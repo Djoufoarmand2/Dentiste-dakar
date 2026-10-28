@@ -5,14 +5,6 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
-}
-
-export interface AdminAccess {
-  isAdmin: boolean;
-}
-
 export interface ClinicInfo {
   name: string;
   city: string;
@@ -118,6 +110,12 @@ export interface SiteContent {
   campaigns: Campaign[];
 }
 
+export interface ContentDocument {
+  content: SiteContent;
+  /** @minimum 1 */
+  version: number;
+}
+
 export interface SiteContentInput {
   clinic: ClinicInfo;
   hero: HeroContent;
@@ -128,5 +126,75 @@ export interface SiteContentInput {
   faqs: FAQItem[];
   blogPosts: BlogPost[];
   campaigns: Campaign[];
+}
+
+export interface ContentPublication {
+  content: SiteContentInput;
+  /** @minimum 1 */
+  expectedVersion: number;
+}
+
+export interface MediaReference {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  path: string;
+}
+
+export type MediaUploadInputMimeType = typeof MediaUploadInputMimeType[keyof typeof MediaUploadInputMimeType];
+
+
+export const MediaUploadInputMimeType = {
+  'image/jpeg': 'image/jpeg',
+  'image/png': 'image/png',
+  'image/webp': 'image/webp',
+  'image/gif': 'image/gif',
+  'video/mp4': 'video/mp4',
+  'video/webm': 'video/webm',
+} as const;
+
+export interface MediaUploadInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  name: string;
+  mimeType: MediaUploadInputMimeType;
+  /**
+     * @minimum 1
+     * @maximum 52428800
+     */
+  size: number;
+}
+
+export type MediaAssetStatus = typeof MediaAssetStatus[keyof typeof MediaAssetStatus];
+
+
+export const MediaAssetStatus = {
+  uploading: 'uploading',
+  ready: 'ready',
+  deleting: 'deleting',
+} as const;
+
+export interface MediaAsset {
+  path: string;
+  url: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  status: MediaAssetStatus;
+}
+
+export interface MediaLibrary {
+  items: MediaAsset[];
+}
+
+export interface HealthStatus {
+  status: string;
+}
+
+export interface AdminAccess {
+  isAdmin: boolean;
 }
 

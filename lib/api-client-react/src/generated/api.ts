@@ -26,7 +26,13 @@ import type {
 
 import type {
   AdminAccess,
+  ContentDocument,
+  ContentPublication,
   HealthStatus,
+  MediaAsset,
+  MediaLibrary,
+  MediaReference,
+  MediaUploadInput,
   SiteContent,
   SiteContentInput
 } from './api.schemas';
@@ -450,4 +456,558 @@ export function useGetAdminAccess<TData = Awaited<ReturnType<typeof getAdminAcce
 
 
 
+
+export const getGetAdminContentUrl = () => {
+
+
+
+
+  return `/api/admin/site-content`
+}
+
+/**
+ * @summary Read complete content and publication version
+ */
+export const getAdminContent = async ( options?: Parameters<typeof customFetch>[1]): Promise<ContentDocument> => {
+
+  return customFetch<ContentDocument>(getGetAdminContentUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminContentQueryKey = () => {
+    return [
+    `/api/admin/site-content`
+    ] as const;
+    }
+
+
+export const getGetAdminContentQueryOptions = <TData = Awaited<ReturnType<typeof getAdminContent>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminContent>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminContentQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminContent>>> = ({ signal }) => getAdminContent({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminContent>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAdminContentQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminContent>>>
+export type GetAdminContentQueryError = ErrorType<void>
+
+
+export function useGetAdminContent<TData = Awaited<ReturnType<typeof getAdminContent>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminContent>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminContent>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminContent>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminContent<TData = Awaited<ReturnType<typeof getAdminContent>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminContent>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminContent>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminContent>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminContent<TData = Awaited<ReturnType<typeof getAdminContent>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminContent>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Read complete content and publication version
+ */
+
+export function useGetAdminContent<TData = Awaited<ReturnType<typeof getAdminContent>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminContent>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAdminContentQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPublishAdminContentUrl = () => {
+
+
+
+
+  return `/api/admin/site-content`
+}
+
+/**
+ * @summary Publish content with optimistic concurrency
+ */
+export const publishAdminContent = async (contentPublication: ContentPublication, options?: Parameters<typeof customFetch>[1]): Promise<ContentDocument> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ContentDocument>(getPublishAdminContentUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(contentPublication)
+  }
+);}
+
+
+
+
+
+export const getPublishAdminContentMutationKey = () => ['publishAdminContent'] as const;
+
+export const getPublishAdminContentMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishAdminContent>>, TError,PublishAdminContentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof publishAdminContent>>, TError,PublishAdminContentMutationVariables, TContext> => {
+
+const mutationKey = getPublishAdminContentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof publishAdminContent>>, PublishAdminContentMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  publishAdminContent(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PublishAdminContentMutationResult = NonNullable<Awaited<ReturnType<typeof publishAdminContent>>>
+    export type PublishAdminContentMutationBody = BodyType<ContentPublication>
+    export type PublishAdminContentMutationError = ErrorType<void>
+    export type PublishAdminContentMutationVariables = {data: BodyType<ContentPublication>}
+
+    /**
+ * @summary Publish content with optimistic concurrency
+ */
+export const usePublishAdminContent = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof publishAdminContent>>, TError,PublishAdminContentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof publishAdminContent>>,
+        TError,
+        PublishAdminContentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPublishAdminContentMutationOptions(options), queryClient);
+    }
+
+export const getGetAdminMediaUrl = () => {
+
+
+
+
+  return `/api/admin/media`
+}
+
+/**
+ * @summary List cabinet media
+ */
+export const getAdminMedia = async ( options?: Parameters<typeof customFetch>[1]): Promise<MediaLibrary> => {
+
+  return customFetch<MediaLibrary>(getGetAdminMediaUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminMediaQueryKey = () => {
+    return [
+    `/api/admin/media`
+    ] as const;
+    }
+
+
+export const getGetAdminMediaQueryOptions = <TData = Awaited<ReturnType<typeof getAdminMedia>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminMediaQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminMedia>>> = ({ signal }) => getAdminMedia({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminMedia>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAdminMediaQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminMedia>>>
+export type GetAdminMediaQueryError = ErrorType<unknown>
+
+
+export function useGetAdminMedia<TData = Awaited<ReturnType<typeof getAdminMedia>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminMedia>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminMedia>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminMedia<TData = Awaited<ReturnType<typeof getAdminMedia>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminMedia>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminMedia>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminMedia>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminMedia<TData = Awaited<ReturnType<typeof getAdminMedia>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary List cabinet media
+ */
+
+export function useGetAdminMedia<TData = Awaited<ReturnType<typeof getAdminMedia>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminMedia>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAdminMediaQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getPrepareAdminMediaUrl = () => {
+
+
+
+
+  return `/api/admin/media/prepare`
+}
+
+/**
+ * @summary Reserve a unique path before direct resumable upload
+ */
+export const prepareAdminMedia = async (mediaUploadInput: MediaUploadInput, options?: Parameters<typeof customFetch>[1]): Promise<MediaAsset> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<MediaAsset>(getPrepareAdminMediaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(mediaUploadInput)
+  }
+);}
+
+
+
+
+
+export const getPrepareAdminMediaMutationKey = () => ['prepareAdminMedia'] as const;
+
+export const getPrepareAdminMediaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareAdminMedia>>, TError,PrepareAdminMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof prepareAdminMedia>>, TError,PrepareAdminMediaMutationVariables, TContext> => {
+
+const mutationKey = getPrepareAdminMediaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof prepareAdminMedia>>, PrepareAdminMediaMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  prepareAdminMedia(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PrepareAdminMediaMutationResult = NonNullable<Awaited<ReturnType<typeof prepareAdminMedia>>>
+    export type PrepareAdminMediaMutationBody = BodyType<MediaUploadInput>
+    export type PrepareAdminMediaMutationError = ErrorType<unknown>
+    export type PrepareAdminMediaMutationVariables = {data: BodyType<MediaUploadInput>}
+
+    /**
+ * @summary Reserve a unique path before direct resumable upload
+ */
+export const usePrepareAdminMedia = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof prepareAdminMedia>>, TError,PrepareAdminMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof prepareAdminMedia>>,
+        TError,
+        PrepareAdminMediaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPrepareAdminMediaMutationOptions(options), queryClient);
+    }
+
+export const getFinalizeAdminMediaUrl = () => {
+
+
+
+
+  return `/api/admin/media/finalize`
+}
+
+/**
+ * @summary Verify an uploaded file before selection
+ */
+export const finalizeAdminMedia = async (mediaReference: MediaReference, options?: Parameters<typeof customFetch>[1]): Promise<MediaAsset> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<MediaAsset>(getFinalizeAdminMediaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(mediaReference)
+  }
+);}
+
+
+
+
+
+export const getFinalizeAdminMediaMutationKey = () => ['finalizeAdminMedia'] as const;
+
+export const getFinalizeAdminMediaMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof finalizeAdminMedia>>, TError,FinalizeAdminMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof finalizeAdminMedia>>, TError,FinalizeAdminMediaMutationVariables, TContext> => {
+
+const mutationKey = getFinalizeAdminMediaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof finalizeAdminMedia>>, FinalizeAdminMediaMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  finalizeAdminMedia(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type FinalizeAdminMediaMutationResult = NonNullable<Awaited<ReturnType<typeof finalizeAdminMedia>>>
+    export type FinalizeAdminMediaMutationBody = BodyType<MediaReference>
+    export type FinalizeAdminMediaMutationError = ErrorType<unknown>
+    export type FinalizeAdminMediaMutationVariables = {data: BodyType<MediaReference>}
+
+    /**
+ * @summary Verify an uploaded file before selection
+ */
+export const useFinalizeAdminMedia = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof finalizeAdminMedia>>, TError,FinalizeAdminMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof finalizeAdminMedia>>,
+        TError,
+        FinalizeAdminMediaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getFinalizeAdminMediaMutationOptions(options), queryClient);
+    }
+
+export const getDeleteAdminMediaUrl = () => {
+
+
+
+
+  return `/api/admin/media/delete`
+}
+
+/**
+ * @summary Delete media only when not referenced by content
+ */
+export const deleteAdminMedia = async (mediaReference: MediaReference, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void>(getDeleteAdminMediaUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(mediaReference)
+  }
+);}
+
+
+
+
+
+export const getDeleteAdminMediaMutationKey = () => ['deleteAdminMedia'] as const;
+
+export const getDeleteAdminMediaMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminMedia>>, TError,DeleteAdminMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminMedia>>, TError,DeleteAdminMediaMutationVariables, TContext> => {
+
+const mutationKey = getDeleteAdminMediaMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminMedia>>, DeleteAdminMediaMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  deleteAdminMedia(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminMediaMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminMedia>>>
+    export type DeleteAdminMediaMutationBody = BodyType<MediaReference>
+    export type DeleteAdminMediaMutationError = ErrorType<void>
+    export type DeleteAdminMediaMutationVariables = {data: BodyType<MediaReference>}
+
+    /**
+ * @summary Delete media only when not referenced by content
+ */
+export const useDeleteAdminMedia = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminMedia>>, TError,DeleteAdminMediaMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminMedia>>,
+        TError,
+        DeleteAdminMediaMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteAdminMediaMutationOptions(options), queryClient);
+    }
 
