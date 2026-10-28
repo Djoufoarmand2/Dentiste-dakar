@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import type { BlogPost, Campaign, ServiceItem, SiteContent, Testimonial } from '@workspace/api-client-react';
 import { Link, useLocation } from 'wouter';
+import { AppointmentRequestForm } from './appointment-request-form';
 
 const navItems = [
   ['Soins', '/soins'], ['Notre équipe', '/equipe'], ['Le cabinet', '/galerie'],
@@ -339,15 +340,23 @@ export function ContactPage({ content }: { content: SiteContent }) {
   const clinic = content.clinic;
   const row = (icon: ReactNode, label: string, value: ReactNode) => <><span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/10 text-[#c1b216]">{icon}</span><span><b className="block font-semibold">{label}</b><span className="mt-1 block whitespace-pre-line text-white/70">{value}</span></span></>;
   return <SiteShell clinic={clinic}><main><PageIntro eyebrow="Prenons le temps d’échanger" title="Nous sommes tout près." text="Un rendez-vous, une question, un besoin d’orientation ? Contactez-nous comme vous le souhaitez." />
-    <section className="wrap section-pad grid gap-7 md:grid-cols-[.9fr_1.1fr]">
+    <section className="wrap section-pad grid gap-7 md:grid-cols-[.8fr_1.2fr]">
       <div className="rounded-md bg-[#073e53] p-7 text-white md:p-10"><p className="text-[11px] uppercase tracking-[.24em] text-[#c1b216]">{safeName(clinic.name)} · {safeCity(clinic.city)}</p><h2 className="mt-4 font-display text-3xl font-semibold">À votre écoute.</h2><div className="mt-8 space-y-6 text-sm">
         <a href={`tel:${clinic.phone}`} className="flex items-start gap-4" data-testid="link-contact-phone">{row(<Phone size={17} />, 'Téléphone', clinic.phone || 'À renseigner')}</a>
         <a href={`mailto:${clinic.email}`} className="flex items-start gap-4" data-testid="link-contact-email">{row(<MessageCircle size={17} />, 'Courriel', clinic.email || 'À renseigner')}</a>
         <div className="flex items-start gap-4" data-testid="text-contact-address">{row(<MapPin size={17} />, 'Adresse', clinic.address || 'Douala, Cameroun')}</div>
         <div className="flex items-start gap-4" data-testid="text-contact-hours">{row(<Clock3 size={17} />, 'Horaires', clinic.openingHours || 'À renseigner')}</div>
       </div><div className="mt-9"><BookButton clinic={clinic} testId="button-contact-book">Demander un rendez-vous</BookButton></div></div>
-      <div className="card-ref flex min-h-[360px] flex-col overflow-hidden">
-        {clinic.mapUrl ? <iframe title="Carte pour rejoindre le cabinet" src={clinic.mapUrl} loading="lazy" className="h-full min-h-[360px] w-full border-0" referrerPolicy="no-referrer-when-downgrade" data-testid="map-contact" /> : <div className="flex flex-1 flex-col items-center justify-center bg-[#e6e3eb] p-8 text-center"><MapPin size={26} className="text-accent" /><h2 className="mt-5 font-display text-2xl font-semibold text-[#073e53]">Au cœur de {safeCity(clinic.city)}</h2><p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{clinic.address || 'L’adresse précise du cabinet sera publiée ici.'}</p><p className="mt-4 text-[10px] uppercase tracking-[.16em] text-accent">Carte à configurer dans l’espace administrateur</p></div>}
+      <div className="card-ref p-6 md:p-9">
+        <p className="eyebrow">À votre rythme</p>
+        <h2 className="mt-2 font-display text-2xl font-semibold text-[#073e53] md:text-3xl">Faire une demande de rendez-vous</h2>
+        <p className="mt-3 text-sm leading-6 text-muted-foreground">L’équipe vous recontactera pour convenir d’un créneau adapté.</p>
+        <AppointmentRequestForm />
+      </div>
+    </section>
+    <section className="wrap pb-16">
+      <div className="card-ref flex min-h-[280px] flex-col overflow-hidden">
+        {clinic.mapUrl ? <iframe title="Carte pour rejoindre le cabinet" src={clinic.mapUrl} loading="lazy" className="h-[360px] w-full border-0" referrerPolicy="no-referrer-when-downgrade" data-testid="map-contact" /> : <div className="flex flex-1 flex-col items-center justify-center bg-[#e6e3eb] p-8 text-center"><MapPin size={26} className="text-accent" /><h2 className="mt-5 font-display text-2xl font-semibold text-[#073e53]">Au cœur de {safeCity(clinic.city)}</h2><p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{clinic.address || 'L’adresse précise du cabinet sera publiée ici.'}</p><p className="mt-4 text-[10px] uppercase tracking-[.16em] text-accent">Carte à configurer dans l’espace administrateur</p></div>}
       </div>
     </section>
   </main></SiteShell>;

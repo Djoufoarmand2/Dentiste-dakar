@@ -261,6 +261,36 @@ export const UpdateSiteContentResponse = zod.object({
 
 
 /**
+ * @summary Send a website appointment request by email
+ */
+export const submitContactAppointmentBodyNameMax = 120;
+
+export const submitContactAppointmentBodyPhoneMax = 40;
+
+export const submitContactAppointmentBodyEmailMax = 254;
+
+export const submitContactAppointmentBodyMessageMax = 2000;
+
+export const submitContactAppointmentBodyWebsiteMax = 200;
+
+
+
+export const SubmitContactAppointmentBody = zod.object({
+  "name": zod.string().min(1).max(submitContactAppointmentBodyNameMax),
+  "phone": zod.string().min(1).max(submitContactAppointmentBodyPhoneMax),
+  "email": zod.string().email().max(submitContactAppointmentBodyEmailMax),
+  "service": zod.enum(['Consultation générale / Bilan', 'Facettes dentaires en composite', 'Esthétique dentaire', 'Blanchiment dentaire', 'Implants dentaires', 'Orthodontie', 'Chirurgie dentaire', 'Urgence dentaire']),
+  "preferredDate": zod.coerce.date().optional(),
+  "message": zod.string().max(submitContactAppointmentBodyMessageMax).optional(),
+  "website": zod.string().max(submitContactAppointmentBodyWebsiteMax).optional()
+})
+
+export const SubmitContactAppointmentResponse = zod.object({
+  "accepted": zod.boolean()
+})
+
+
+/**
  * @summary Check current administrator access
  */
 export const GetAdminAccessResponse = zod.object({
