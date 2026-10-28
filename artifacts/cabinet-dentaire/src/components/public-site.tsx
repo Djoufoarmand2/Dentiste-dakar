@@ -29,19 +29,27 @@ export function LogoWordmark({ clinic, inverse = false }: { clinic?: SiteContent
 
 export function Header({ clinic, overlay = false }: { clinic?: SiteContent['clinic']; overlay?: boolean }) {
   const [open, setOpen] = useState(false);
-  return <header className={`${overlay ? 'absolute inset-x-0 top-0 bg-gradient-to-b from-[#070116]/70 to-transparent' : 'relative bg-[#073e53]'} z-30 text-white`}>
+  const [scrolled, setScrolled] = useState(false);
+  const lightHeader = !overlay || scrolled;
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 24);
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+    return () => window.removeEventListener('scroll', update);
+  }, []);
+  return <header className={`public-header ${overlay ? `home-header ${scrolled ? 'is-scrolled' : ''}` : ''} ${lightHeader ? 'header-light' : 'header-transparent'}`}>
     <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-6 px-5 py-4 md:px-8">
-      <LogoWordmark clinic={clinic} inverse />
+      <LogoWordmark clinic={clinic} inverse={!lightHeader} />
       <nav aria-label="Navigation principale" className="hidden items-center gap-7 xl:flex">
-        <Link href="/" className="text-[13px] font-medium text-white/90 transition-colors hover:text-[#c1b216]" data-testid="nav-accueil">Accueil</Link>
-        {navItems.map(([label, href]) => <Link key={href} href={href} className="text-[13px] font-medium text-white/90 transition-colors hover:text-[#c1b216]" data-testid={`nav-${href.slice(1)}`}>{label}</Link>)}
-        <Link href="/informations" className="text-[13px] font-medium text-white/90 transition-colors hover:text-[#c1b216]" data-testid="nav-informations">Informations</Link>
+        <Link href="/" className={`text-[13px] font-medium transition-colors hover:text-[#c1b216] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid="nav-accueil">Accueil</Link>
+        {navItems.map(([label, href]) => <Link key={href} href={href} className={`text-[13px] font-medium transition-colors hover:text-[#c1b216] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid={`nav-${href.slice(1)}`}>{label}</Link>)}
+        <Link href="/informations" className={`text-[13px] font-medium transition-colors hover:text-[#c1b216] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid="nav-informations">Informations</Link>
       </nav>
       <Link href="/contact" className="btn-gold hidden whitespace-nowrap xl:inline-flex" data-testid="button-header-rendez-vous">Prendre rendez-vous <ArrowRight size={15} /></Link>
-      <button type="button" aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'} aria-expanded={open} onClick={() => setOpen(!open)} className="grid h-10 w-10 place-items-center rounded-md border border-white/30 xl:hidden" data-testid="button-menu-mobile">{open ? <X size={19} /> : <Menu size={19} />}</button>
+      <button type="button" aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'} aria-expanded={open} onClick={() => setOpen(!open)} className={`grid h-10 w-10 place-items-center rounded-md border xl:hidden ${lightHeader ? 'border-[#073e53]/25 text-[#073e53]' : 'border-white/30 text-white'}`} data-testid="button-menu-mobile">{open ? <X size={19} /> : <Menu size={19} />}</button>
     </div>
-    {open && <nav aria-label="Navigation mobile" className="absolute inset-x-0 top-full bg-[#073e53] px-5 pb-6 pt-1 shadow-xl xl:hidden">
-      {[['Accueil', '/'] as const, ...navItems, ['Informations', '/informations'] as const, ['Contact', '/contact'] as const].map(([label, href]) => <Link onClick={() => setOpen(false)} key={href} href={href} className="block border-t border-white/10 py-3 text-sm text-white/90" data-testid={`mobile-nav-${href.slice(1) || 'accueil'}`}>{label}</Link>)}
+    {open && <nav aria-label="Navigation mobile" className={`absolute inset-x-0 top-full px-5 pb-6 pt-1 shadow-xl xl:hidden ${lightHeader ? 'bg-white' : 'bg-[#073e53]'}`}>
+      {[['Accueil', '/'] as const, ...navItems, ['Informations', '/informations'] as const, ['Contact', '/contact'] as const].map(([label, href]) => <Link onClick={() => setOpen(false)} key={href} href={href} className={`block border-t py-3 text-sm ${lightHeader ? 'border-[#073e53]/10 text-[#073e53]' : 'border-white/10 text-white/90'}`} data-testid={`mobile-nav-${href.slice(1) || 'accueil'}`}>{label}</Link>)}
       <Link href="/contact" onClick={() => setOpen(false)} className="btn-gold mt-4 w-full justify-center" data-testid="mobile-button-rendez-vous">Prendre rendez-vous <ArrowRight size={15} /></Link>
     </nav>}
   </header>;
@@ -59,8 +67,44 @@ export function Footer({ clinic }: { clinic?: SiteContent['clinic'] }) {
   </footer>;
 }
 
+function AnnouncementBar({ clinic }: { clinic?: SiteContent['clinic'] }) {
+  const hours = clinic?.openingHours?.trim().replace(/\s*\n\s*/g, ' · ');
+  return <div className="announcement-bar flex items-center justify-center bg-[#c1b216] px-4 py-2 text-center text-[10px] font-semibold tracking-[.04em] text-[#070116] sm:text-[11px]" data-testid="announcement-hours">
+    {hours ? <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap" title={`Horaires du cabinet : ${hours}`}><Clock3 className="mr-2 inline-block align-[-3px]" size={13} aria-hidden="true" />Horaires du cabinet : {hours}</span> : <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap">Pour un rendez-vous, contactez le cabinet ou envoyez une demande en ligne.</span>}
+  </div>;
+}
+
+function FloatingCallButton({ phone }: { phone?: string }) {
+  const number = phone?.trim();
+  if (!number) return null;
+  const dialable = number.replace(/[^\d+]/g, '');
+  if (!dialable) return null;
+  return <a href={`tel:${dialable}`} aria-label={`Appeler le cabinet au ${number}`} className="floating-call grid h-14 w-14 place-items-center rounded-full bg-[#073e53] text-white shadow-[0_8px_24px_rgba(7,1,22,.24)] transition-transform hover:-translate-y-1 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#c1b216]" data-testid="button-floating-call"><Phone size={21} aria-hidden="true" /><span className="sr-only">Appeler le cabinet</span></a>;
+}
+
 export function SiteShell({ children, clinic, overlay = false }: { children: ReactNode; clinic?: SiteContent['clinic']; overlay?: boolean }) {
-  return <div className="public-site relative min-h-[100dvh] bg-background text-foreground"><Header clinic={clinic} overlay={overlay} />{children}<Footer clinic={clinic} /></div>;
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    root.classList.add('motion-ready');
+    const elements = Array.from(document.querySelectorAll<HTMLElement>('.public-site main > section, .public-site .card-ref, .public-site figure[data-testid]'));
+    elements.forEach((element) => element.classList.add('reveal-on-scroll'));
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08, rootMargin: '0px 0px -36px 0px' });
+    elements.forEach((element) => observer.observe(element));
+    return () => {
+      observer.disconnect();
+      root.classList.remove('motion-ready');
+      elements.forEach((element) => element.classList.remove('reveal-on-scroll', 'is-visible'));
+    };
+  }, []);
+  return <div className="public-site relative min-h-[100dvh] bg-background text-foreground"><AnnouncementBar clinic={clinic} /><Header clinic={clinic} overlay={overlay} />{children}<Footer clinic={clinic} /><FloatingCallButton phone={clinic?.phone} /></div>;
 }
 
 export function LoadingPage() {
@@ -139,12 +183,66 @@ function ReviewCard({ review }: { review: Testimonial }) {
   </article>;
 }
 
+function ReviewCarousel({ reviews, id = 'reviews' }: { reviews: Testimonial[]; id?: string }) {
+  const [active, setActive] = useState(0);
+  if (!reviews.length) return <EmptyInline title="Votre expérience compte" text="Les avis seront affichés ici lorsqu’ils seront disponibles." />;
+  const move = (step: number) => setActive((current) => (current + step + reviews.length) % reviews.length);
+  return <div className="mx-auto max-w-3xl" data-testid={`${id}-carousel`}>
+    <div className="overflow-hidden px-1 py-2" aria-live="polite" aria-atomic="true">
+      <ReviewCard key={reviews[active].id} review={reviews[active]} />
+    </div>
+    <div className="mt-5 flex items-center justify-between">
+      <p className="text-xs font-medium tabular-nums text-muted-foreground" aria-label={`Témoignage ${active + 1} sur ${reviews.length}`}>{String(active + 1).padStart(2, '0')} <span className="mx-1 text-accent">/</span> {String(reviews.length).padStart(2, '0')}</p>
+      <div className="flex gap-2">
+        <button type="button" onClick={() => move(-1)} aria-label="Témoignage précédent" className="grid h-10 w-10 place-items-center rounded-full border border-[#073e53]/20 text-[#073e53] transition-colors hover:bg-[#073e53] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6f0b]" data-testid={`${id}-previous`}><ArrowLeft size={17} /></button>
+        <button type="button" onClick={() => move(1)} aria-label="Témoignage suivant" className="grid h-10 w-10 place-items-center rounded-full border border-[#073e53]/20 text-[#073e53] transition-colors hover:bg-[#073e53] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6f0b]" data-testid={`${id}-next`}><ArrowRight size={17} /></button>
+      </div>
+    </div>
+  </div>;
+}
+
 function FaqList({ faqs }: { faqs: SiteContent['faqs'] }) {
   const [expanded, setExpanded] = useState<string | null>(faqs[0]?.id || null);
   return <div className="space-y-3">{faqs.map((faq) => <article key={faq.id} className="card-ref overflow-hidden" data-testid={`faq-item-${faq.id}`}>
-    <button type="button" aria-expanded={expanded === faq.id} onClick={() => setExpanded(expanded === faq.id ? null : faq.id)} className="flex w-full items-center justify-between gap-5 px-6 py-5 text-left" data-testid={`button-faq-${faq.id}`}><span className="text-[15px] font-semibold text-[#073e53] md:text-base">{faq.question}</span><ChevronDown className={`shrink-0 text-accent transition-transform ${expanded === faq.id ? 'rotate-180' : ''}`} size={20} /></button>
-    {expanded === faq.id && <p className="px-6 pb-6 text-sm leading-7 text-muted-foreground">{faq.answer}</p>}
+    <button type="button" id={`faq-trigger-${faq.id}`} aria-controls={`faq-panel-${faq.id}`} aria-expanded={expanded === faq.id} onClick={() => setExpanded(expanded === faq.id ? null : faq.id)} className="flex w-full items-center justify-between gap-5 px-6 py-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[#8c6f0b]" data-testid={`button-faq-${faq.id}`}><span className="text-[15px] font-semibold text-[#073e53] md:text-base">{faq.question}</span><ChevronDown className={`shrink-0 text-accent transition-transform ${expanded === faq.id ? 'rotate-180' : ''}`} size={20} aria-hidden="true" /></button>
+    <div id={`faq-panel-${faq.id}`} role="region" aria-labelledby={`faq-trigger-${faq.id}`} aria-hidden={expanded !== faq.id} className="faq-panel" data-open={expanded === faq.id}><div><p className="px-6 pb-6 text-sm leading-7 text-muted-foreground">{faq.answer}</p></div></div>
   </article>)}</div>;
+}
+
+function MetricCounter({ value, label }: { value: number; label: string }) {
+  const [display, setDisplay] = useState(0);
+  const [started, setStarted] = useState(false);
+  useEffect(() => {
+    const node = document.getElementById(`metric-${label.replace(/\W/g, '')}`);
+    if (!node) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+      setDisplay(value);
+      return;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setStarted(true);
+        observer.disconnect();
+      }
+    }, { threshold: 0.5 });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [label, value]);
+  useEffect(() => {
+    if (!started) return;
+    const start = performance.now();
+    const duration = 850;
+    let frame = 0;
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration);
+      setDisplay(Math.round(value * (1 - Math.pow(1 - progress, 3))));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [started, value]);
+  const nodeId = `metric-${label.replace(/\W/g, '')}`;
+  return <div id={nodeId} className="border-l border-[#073e53]/15 pl-5 first:border-0 first:pl-0" aria-label={`${value} ${label}`}><p className="font-display text-3xl font-semibold tabular-nums text-[#073e53] md:text-4xl">{display}</p><p className="mt-1 text-[10px] uppercase tracking-[.14em] text-muted-foreground sm:text-[11px]">{label}</p></div>;
 }
 
 function BookButton({ clinic, children, testId, outline = false }: { clinic: SiteContent['clinic']; children: ReactNode; testId: string; outline?: boolean }) {
@@ -179,6 +277,14 @@ export function HomePage({ content }: { content: SiteContent }) {
           </div>
         </div>
       </section>
+
+      {[content.services.length, content.team.length, content.gallery.length].some((count) => count > 0) && <section className="border-b border-[#073e53]/10 bg-[#f3f1f5] py-8 md:py-10" aria-label="Le cabinet en quelques repères">
+        <div className="wrap flex flex-wrap items-center justify-center gap-x-10 gap-y-6 sm:justify-start">
+          {content.services.length > 0 && <MetricCounter value={content.services.length} label="Soins présentés" />}
+          {content.team.length > 0 && <MetricCounter value={content.team.length} label="Membres de l’équipe" />}
+          {content.gallery.length > 0 && <MetricCounter value={content.gallery.length} label="Images en galerie" />}
+        </div>
+      </section>}
 
       <section id="soins" className="section-pad bg-background">
         <div className="wrap">
@@ -220,8 +326,7 @@ export function HomePage({ content }: { content: SiteContent }) {
         <div className="wrap">
           <SectionHead eyebrow="Témoignages" title="La confiance se construit ensemble." />
           <div className="mt-10"><SampleNotice /></div>
-          {content.testimonials.length ? <div className="grid gap-6 md:grid-cols-3">{content.testimonials.slice(0, 3).map((r) => <ReviewCard key={r.id} review={r} />)}</div>
-            : <EmptyInline title="Votre expérience compte" text="Les avis seront affichés ici lorsqu’ils seront disponibles." />}
+          <ReviewCarousel reviews={content.testimonials.slice(0, 3)} id="home-reviews" />
           <div className="mt-10 text-center"><ActionLink href="/avis" variant="navy" testId="link-home-reviews">Tous les témoignages</ActionLink></div>
         </div>
       </section>
@@ -276,7 +381,7 @@ export function GalleryPage({ content }: { content: SiteContent }) {
 export function ReviewsPage({ content }: { content: SiteContent }) {
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Vos mots comptent" title="La confiance se construit ensemble." text="Chaque retour nous aide à mieux vous accueillir. Les témoignages ci-dessous sont des exemples de présentation et doivent être remplacés avant le lancement." />
     <section className="wrap section-pad"><SampleNotice />
-      {content.testimonials.length ? <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">{content.testimonials.map((r) => <ReviewCard key={r.id} review={r} />)}</div> : <EmptyInline title="Votre expérience compte" text="Les avis seront affichés ici lorsqu’ils seront disponibles." />}
+      <ReviewCarousel reviews={content.testimonials} id="reviews-page" />
       <div className="mt-12 text-center"><ActionLink href="/contact" testId="link-reviews-contact">Nous laisser un message</ActionLink></div>
     </section></main></SiteShell>;
 }
