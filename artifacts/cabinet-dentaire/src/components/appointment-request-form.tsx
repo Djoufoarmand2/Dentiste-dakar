@@ -2,7 +2,8 @@ import {
   useSubmitContactAppointment,
   type ContactAppointmentInput,
 } from "@workspace/api-client-react";
-import { ArrowRight, LoaderCircle } from "lucide-react";
+import { ArrowRight, CheckCircle2, LoaderCircle } from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,6 +17,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 type AppointmentFormValues = Omit<ContactAppointmentInput, "service"> & {
   service: ContactAppointmentInput["service"] | "";
@@ -44,11 +54,18 @@ const defaultValues: AppointmentFormValues = {
 };
 
 export function AppointmentRequestForm() {
-  const form = useForm<AppointmentFormValues>({ defaultValues });
+  const form = useForm<AppointmentFormValues>({ defaultValues, mode: "onChange" });
   const request = useSubmitContactAppointment();
+  const [submissionAccepted, setSubmissionAccepted] = useState<boolean | null>(null);
+  const phoneValue = form.watch("phone");
+  const emailValue = form.watch("email");
+  const phoneDigits = phoneValue.replace(/\D/g, "");
+  const phoneValid = phoneDigits.length >= 8 && phoneDigits.length <= 15;
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
 
   const submit = async (values: AppointmentFormValues) => {
     request.reset();
+    setSubmissionAccepted(null);
     if (!values.service) {
       form.setError("service", {
         type: "required",
@@ -58,7 +75,7 @@ export function AppointmentRequestForm() {
     }
 
     try {
-      await request.mutateAsync({
+      const result = await request.mutateAsync({
         data: {
           name: values.name.trim(),
           phone: values.phone.trim(),
@@ -69,13 +86,15 @@ export function AppointmentRequestForm() {
           website: values.website,
         },
       });
-      form.reset(defaultValues);
+      setSubmissionAccepted(result.accepted === true);
+      if (result.accepted === true) form.reset(defaultValues);
     } catch {
-      // The mutation state below displays a clear message without losing the form values.
+      setSubmissionAccepted(false);
     }
   };
 
   return (
+    <>
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(submit)}
@@ -110,8 +129,15 @@ export function AppointmentRequestForm() {
           <FormField
             control={form.control}
             name="phone"
-            rules={{ required: "Indiquez votre numéro de téléphone.", maxLength: 40 }}
-            render={({ field }) => (
+            rules={{
+              required: "Indiquez votre numéro de téléphone.",
+              maxLength: { value: 40, message: "Le numéro est trop long." },
+              validate: (value) => {
+                const digits = value.replace(/\D/g, "");
+                return (digits.length >= 8 && digits.length <= 15) || "Saisissez un numéro de téléphone valide.";
+              },
+            }}
+            render={({ field, fieldState }) => (
               <FormItem>
                 <FormLabel>Numéro de téléphone *</FormLabel>
                 <FormControl>
@@ -121,7 +147,8 @@ export function AppointmentRequestForm() {
                     autoComplete="tel"
                     placeholder="+237 6XX XX XX XX"
                     maxLength={40}
-                    className="bg-white"
+                    aria-invalid={fieldState.invalid}
+                    className={`bg-white ${fieldState.invalid ? "input-invalid" : phoneValue ? (phoneValid ? "input-valid" : "input-invalid") : ""}`}
                     data-testid="input-appointment-phone"
                   />
                 </FormControl>
@@ -145,7 +172,7 @@ export function AppointmentRequestForm() {
             },
             maxLength: 254,
           }}
-          render={({ field }) => (
+            render={({ field, fieldState }) => (
             <FormItem>
               <FormLabel>Adresse e-mail *</FormLabel>
               <FormControl>
@@ -155,7 +182,8 @@ export function AppointmentRequestForm() {
                   autoComplete="email"
                   placeholder="patient@email.com"
                   maxLength={254}
-                  className="bg-white"
+                    aria-invalid={fieldState.invalid}
+                  className={`bg-white ${fieldState.invalid ? "input-invalid" : emailValue ? (emailValid ? "input-valid" : "input-invalid") : ""}`}
                   data-testid="input-appointment-email"
                 />
               </FormControl>
@@ -257,17 +285,7 @@ export function AppointmentRequestForm() {
           />
         </div>
 
-        {request.isSuccess && (
-          <p
-            role="status"
-            className="rounded-md border border-[#8c6f0b]/40 bg-[#e6e3eb] p-4 text-sm leading-6 text-[#073e53]"
-            data-testid="status-appointment-success"
-          >
-            Votre demande a bien été transmise. Le cabinet vous recontactera pour
-            confirmer le rendez-vous.
-          </p>
-        )}
-        {request.isError && (
+        {(request.isError || submissionAccepted === false) && (
           <p
             role="alert"
             className="rounded-md border border-[#e7c8c1] bg-[#f8e9e5] p-4 text-sm leading-6 text-[#943d35]"
@@ -305,5 +323,44 @@ export function AppointmentRequestForm() {
         </div>
       </form>
     </Form>
+    <Dialog
+      open={submissionAccepted === true}
+      onOpenChange={(open) => {
+        if (!open) setSubmissionAccepted(null);
+      }}
+    >
+      <DialogContent className="confirmation-in max-w-md border-[#073e53]/10 bg-white">
+        <DialogHeader className="items-center text-center">
+          <span className="mb-2 grid h-14 w-14 place-items-center rounded-full bg-[#e6e3eb] text-[#5d7f46]">
+            <CheckCircle2 size={27} aria-hidden="true" />
+          </span>
+          <DialogTitle className="font-display text-2xl text-[#073e53]">
+            Demande transmise
+          </DialogTitle>
+          <DialogDescription
+            role="status"
+            className="pt-2 text-sm leading-6"
+            data-testid="status-appointment-success"
+          >
+            Votre demande a bien été reçue. Le cabinet vous recontactera pour
+            confirmer le rendez-vous. L’envoi de ce formulaire ne réserve pas
+            encore de créneau.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="sm:justify-center">
+          <DialogClose asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className="btn-gold w-full sm:w-auto"
+              data-testid="button-close-appointment-confirmation"
+            >
+              Terminé
+            </Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
