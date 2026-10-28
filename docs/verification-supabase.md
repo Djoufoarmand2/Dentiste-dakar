@@ -37,8 +37,10 @@ le média reste une image conformément à l'interface existante.
   sélection dans la médiathèque vérifiés. Un MIME incorrect est refusé.
 - Téléversement TUS d'un MP4 dans une campagne ; prévisualisation réellement
   lisible et lecture vidéo constatée.
-- Publication depuis l'interface, puis vérification du lien vidéo exact sur la
-  page publique `/informations` dans un autre onglet.
+- La publication, la lecture du lecteur HTML5 intégré sur `/informations` et
+  l'accessibilité des commandes du lecteur sont présentes dans la version
+  courante ; le parcours de publication publique complet a été vérifié avant
+  cette dernière modification du lecteur.
 - Publication concurrente simulée : HTTP 409 affiché et brouillon conservé.
 - Déconnexion par l'interface : l'éditeur ne reste pas accessible.
 - Connexion d'un compte ordinaire par le formulaire : espace administrateur
