@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: site
+    description: Public website content and administrator access
 paths:
   /healthz:
     get:
@@ -24,6 +26,56 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /site-content:
+    get:
+      operationId: getSiteContent
+      tags: [site]
+      summary: Get public website content
+      responses:
+        "200":
+          description: Current website content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteContent"
+    put:
+      operationId: updateSiteContent
+      tags: [site]
+      summary: Replace website content
+      description: Administrator-only. Updates all editable website content in one operation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiteContentInput"
+      responses:
+        "200":
+          description: Updated website content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteContent"
+        "400":
+          description: Invalid website content
+        "401":
+          description: Sign-in required
+        "403":
+          description: Administrator access required
+  /admin/access:
+    get:
+      operationId: getAdminAccess
+      tags: [site]
+      summary: Check current administrator access
+      responses:
+        "200":
+          description: Access check result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAccess"
+        "401":
+          description: Sign-in required
 components:
   schemas:
     HealthStatus:
@@ -33,4 +85,153 @@ components:
           type: string
       required:
         - status
+    AdminAccess:
+      type: object
+      properties:
+        isAdmin:
+          type: boolean
+      required: [isAdmin]
+    ClinicInfo:
+      type: object
+      properties:
+        name: { type: string }
+        city: { type: string }
+        address: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        openingHours: { type: string }
+        bookingUrl: { type: string }
+        mapUrl: { type: string }
+        logoUrl: { type: string }
+      required: [name, city, address, phone, email, openingHours, bookingUrl, mapUrl, logoUrl]
+    HeroContent:
+      type: object
+      properties:
+        eyebrow: { type: string }
+        title: { type: string }
+        description: { type: string }
+        primaryAction: { type: string }
+        secondaryAction: { type: string }
+        imageUrl: { type: string }
+      required: [eyebrow, title, description, primaryAction, secondaryAction, imageUrl]
+    ServiceItem:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        slug: { type: string }
+        summary: { type: string }
+        description: { type: string }
+        imageUrl: { type: string }
+      required: [id, title, slug, summary, description, imageUrl]
+    TeamMember:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { type: string }
+        biography: { type: string }
+        imageUrl: { type: string }
+      required: [id, name, role, biography, imageUrl]
+    GalleryImage:
+      type: object
+      properties:
+        id: { type: string }
+        alt: { type: string }
+        imageUrl: { type: string }
+      required: [id, alt, imageUrl]
+    Testimonial:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        service: { type: string }
+        quote: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+      required: [id, name, service, quote, rating]
+    FAQItem:
+      type: object
+      properties:
+        id: { type: string }
+        question: { type: string }
+        answer: { type: string }
+      required: [id, question, answer]
+    BlogPost:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        slug: { type: string }
+        excerpt: { type: string }
+        content: { type: string }
+        imageUrl: { type: string }
+        author: { type: string }
+        date: { type: string }
+        published: { type: boolean }
+      required: [id, title, slug, excerpt, content, imageUrl, author, date, published]
+    Campaign:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        mediaType: { type: string, enum: [image, video] }
+        imageUrl: { type: string }
+        videoUrl: { type: ["string", "null"] }
+        active: { type: boolean }
+      required: [id, title, description, mediaType, imageUrl, videoUrl, active]
+    SiteContent:
+      type: object
+      properties:
+        clinic: { $ref: "#/components/schemas/ClinicInfo" }
+        hero: { $ref: "#/components/schemas/HeroContent" }
+        services:
+          type: array
+          items: { $ref: "#/components/schemas/ServiceItem" }
+        team:
+          type: array
+          items: { $ref: "#/components/schemas/TeamMember" }
+        gallery:
+          type: array
+          items: { $ref: "#/components/schemas/GalleryImage" }
+        testimonials:
+          type: array
+          items: { $ref: "#/components/schemas/Testimonial" }
+        faqs:
+          type: array
+          items: { $ref: "#/components/schemas/FAQItem" }
+        blogPosts:
+          type: array
+          items: { $ref: "#/components/schemas/BlogPost" }
+        campaigns:
+          type: array
+          items: { $ref: "#/components/schemas/Campaign" }
+      required: [clinic, hero, services, team, gallery, testimonials, faqs, blogPosts, campaigns]
+    SiteContentInput:
+      type: object
+      properties:
+        clinic: { $ref: "#/components/schemas/ClinicInfo" }
+        hero: { $ref: "#/components/schemas/HeroContent" }
+        services:
+          type: array
+          items: { $ref: "#/components/schemas/ServiceItem" }
+        team:
+          type: array
+          items: { $ref: "#/components/schemas/TeamMember" }
+        gallery:
+          type: array
+          items: { $ref: "#/components/schemas/GalleryImage" }
+        testimonials:
+          type: array
+          items: { $ref: "#/components/schemas/Testimonial" }
+        faqs:
+          type: array
+          items: { $ref: "#/components/schemas/FAQItem" }
+        blogPosts:
+          type: array
+          items: { $ref: "#/components/schemas/BlogPost" }
+        campaigns:
+          type: array
+          items: { $ref: "#/components/schemas/Campaign" }
+      required: [clinic, hero, services, team, gallery, testimonials, faqs, blogPosts, campaigns]
 
