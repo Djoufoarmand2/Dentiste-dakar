@@ -44,6 +44,7 @@ Site vitrine fictif, en français, pour un cabinet dentaire à Douala. Les coord
 
 - Garder les contenus de départ fictifs et les zones de photos/logo sans image jusqu’à ce que le cabinet fournisse ses propres visuels.
 - Reprendre fidèlement la présentation et la structure de base de cabinetdentairegloria.com, tout en gardant notre logique de base, nos contenus, Supabase et l’administration. Ne pas reprendre son code, ses textes, son logo ni ses photos.
+- Les couleurs doivent être plus vives et éclatantes : garder le bleu et le doré, avec un rendu plus lumineux et des fonds blancs nets.
 
 ## Gotchas
 
