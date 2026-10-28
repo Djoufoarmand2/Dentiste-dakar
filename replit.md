@@ -49,7 +49,7 @@ Site vitrine fictif, en français, pour un cabinet dentaire à Douala. Les coord
 
 - Le premier chargement public crée le bucket privé si nécessaire et y place le contenu de départ. Les secrets Supabase doivent donc être configurés avant d’ouvrir le site.
 - Les comptes Clerk sont séparés entre développement et production; le compte autorisé doit utiliser l’adresse configurée dans `ADMIN_EMAIL`.
-- L’application utilise les versions React du catalogue du workspace pour préserver la compatibilité Expo des autres packages.
+- Le site utilise React 19.1.4 pour la compatibilité Clerk ; le catalogue React du workspace reste inchangé pour préserver la compatibilité Expo des autres packages.
 
 ## Pointers
 

@@ -305,7 +305,12 @@ function AdminPage() {
   const [draft, setDraft] = useState<SiteContent | null>(null);
   const [section, setSection] = useState<'clinic' | 'hero' | ArraySection>('clinic');
   const [saved, setSaved] = useState(false);
-  useEffect(() => { if (contentQuery.data) setDraft(JSON.parse(JSON.stringify(contentQuery.data)) as SiteContent); }, [contentQuery.data]);
+  useEffect(() => {
+    if (contentQuery.data) {
+      const content = contentQuery.data;
+      setDraft((current) => current ?? JSON.parse(JSON.stringify(content)) as SiteContent);
+    }
+  }, [contentQuery.data]);
   const currentFields = section === 'clinic' ? draft?.clinic : section === 'hero' ? draft?.hero : null;
   const entries = section !== 'clinic' && section !== 'hero' && draft ? draft[section] as unknown as Record<string, unknown>[] : [];
   const busy = update.isPending;
@@ -333,12 +338,14 @@ function AdminPage() {
     const base = newItem[section];
     const item = { ...base, id: `${section}-${Date.now().toString(36)}` };
     setDraft({ ...draft, [section]: [...(draft[section] as unknown as Record<string, unknown>[]), item] } as SiteContent);
+    setSaved(false);
   }
   function removeItem(index: number) {
     if (!draft || section === 'clinic' || section === 'hero') return;
     if (!window.confirm('Supprimer cet élément ? Cette action sera appliquée après publication.')) return;
     const next = (draft[section] as unknown as Record<string, unknown>[]).filter((_, i) => i !== index);
     setDraft({ ...draft, [section]: next } as SiteContent);
+    setSaved(false);
   }
   function publish() {
     if (!draft) return;
@@ -353,8 +360,8 @@ function AdminPage() {
   }
   if (access.isLoading) return <div className="min-h-[100dvh] bg-[#f7f4ed] p-6"><div className="mx-auto max-w-6xl"><div className="h-12 w-48 animate-pulse rounded bg-secondary" /><div className="mt-8 h-[420px] animate-pulse rounded-3xl bg-secondary/60" /></div></div>;
   if (access.isError || !access.data?.isAdmin) return <div className="flex min-h-[100dvh] items-center justify-center bg-[#f7f4ed] px-5"><div className="max-w-md rounded-[30px] border border-border bg-card p-9 text-center"><span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-secondary text-primary"><ShieldCheck size={24} /></span><h1 className="mt-5 font-display text-3xl">Espace réservé</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">Connectez-vous avec un compte administrateur autorisé pour modifier le site.</p><Link href="/sign-in" className="mt-6 inline-flex rounded-full bg-primary px-6 py-3 text-xs font-semibold uppercase tracking-wide text-primary-foreground" data-testid="link-admin-signin">Accéder à la connexion</Link><Link href="/" className="mt-4 block text-xs text-primary" data-testid="link-admin-home">Retour au site</Link></div></div>;
-  if (contentQuery.isLoading || !draft) return <div className="min-h-[100dvh] bg-[#f7f4ed] p-6"><div className="mx-auto max-w-6xl"><div className="h-12 w-56 animate-pulse rounded bg-secondary" /><div className="mt-8 h-96 animate-pulse rounded-3xl bg-secondary/60" /></div></div>;
   if (contentQuery.isError) return <div className="mx-auto max-w-3xl px-5 py-20"><FetchError retry={() => void contentQuery.refetch()} /></div>;
+  if (contentQuery.isLoading || !draft) return <div className="min-h-[100dvh] bg-[#f7f4ed] p-6"><div className="mx-auto max-w-6xl"><div className="h-12 w-56 animate-pulse rounded bg-secondary" /><div className="mt-8 h-96 animate-pulse rounded-3xl bg-secondary/60" /></div></div>;
   return <div className="min-h-[100dvh] bg-[#f5f1e8] text-foreground">
     <header className="sticky top-0 z-20 border-b border-border bg-[#f5f1e8]/95 backdrop-blur"><div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-5 py-4 md:px-8"><div><p className="text-[9px] font-bold uppercase tracking-[.23em] text-primary">Cabinet Naya · Édition</p><h1 className="mt-1 font-display text-xl md:text-2xl">Espace de publication</h1></div><div className="flex items-center gap-3"><Link href="/" className="hidden text-xs text-muted-foreground hover:text-primary sm:block" data-testid="link-admin-preview">Voir le site <ArrowUpRight className="ml-1 inline" size={13} /></Link><button onClick={publish} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-bold uppercase tracking-[.13em] text-primary-foreground disabled:opacity-60" data-testid="button-publish-site">{busy ? 'Publication…' : saved ? <><Check size={14} /> Publié</> : 'Publier les changements'} <ArrowUpRight size={14} /></button></div></div></header>
     <div className="mx-auto grid max-w-[1500px] gap-7 px-4 py-6 md:grid-cols-[220px_1fr] md:px-8 md:py-9">

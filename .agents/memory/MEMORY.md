@@ -1,0 +1,1 @@
+- [Clés serveur Supabase](supabase-server-keys.md) — pour le stockage privé, demander une Secret key du projet, pas la clé publique proposée par Connect.
