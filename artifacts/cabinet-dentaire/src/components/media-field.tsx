@@ -22,6 +22,7 @@ export function MediaField({ value, onChange, kind, protectedUrls, disabled = fa
   onChangeRef.current = onChange;
 
   useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => { if (!value) setSuccess(null); }, [value]);
 
   const refresh = useCallback(async () => {
     setLoadingLib(true);

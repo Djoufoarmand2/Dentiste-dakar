@@ -6,7 +6,9 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const cfg = JSON.parse(await readFile(resolve(root, 'generated-artifacts/cabinet-public-config.json'), 'utf8'));
+const cfg = process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_PUBLISHABLE_KEY
+  ? { VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY: process.env.VITE_SUPABASE_PUBLISHABLE_KEY }
+  : JSON.parse(await readFile(resolve(root, 'generated-artifacts/cabinet-public-config.json'), 'utf8'));
 const url = cfg.VITE_SUPABASE_URL;
 const key = cfg.VITE_SUPABASE_PUBLISHABLE_KEY;
 const service = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } });

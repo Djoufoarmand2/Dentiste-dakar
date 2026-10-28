@@ -117,17 +117,19 @@ ils n'ont pas été exécutés.
 
 ## Retour arrière
 
-Le code historique Express et les comptes Clerk sont conservés jusqu'à validation
-du parcours administrateur complet. Ne pas supprimer les sauvegardes ni les
-comptes pour effectuer le retour arrière.
+Le code historique Express et les comptes Clerk sont conservés pour le retour
+arrière. L'entrée actuelle du serveur pointe vers `retired-app.ts` : un
+redémarrage accidentel ne réactive pas ses anciennes routes ; elles répondent
+HTTP 410. Ne pas supprimer les sauvegardes ni les comptes pour restaurer.
 
 1. Arrêter les publications pendant la restauration pour éviter deux sources
    de contenu actives.
 2. Sauvegarder le document PostgreSQL actuel et exporter son contenu complet dans
    le format SiteContent avant tout retour à l'ancien backend : le JSON
    historique n'est pas synchronisé avec les nouvelles publications.
-3. Restaurer le frontend et les points d'entrée Express de la version précédente,
-   puis redémarrer les workflows d'origine avec les clés Clerk existantes.
+3. Restaurer le frontend de la version précédente et rétablir l'import de
+   `./app` dans `artifacts/api-server/src/index.ts`, puis redémarrer les workflows
+   d'origine avec les clés Clerk existantes et les dépendances frontend Clerk.
 4. Importer le dernier contenu validé dans le stockage privé historique seulement
    après sauvegarde et vérification, puis contrôler le site et l'accès Clerk.
 5. Conserver les ressources Supabase nouvelles jusqu'à validation de la
