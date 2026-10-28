@@ -5,6 +5,45 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+export type ContactAppointmentInputService = typeof ContactAppointmentInputService[keyof typeof ContactAppointmentInputService];
+
+
+export const ContactAppointmentInputService = {
+  'Consultation_générale_/_Bilan': 'Consultation générale / Bilan',
+  Facettes_dentaires_en_composite: 'Facettes dentaires en composite',
+  Esthétique_dentaire: 'Esthétique dentaire',
+  Blanchiment_dentaire: 'Blanchiment dentaire',
+  Implants_dentaires: 'Implants dentaires',
+  Orthodontie: 'Orthodontie',
+  Chirurgie_dentaire: 'Chirurgie dentaire',
+  Urgence_dentaire: 'Urgence dentaire',
+} as const;
+
+export interface ContactAppointmentInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  phone: string;
+  /** @maxLength 254 */
+  email: string;
+  service: ContactAppointmentInputService;
+  preferredDate?: string;
+  /** @maxLength 2000 */
+  message?: string;
+  /** @maxLength 200 */
+  website?: string;
+}
+
+export interface ContactAppointmentAccepted {
+  accepted: boolean;
+}
+
 export interface ClinicInfo {
   name: string;
   city: string;
