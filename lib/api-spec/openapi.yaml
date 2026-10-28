@@ -76,8 +76,138 @@ paths:
                 $ref: "#/components/schemas/AdminAccess"
         "401":
           description: Sign-in required
+  /admin/site-content:
+    get:
+      operationId: getAdminContent
+      tags: [site]
+      summary: Read complete content and publication version
+      responses:
+        "200":
+          description: Administrator document
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentDocument" }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+    put:
+      operationId: publishAdminContent
+      tags: [site]
+      summary: Publish content with optimistic concurrency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContentPublication" }
+      responses:
+        "200":
+          description: Published document
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentDocument" }
+        "409": { description: Concurrent publication or invalid media reference }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+  /admin/media:
+    get:
+      operationId: getAdminMedia
+      tags: [site]
+      summary: List cabinet media
+      responses:
+        "200":
+          description: Media library
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MediaLibrary" }
+  /admin/media/prepare:
+    post:
+      operationId: prepareAdminMedia
+      tags: [site]
+      summary: Reserve a unique path before direct resumable upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MediaUploadInput" }
+      responses:
+        "201":
+          description: Reserved media
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MediaAsset" }
+  /admin/media/finalize:
+    post:
+      operationId: finalizeAdminMedia
+      tags: [site]
+      summary: Verify an uploaded file before selection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MediaReference" }
+      responses:
+        "200":
+          description: Verified media
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MediaAsset" }
+  /admin/media/delete:
+    post:
+      operationId: deleteAdminMedia
+      tags: [site]
+      summary: Delete media only when not referenced by content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MediaReference" }
+      responses:
+        "204": { description: Media deleted }
+        "409": { description: Media still referenced }
 components:
   schemas:
+    ContentDocument:
+      type: object
+      required: [content, version]
+      properties:
+        content: { $ref: "#/components/schemas/SiteContent" }
+        version: { type: integer, minimum: 1 }
+    ContentPublication:
+      type: object
+      required: [content, expectedVersion]
+      properties:
+        content: { $ref: "#/components/schemas/SiteContentInput" }
+        expectedVersion: { type: integer, minimum: 1 }
+    MediaReference:
+      type: object
+      required: [path]
+      properties:
+        path: { type: string, minLength: 1, maxLength: 200 }
+    MediaUploadInput:
+      type: object
+      required: [name, mimeType, size]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp, image/gif, video/mp4, video/webm]
+        size: { type: integer, minimum: 1, maximum: 52428800 }
+    MediaAsset:
+      type: object
+      required: [path, url, name, mimeType, size, status]
+      properties:
+        path: { type: string }
+        url: { type: string }
+        name: { type: string }
+        mimeType: { type: string }
+        size: { type: integer }
+        status: { type: string, enum: [uploading, ready, deleting] }
+    MediaLibrary:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/MediaAsset" }
     HealthStatus:
       type: object
       properties:

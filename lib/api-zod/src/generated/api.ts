@@ -268,3 +268,332 @@ export const GetAdminAccessResponse = zod.object({
 })
 
 
+/**
+ * @summary Read complete content and publication version
+ */
+export const getAdminContentResponseContentTestimonialsItemRatingMax = 5;
+
+
+
+
+export const GetAdminContentResponse = zod.object({
+  "content": zod.object({
+  "clinic": zod.object({
+  "name": zod.string(),
+  "city": zod.string(),
+  "address": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string(),
+  "openingHours": zod.string(),
+  "bookingUrl": zod.string(),
+  "mapUrl": zod.string(),
+  "logoUrl": zod.string()
+}),
+  "hero": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "primaryAction": zod.string(),
+  "secondaryAction": zod.string(),
+  "imageUrl": zod.string()
+}),
+  "services": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "slug": zod.string(),
+  "summary": zod.string(),
+  "description": zod.string(),
+  "imageUrl": zod.string()
+})),
+  "team": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "biography": zod.string(),
+  "imageUrl": zod.string()
+})),
+  "gallery": zod.array(zod.object({
+  "id": zod.string(),
+  "alt": zod.string(),
+  "imageUrl": zod.string()
+})),
+  "testimonials": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "service": zod.string(),
+  "quote": zod.string(),
+  "rating": zod.number().int().min(1).max(getAdminContentResponseContentTestimonialsItemRatingMax)
+})),
+  "faqs": zod.array(zod.object({
+  "id": zod.string(),
+  "question": zod.string(),
+  "answer": zod.string()
+})),
+  "blogPosts": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "slug": zod.string(),
+  "excerpt": zod.string(),
+  "content": zod.string(),
+  "imageUrl": zod.string(),
+  "author": zod.string(),
+  "date": zod.string(),
+  "published": zod.boolean()
+})),
+  "campaigns": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "mediaType": zod.enum(['image', 'video']),
+  "imageUrl": zod.string(),
+  "videoUrl": zod.string().nullable(),
+  "active": zod.boolean()
+}))
+}),
+  "version": zod.number().int().min(1)
+})
+
+
+/**
+ * @summary Publish content with optimistic concurrency
+ */
+export const publishAdminContentBodyContentTestimonialsItemRatingMax = 5;
+
+
+
+
+export const PublishAdminContentBody = zod.object({
+  "content": zod.object({
+  "clinic": zod.object({
+  "name": zod.string(),
+  "city": zod.string(),
+  "address": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string(),
+  "openingHours": zod.string(),
+  "bookingUrl": zod.string(),
+  "mapUrl": zod.string(),
+  "logoUrl": zod.string()
+}),
+  "hero": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "primaryAction": zod.string(),
+  "secondaryAction": zod.string(),
+  "imageUrl": zod.string()
+}),
+  "services": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "slug": zod.string(),
+  "summary": zod.string(),
+  "description": zod.string(),
+  "imageUrl": zod.string()
+})),
+  "team": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "biography": zod.string(),
+  "imageUrl": zod.string()
+})),
+  "gallery": zod.array(zod.object({
+  "id": zod.string(),
+  "alt": zod.string(),
+  "imageUrl": zod.string()
+})),
+  "testimonials": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "service": zod.string(),
+  "quote": zod.string(),
+  "rating": zod.number().int().min(1).max(publishAdminContentBodyContentTestimonialsItemRatingMax)
+})),
+  "faqs": zod.array(zod.object({
+  "id": zod.string(),
+  "question": zod.string(),
+  "answer": zod.string()
+})),
+  "blogPosts": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "slug": zod.string(),
+  "excerpt": zod.string(),
+  "content": zod.string(),
+  "imageUrl": zod.string(),
+  "author": zod.string(),
+  "date": zod.string(),
+  "published": zod.boolean()
+})),
+  "campaigns": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "mediaType": zod.enum(['image', 'video']),
+  "imageUrl": zod.string(),
+  "videoUrl": zod.string().nullable(),
+  "active": zod.boolean()
+}))
+}),
+  "expectedVersion": zod.number().int().min(1)
+})
+
+export const publishAdminContentResponseContentTestimonialsItemRatingMax = 5;
+
+
+
+
+export const PublishAdminContentResponse = zod.object({
+  "content": zod.object({
+  "clinic": zod.object({
+  "name": zod.string(),
+  "city": zod.string(),
+  "address": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string(),
+  "openingHours": zod.string(),
+  "bookingUrl": zod.string(),
+  "mapUrl": zod.string(),
+  "logoUrl": zod.string()
+}),
+  "hero": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "primaryAction": zod.string(),
+  "secondaryAction": zod.string(),
+  "imageUrl": zod.string()
+}),
+  "services": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "slug": zod.string(),
+  "summary": zod.string(),
+  "description": zod.string(),
+  "imageUrl": zod.string()
+})),
+  "team": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "role": zod.string(),
+  "biography": zod.string(),
+  "imageUrl": zod.string()
+})),
+  "gallery": zod.array(zod.object({
+  "id": zod.string(),
+  "alt": zod.string(),
+  "imageUrl": zod.string()
+})),
+  "testimonials": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "service": zod.string(),
+  "quote": zod.string(),
+  "rating": zod.number().int().min(1).max(publishAdminContentResponseContentTestimonialsItemRatingMax)
+})),
+  "faqs": zod.array(zod.object({
+  "id": zod.string(),
+  "question": zod.string(),
+  "answer": zod.string()
+})),
+  "blogPosts": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "slug": zod.string(),
+  "excerpt": zod.string(),
+  "content": zod.string(),
+  "imageUrl": zod.string(),
+  "author": zod.string(),
+  "date": zod.string(),
+  "published": zod.boolean()
+})),
+  "campaigns": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "mediaType": zod.enum(['image', 'video']),
+  "imageUrl": zod.string(),
+  "videoUrl": zod.string().nullable(),
+  "active": zod.boolean()
+}))
+}),
+  "version": zod.number().int().min(1)
+})
+
+
+/**
+ * @summary List cabinet media
+ */
+export const GetAdminMediaResponse = zod.object({
+  "items": zod.array(zod.object({
+  "path": zod.string(),
+  "url": zod.string(),
+  "name": zod.string(),
+  "mimeType": zod.string(),
+  "size": zod.number().int(),
+  "status": zod.enum(['uploading', 'ready', 'deleting'])
+}))
+})
+
+
+/**
+ * @summary Reserve a unique path before direct resumable upload
+ */
+export const prepareAdminMediaBodyNameMax = 200;
+
+export const prepareAdminMediaBodySizeMax = 52428800;
+
+
+
+export const PrepareAdminMediaBody = zod.object({
+  "name": zod.string().min(1).max(prepareAdminMediaBodyNameMax),
+  "mimeType": zod.enum(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/webm']),
+  "size": zod.number().int().min(1).max(prepareAdminMediaBodySizeMax)
+})
+
+export const PrepareAdminMediaResponse = zod.object({
+  "path": zod.string(),
+  "url": zod.string(),
+  "name": zod.string(),
+  "mimeType": zod.string(),
+  "size": zod.number().int(),
+  "status": zod.enum(['uploading', 'ready', 'deleting'])
+})
+
+
+/**
+ * @summary Verify an uploaded file before selection
+ */
+export const finalizeAdminMediaBodyPathMax = 200;
+
+
+
+export const FinalizeAdminMediaBody = zod.object({
+  "path": zod.string().min(1).max(finalizeAdminMediaBodyPathMax)
+})
+
+export const FinalizeAdminMediaResponse = zod.object({
+  "path": zod.string(),
+  "url": zod.string(),
+  "name": zod.string(),
+  "mimeType": zod.string(),
+  "size": zod.number().int(),
+  "status": zod.enum(['uploading', 'ready', 'deleting'])
+})
+
+
+/**
+ * @summary Delete media only when not referenced by content
+ */
+export const deleteAdminMediaBodyPathMax = 200;
+
+
+
+export const DeleteAdminMediaBody = zod.object({
+  "path": zod.string().min(1).max(deleteAdminMediaBodyPathMax)
+})
+
+export const DeleteAdminMediaResponse = zod.void()
+
+
