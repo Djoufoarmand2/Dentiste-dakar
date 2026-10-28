@@ -1,4 +1,5 @@
-import app from "./app";
+// The original app remains in app.ts for rollback, but is no longer served.
+import app from "./retired-app";
 import { logger } from "./lib/logger";
 
 const rawPort = process.env["PORT"];

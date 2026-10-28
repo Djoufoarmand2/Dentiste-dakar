@@ -59,7 +59,7 @@ function SignedInNotice() {
   if (!session) return null;
   async function logout() {
     setBusy(true); setError(null);
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) setError(translate(error.message));
     setBusy(false);
   }
