@@ -42,6 +42,13 @@ permet de modifier cette autorisation.
 Les champs logo, image et vidéo proposent le téléversement, la prévisualisation,
 la sélection dans la médiathèque et la saisie d'un lien externe.
 
+Sur la page publique `/informations`, une campagne au type « vidéo » avec une
+URL vidéo affiche le lecteur natif directement dans la carte : commandes de
+lecture accessibles, sans démarrage automatique, chargement limité aux
+métadonnées avant lecture. L'image de campagne sert d'affiche si elle existe ;
+sinon le lecteur s'affiche sur un fond bleu. Les campagnes désactivées restent
+invisibles. La vidéo n'est pas intégrée au hero de la page d'accueil.
+
 - Images : JPEG, PNG, WebP et GIF, jusqu'à **10 Mio**.
 - Vidéos : MP4 et WebM, jusqu'à **50 Mio**.
 - Maximum actuel : **1 000 références** dans la médiathèque.
