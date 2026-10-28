@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Cabinet dentaire"
+description = "Site vitrine français pour un cabinet dentaire avec pages de présentation, blog, campagnes d'information et un espace d'administration protégé permettant de gérer le contenu et les images."
+version = "1.0.0"
+id = "artifacts/cabinet-dentaire"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19082
+
+[services.development]
+run = "pnpm --filter @workspace/cabinet-dentaire run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cabinet-dentaire", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/cabinet-dentaire/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19082"
+BASE_PATH = "/"
