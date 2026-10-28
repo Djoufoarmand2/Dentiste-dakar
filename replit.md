@@ -43,7 +43,7 @@ Site vitrine fictif, en français, pour un cabinet dentaire à Douala. Les coord
 ## User preferences
 
 - Garder les contenus de départ fictifs et les zones de photos/logo sans image jusqu’à ce que le cabinet fournisse ses propres visuels.
-- Utiliser le site de référence uniquement comme inspiration générale; ne pas reprendre son code, ses textes, son logo, ses photos ni reproduire exactement sa mise en page.
+- Reprendre fidèlement la présentation et la structure de base de cabinetdentairegloria.com, tout en gardant notre logique de base, nos contenus, Supabase et l’administration. Ne pas reprendre son code, ses textes, son logo ni ses photos.
 
 ## Gotchas
 
