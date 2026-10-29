@@ -54,7 +54,7 @@ export function AdminReviewsPanel() {
       <div className="mb-5">
         <p className="eyebrow">Publication administrateur</p>
         <h3 className="mt-2 font-display text-2xl text-[#073e53]">Créer un avis</h3>
-        <p className="mt-2 text-sm text-muted-foreground">Il sera visible immédiatement sur le site public.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Il sera visible immédiatement sur le site public. Utilisez un témoignage dont la publication est autorisée.</p>
       </div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(submit)} className="grid gap-4 md:grid-cols-2" data-testid="form-admin-create-review">
@@ -100,7 +100,7 @@ export function AdminReviewsPanel() {
 
     <section aria-labelledby="admin-reviews-list-title">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div><p className="eyebrow">Tous les avis</p><h3 id="admin-reviews-list-title" className="mt-2 font-display text-2xl text-[#073e53]">Avis publiés</h3></div>
+        <div><p className="eyebrow">Avis visiteurs et cabinet</p><h3 id="admin-reviews-list-title" className="mt-2 font-display text-2xl text-[#073e53]">Avis gérés</h3><p className="mt-2 text-sm text-muted-foreground">Les avis reçus via le formulaire et ceux créés ici sont enregistrés ensemble. Les témoignages historiques restent dans la section CMS ci-dessous.</p></div>
         <p className="text-xs text-muted-foreground">{reviews.data?.length ?? 0} avis</p>
       </div>
       {reviews.isLoading && <div className="rounded-xl bg-secondary/60 p-6 text-sm text-muted-foreground" role="status">Chargement des avis…</div>}

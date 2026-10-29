@@ -1,10 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AdminReviewInput, Review, ReviewSubmission } from '@workspace/api-client-react';
+import type { AdminReviewInput, Review, ReviewSubmission, Testimonial } from '@workspace/api-client-react';
 import { useCabinetSession } from '@/components/auth-provider';
 import { cmsRequest } from './supabase';
 
 export const publicReviewsKey = ['cabinet', 'reviews'] as const;
 export const adminReviewsKey = ['cabinet', 'admin-reviews'] as const;
+
+function normalizeReviewText(value: string) {
+  return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('fr');
+}
+
+export function combinePublicReviews(reviews: readonly Review[], historicTestimonials: readonly Testimonial[]): Testimonial[] {
+  const seen = new Set<string>();
+  return [...reviews, ...historicTestimonials].filter((review) => {
+    const key = `${normalizeReviewText(review.name)}\u0000${normalizeReviewText(review.quote)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 export function usePublicReviews() {
   return useQuery({

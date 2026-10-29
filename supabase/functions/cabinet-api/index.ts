@@ -17,10 +17,16 @@ const allowedOrigins = new Set(env('CABINET_ALLOWED_ORIGINS').split(',').map((s)
 const mediaBucket = 'cabinet-media';
 const mediaBaseUrl = `${url}/storage/v1/object/public/${mediaBucket}`;
 const db = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
-const reviewAttempts = new Map<string, number[]>();
+const reviewRateLimitKey = crypto.subtle.importKey(
+  'raw',
+  new TextEncoder().encode(secret),
+  { name: 'HMAC', hash: 'SHA-256' },
+  false,
+  ['sign'],
+);
 
 class HttpError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+  constructor(public status: number, message: string, public retryAt?: string) { super(message); }
 }
 
 async function body(request: Request) {
@@ -71,24 +77,36 @@ function review(row: Record<string, unknown>) {
   };
 }
 
-function checkReviewRate(request: Request) {
-  const now = Date.now();
-  const ip = request.headers.get('cf-connecting-ip')
-    || request.headers.get('x-real-ip')
-    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    || 'unknown';
-  const attempts = (reviewAttempts.get(ip) ?? []).filter((attempt) => now - attempt < 10 * 60_000);
-  if (attempts.length >= 3) {
-    throw new HttpError(429, 'Vous avez déjà envoyé plusieurs avis. Réessayez dans quelques minutes.');
+async function checkReviewRate(request: Request) {
+  // Cloudflare supplies this header at the edge. Do not trust arbitrary
+  // forwarding headers or use a shared "unknown" bucket when it is absent.
+  const ip = request.headers.get('cf-connecting-ip')?.trim();
+  if (!ip || ip.length > 45 || /[\s,]/.test(ip)) {
+    throw new HttpError(503, 'La protection anti-abus est momentanément indisponible.');
   }
-  attempts.push(now);
-  reviewAttempts.set(ip, attempts);
-  if (reviewAttempts.size > 5000) {
-    for (const [key, timestamps] of reviewAttempts) {
-      const recent = timestamps.filter((attempt) => now - attempt < 10 * 60_000);
-      if (recent.length) reviewAttempts.set(key, recent);
-      else reviewAttempts.delete(key);
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    await reviewRateLimitKey,
+    new TextEncoder().encode(ip),
+  );
+  const ipHash = Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  const { data, error } = await db.rpc('cabinet_allow_review_submission', { p_ip_hash: ipHash });
+  const decision = Array.isArray(data) ? data[0] : null;
+  if (
+    error
+    || !decision
+    || typeof decision.is_allowed !== 'boolean'
+    || (decision.retry_at !== null && typeof decision.retry_at !== 'string')
+  ) {
+    throw new HttpError(503, 'La protection anti-abus est momentanément indisponible.');
+  }
+  if (!decision.is_allowed) {
+    const retryAtMilliseconds = typeof decision.retry_at === 'string' ? Date.parse(decision.retry_at) : Number.NaN;
+    if (!Number.isFinite(retryAtMilliseconds)) {
+      throw new HttpError(503, 'La protection anti-abus est momentanément indisponible.');
     }
+    const retryAt = new Date(retryAtMilliseconds).toISOString();
+    throw new HttpError(429, 'Vous avez déjà envoyé plusieurs avis.', retryAt);
   }
 }
 
@@ -138,7 +156,7 @@ export async function handleRequest(request: Request): Promise<Response> {
       if (name.length < 2 || quote.length < 12 || service.length > 120) {
         throw new HttpError(400, 'Vérifiez le nom affiché et le commentaire de votre avis.');
       }
-      checkReviewRate(request);
+      await checkReviewRate(request);
       const { data, error } = await db.from('cabinet_reviews').insert({
         name,
         service,
@@ -264,6 +282,10 @@ export async function handleRequest(request: Request): Promise<Response> {
     throw new HttpError(404, 'Ressource introuvable.');
   } catch (error) {
     // Do not leak database responses, JWTs, content or personal data in errors.
+    if (error instanceof HttpError && error.retryAt) {
+      headers['Retry-After'] = String(Math.max(1, Math.ceil((Date.parse(error.retryAt) - Date.now()) / 1000)));
+      return respond({ error: error.message, retryAt: error.retryAt }, error.status);
+    }
     return respond({ error: error instanceof HttpError ? error.message : 'Le service est momentanément indisponible.' }, error instanceof HttpError ? error.status : 503);
   }
 }
