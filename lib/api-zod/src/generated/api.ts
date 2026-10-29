@@ -291,6 +291,155 @@ export const SubmitContactAppointmentResponse = zod.object({
 
 
 /**
+ * @summary List published visitor and administrator reviews
+ */
+export const getPublicReviewsResponseNameMax = 80;
+
+export const getPublicReviewsResponseServiceMax = 120;
+
+export const getPublicReviewsResponseQuoteMax = 1500;
+
+export const getPublicReviewsResponseRatingMax = 5;
+
+
+
+export const GetPublicReviewsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string().max(getPublicReviewsResponseNameMax),
+  "service": zod.string().max(getPublicReviewsResponseServiceMax),
+  "quote": zod.string().max(getPublicReviewsResponseQuoteMax),
+  "rating": zod.number().int().min(1).max(getPublicReviewsResponseRatingMax),
+  "createdAt": zod.coerce.date(),
+  "source": zod.enum(['visitor', 'admin'])
+})
+export const GetPublicReviewsResponse = zod.array(GetPublicReviewsResponseItem)
+
+
+/**
+ * @summary Submit a review for immediate public display
+ */
+export const submitReviewBodyNameMin = 2;
+export const submitReviewBodyNameMax = 80;
+
+export const submitReviewBodyServiceMax = 120;
+
+export const submitReviewBodyQuoteMin = 12;
+export const submitReviewBodyQuoteMax = 1500;
+
+export const submitReviewBodyRatingMax = 5;
+
+export const submitReviewBodyWebsiteMax = 200;
+
+
+
+export const SubmitReviewBody = zod.object({
+  "name": zod.string().min(submitReviewBodyNameMin).max(submitReviewBodyNameMax),
+  "service": zod.string().max(submitReviewBodyServiceMax).optional(),
+  "quote": zod.string().min(submitReviewBodyQuoteMin).max(submitReviewBodyQuoteMax),
+  "rating": zod.number().int().min(1).max(submitReviewBodyRatingMax),
+  "consent": zod.literal(true),
+  "website": zod.string().max(submitReviewBodyWebsiteMax).optional()
+})
+
+export const submitReviewResponseNameMax = 80;
+
+export const submitReviewResponseServiceMax = 120;
+
+export const submitReviewResponseQuoteMax = 1500;
+
+export const submitReviewResponseRatingMax = 5;
+
+
+
+export const SubmitReviewResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string().max(submitReviewResponseNameMax),
+  "service": zod.string().max(submitReviewResponseServiceMax),
+  "quote": zod.string().max(submitReviewResponseQuoteMax),
+  "rating": zod.number().int().min(1).max(submitReviewResponseRatingMax),
+  "createdAt": zod.coerce.date(),
+  "source": zod.enum(['visitor', 'admin'])
+})
+
+
+/**
+ * @summary List reviews for administrator management
+ */
+export const getAdminReviewsResponseNameMax = 80;
+
+export const getAdminReviewsResponseServiceMax = 120;
+
+export const getAdminReviewsResponseQuoteMax = 1500;
+
+export const getAdminReviewsResponseRatingMax = 5;
+
+
+
+export const GetAdminReviewsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string().max(getAdminReviewsResponseNameMax),
+  "service": zod.string().max(getAdminReviewsResponseServiceMax),
+  "quote": zod.string().max(getAdminReviewsResponseQuoteMax),
+  "rating": zod.number().int().min(1).max(getAdminReviewsResponseRatingMax),
+  "createdAt": zod.coerce.date(),
+  "source": zod.enum(['visitor', 'admin'])
+})
+export const GetAdminReviewsResponse = zod.array(GetAdminReviewsResponseItem)
+
+
+/**
+ * @summary Create a review as administrator
+ */
+export const createAdminReviewBodyNameMin = 2;
+export const createAdminReviewBodyNameMax = 80;
+
+export const createAdminReviewBodyServiceMax = 120;
+
+export const createAdminReviewBodyQuoteMax = 1500;
+
+export const createAdminReviewBodyRatingMax = 5;
+
+
+
+export const CreateAdminReviewBody = zod.object({
+  "name": zod.string().min(createAdminReviewBodyNameMin).max(createAdminReviewBodyNameMax),
+  "service": zod.string().max(createAdminReviewBodyServiceMax).optional(),
+  "quote": zod.string().min(1).max(createAdminReviewBodyQuoteMax),
+  "rating": zod.number().int().min(1).max(createAdminReviewBodyRatingMax)
+})
+
+export const createAdminReviewResponseNameMax = 80;
+
+export const createAdminReviewResponseServiceMax = 120;
+
+export const createAdminReviewResponseQuoteMax = 1500;
+
+export const createAdminReviewResponseRatingMax = 5;
+
+
+
+export const CreateAdminReviewResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string().max(createAdminReviewResponseNameMax),
+  "service": zod.string().max(createAdminReviewResponseServiceMax),
+  "quote": zod.string().max(createAdminReviewResponseQuoteMax),
+  "rating": zod.number().int().min(1).max(createAdminReviewResponseRatingMax),
+  "createdAt": zod.coerce.date(),
+  "source": zod.enum(['visitor', 'admin'])
+})
+
+
+/**
+ * @summary Delete a review as administrator
+ */
+export const DeleteAdminReviewParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const DeleteAdminReviewResponse = zod.void()
+
+
+/**
  * @summary Check current administrator access
  */
 export const GetAdminAccessResponse = zod.object({

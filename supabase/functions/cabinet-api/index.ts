@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import {
-  PublishAdminContentBody, PrepareAdminMediaBody, FinalizeAdminMediaBody, DeleteAdminMediaBody,
+  CreateAdminReviewBody, DeleteAdminReviewParams, PublishAdminContentBody, PrepareAdminMediaBody,
+  FinalizeAdminMediaBody, DeleteAdminMediaBody, SubmitReviewBody,
 } from '../../../lib/api-zod/src/generated/api';
 import { mimeExtensions, parseContent, publicContent, signatureMatches } from './validation';
 
@@ -16,6 +17,7 @@ const allowedOrigins = new Set(env('CABINET_ALLOWED_ORIGINS').split(',').map((s)
 const mediaBucket = 'cabinet-media';
 const mediaBaseUrl = `${url}/storage/v1/object/public/${mediaBucket}`;
 const db = createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+const reviewAttempts = new Map<string, number[]>();
 
 class HttpError extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -56,6 +58,40 @@ async function administrator(request: Request) {
 function asset(row: Record<string, unknown>) {
   return { path: row.path, url: row.public_url, name: row.name, mimeType: row.mime_type, size: Number(row.size), status: row.status };
 }
+
+function review(row: Record<string, unknown>) {
+  return {
+    id: row.id,
+    name: row.name,
+    service: row.service,
+    quote: row.quote,
+    rating: Number(row.rating),
+    createdAt: row.created_at,
+    source: row.source,
+  };
+}
+
+function checkReviewRate(request: Request) {
+  const now = Date.now();
+  const ip = request.headers.get('cf-connecting-ip')
+    || request.headers.get('x-real-ip')
+    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || 'unknown';
+  const attempts = (reviewAttempts.get(ip) ?? []).filter((attempt) => now - attempt < 10 * 60_000);
+  if (attempts.length >= 3) {
+    throw new HttpError(429, 'Vous avez déjà envoyé plusieurs avis. Réessayez dans quelques minutes.');
+  }
+  attempts.push(now);
+  reviewAttempts.set(ip, attempts);
+  if (reviewAttempts.size > 5000) {
+    for (const [key, timestamps] of reviewAttempts) {
+      const recent = timestamps.filter((attempt) => now - attempt < 10 * 60_000);
+      if (recent.length) reviewAttempts.set(key, recent);
+      else reviewAttempts.delete(key);
+    }
+  }
+}
+
 async function getAsset(path: string) {
   if (!/^uploads\/[a-f0-9-]+\.(jpg|png|webp|gif|mp4|webm)$/.test(path)) throw new HttpError(400, 'Chemin de média invalide.');
   const { data, error } = await db.from('cabinet_media').select('*').eq('path', path).maybeSingle();
@@ -77,7 +113,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   try {
     if (origin && !allowedOrigins.has(origin)) throw new HttpError(403, 'Origine non autorisée.');
     if (request.method === 'OPTIONS') {
-      headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,OPTIONS';
+      headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS';
       headers['Access-Control-Allow-Headers'] = 'authorization,apikey,content-type,x-client-info';
       return respond(null, 204);
     }
@@ -87,10 +123,66 @@ export async function handleRequest(request: Request): Promise<Response> {
       if (error || !data) throw new HttpError(503, 'Le contenu du site est temporairement indisponible.');
       return respond(publicContent(data.content));
     }
+    if (request.method === 'GET' && path === '/reviews') {
+      const { data, error } = await db.from('cabinet_reviews').select('*').order('created_at', { ascending: false }).limit(100);
+      if (error) throw new HttpError(503, 'Les avis sont temporairement indisponibles.');
+      return respond((data ?? []).map((row) => review(row)));
+    }
+    if (request.method === 'POST' && path === '/reviews') {
+      const parsed = SubmitReviewBody.safeParse(await body(request));
+      if (!parsed.success) throw new HttpError(400, 'Vérifiez le nom, la note, le commentaire et votre autorisation de publication.');
+      if (parsed.data.website?.trim()) throw new HttpError(400, 'La demande n’a pas pu être validée.');
+      const name = parsed.data.name.trim();
+      const service = parsed.data.service?.trim() ?? '';
+      const quote = parsed.data.quote.trim();
+      if (name.length < 2 || quote.length < 12 || service.length > 120) {
+        throw new HttpError(400, 'Vérifiez le nom affiché et le commentaire de votre avis.');
+      }
+      checkReviewRate(request);
+      const { data, error } = await db.from('cabinet_reviews').insert({
+        name,
+        service,
+        quote,
+        rating: parsed.data.rating,
+        source: 'visitor',
+      }).select('*').single();
+      if (error || !data) throw new HttpError(503, 'Impossible d’enregistrer votre avis pour le moment.');
+      return respond(review(data), 201);
+    }
     if (!path.startsWith('/admin/')) throw new HttpError(404, 'Ressource introuvable.');
     const admin = await administrator(request);
     if (request.method === 'GET' && path === '/admin/access') return respond({ isAdmin: admin.isAdmin });
     if (!admin.isAdmin) throw new HttpError(403, 'Accès réservé à l’administrateur du cabinet.');
+    if (request.method === 'GET' && path === '/admin/reviews') {
+      const { data, error } = await db.from('cabinet_reviews').select('*').order('created_at', { ascending: false }).limit(500);
+      if (error) throw new HttpError(503, 'Impossible de charger les avis.');
+      return respond((data ?? []).map((row) => review(row)));
+    }
+    if (request.method === 'POST' && path === '/admin/reviews') {
+      const parsed = CreateAdminReviewBody.safeParse(await body(request));
+      if (!parsed.success) throw new HttpError(400, 'Vérifiez les champs de l’avis.');
+      const name = parsed.data.name.trim();
+      const service = parsed.data.service?.trim() ?? '';
+      const quote = parsed.data.quote.trim();
+      if (name.length < 2 || !quote || service.length > 120) throw new HttpError(400, 'Vérifiez les champs de l’avis.');
+      const { data, error } = await db.from('cabinet_reviews').insert({
+        name,
+        service,
+        quote,
+        rating: parsed.data.rating,
+        source: 'admin',
+      }).select('*').single();
+      if (error || !data) throw new HttpError(503, 'Impossible d’enregistrer cet avis.');
+      return respond(review(data), 201);
+    }
+    if (request.method === 'DELETE' && path.startsWith('/admin/reviews/')) {
+      const parsed = DeleteAdminReviewParams.safeParse({ id: path.slice('/admin/reviews/'.length) });
+      if (!parsed.success) throw new HttpError(400, 'Identifiant d’avis invalide.');
+      const { data, error } = await db.from('cabinet_reviews').delete().eq('id', parsed.data.id).select('id').maybeSingle();
+      if (error) throw new HttpError(503, 'Impossible de supprimer cet avis.');
+      if (!data) throw new HttpError(404, 'Avis introuvable.');
+      return respond(null, 204);
+    }
     if (path === '/admin/site-content' && request.method === 'GET') {
       const { data, error } = await db.from('cabinet_site_content').select('content,version').eq('id', true).single();
       if (error) throw new HttpError(503, 'Impossible de charger le contenu.');

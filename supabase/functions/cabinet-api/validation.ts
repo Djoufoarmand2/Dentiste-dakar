@@ -25,7 +25,14 @@ export function parseContent(input: unknown, mediaBaseUrl: string) {
 
 export function publicContent(input: unknown) {
   const content = GetSiteContentResponse.parse(input);
-  return { ...content, blogPosts: content.blogPosts.filter((p) => p.published), campaigns: content.campaigns.filter((c) => c.active) };
+  const isDemonstrationReview = (review: (typeof content.testimonials)[number]) =>
+    review.id.startsWith('avis-demo-');
+  return {
+    ...content,
+    testimonials: content.testimonials.filter((review) => !isDemonstrationReview(review)),
+    blogPosts: content.blogPosts.filter((p) => p.published),
+    campaigns: content.campaigns.filter((c) => c.active),
+  };
 }
 
 export const mimeExtensions: Record<string, string> = {

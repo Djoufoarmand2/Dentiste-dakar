@@ -26,7 +26,7 @@ function Frame({ title, eyebrow, children }: { title: string; eyebrow: string; c
   return <main className="grid min-h-[100dvh] bg-background md:grid-cols-[.85fr_1fr]">
     <aside className="relative hidden overflow-hidden bg-[#073e53] p-12 text-[#e6e3eb] md:flex md:flex-col md:justify-between lg:p-16">
       <LogoWordmark inverse />
-      <div><p className="text-[10px] uppercase tracking-[.25em] text-[#c1b216]">Espace de publication</p><p className="mt-5 max-w-lg font-display text-5xl leading-tight">La confiance commence par une présence attentive.</p><p className="mt-5 max-w-sm text-sm leading-7 text-white/70">Accès réservé à l’équipe du cabinet, sur invitation.</p></div>
+      <div><p className="text-[10px] uppercase tracking-[.25em] text-[#f0a0a6]">Espace de publication</p><p className="mt-5 max-w-lg font-display text-5xl leading-tight">La confiance commence par une présence attentive.</p><p className="mt-5 max-w-sm text-sm leading-7 text-white/70">Accès réservé à l’équipe du cabinet, sur invitation.</p></div>
       <p className="text-[10px] tracking-wide text-white/55">Cabinet Naya · Douala, Cameroun</p>
     </aside>
     <div className="flex flex-col items-center justify-center px-5 py-12">
@@ -44,7 +44,7 @@ function Frame({ title, eyebrow, children }: { title: string; eyebrow: string; c
 function Alert({ error, success }: { error: string | null; success?: string | null }) {
   return <>
     {error && <p role="alert" className="mt-4 rounded-xl border border-[#e7c8c1] bg-[#f8e9e5] p-3 text-sm text-[#943d35]" data-testid="text-auth-error">{error}</p>}
-    {success && <p role="status" className="mt-4 rounded-xl border border-[#8c6f0b]/40 bg-[#e6e3eb] p-3 text-sm text-[#073e53]" data-testid="text-auth-success">{success}</p>}
+    {success && <p role="status" className="mt-4 rounded-xl border border-[#b94f5b]/30 bg-[#f7e9ec] p-3 text-sm text-[#073e53]" data-testid="text-auth-success">{success}</p>}
   </>;
 }
 
@@ -131,7 +131,7 @@ function Recover() {
 function SignUpInfo() {
   return <Frame eyebrow="Accès sur invitation" title="Création de compte">
     <p className="mt-3 text-sm leading-6 text-muted-foreground">L’espace de publication n’accepte pas d’inscription publique. Un administrateur du cabinet doit vous envoyer une invitation par e-mail ; le lien reçu vous permettra de choisir votre mot de passe.</p>
-    <div className="mt-5 rounded-xl border border-[#8c6f0b]/60 bg-[#e6e3eb] p-4 text-sm leading-6 text-[#073e53]" data-testid="notice-migration">
+    <div className="mt-5 rounded-xl border border-[#b94f5b]/40 bg-[#f7e9ec] p-4 text-sm leading-6 text-[#073e53]" data-testid="notice-migration">
       <b>Anciens comptes :</b> les mots de passe de l’ancien système de connexion n’ont pas été transférés. Si votre adresse a déjà été invitée, utilisez « Mot de passe oublié » pour en définir un nouveau.
     </div>
     <div className="mt-6 flex flex-wrap gap-2">
