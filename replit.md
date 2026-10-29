@@ -10,6 +10,7 @@ Site vitrine fictif, en français, pour un cabinet dentaire à Douala. Les coord
 - `pnpm run build` — construction des packages
 - `pnpm --filter @workspace/api-spec run codegen` — régénérer les clients et schémas depuis le contrat API
 - Frontend : `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` (configuration publique).
+- SEO public facultatif : `VITE_SITE_URL`, `VITE_SITE_INDEXABLE=true`, `VITE_SITE_TITLE`, `VITE_SITE_DESCRIPTION`, `VITE_SITE_OG_IMAGE_URL`. Ne renseigner ces valeurs qu’après validation des informations du cabinet et de son domaine officiel ; ne jamais utiliser le domaine de prévisualisation.
 - Outils de migration : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ACCESS_TOKEN`, `ADMIN_EMAIL` (secrets serveur).
 - Les secrets Clerk existants sont conservés uniquement pour le retour arrière.
 
@@ -60,6 +61,8 @@ Site vitrine fictif, en français, pour un cabinet dentaire à Douala. Les coord
 - Le frontend ne crée ni ne réinitialise de données au chargement. Une erreur de lecture doit rester explicite.
 - L'adresse de l'administrateur doit être confirmée via Supabase Auth. Ne pas désactiver cette vérification pour contourner un problème d'e-mail.
 - Sans SMTP propre, l'envoi Supabase de démonstration est limité et n'offre pas de garantie de livraison ; invitations et récupération doivent être validées avant de considérer la migration terminée.
+- Le site reste `noindex` et sans sitemap tant que l’identité, les coordonnées, le domaine officiel et l’image de partage ne sont pas confirmés. Le build n’active l’indexation et ne génère le sitemap qu’avec l’ensemble des paramètres SEO publics ci-dessus.
+- C’est une SPA Vite : les titres, URL canoniques et balises de partage par page sont mis à jour après le chargement JavaScript. Si les moteurs ciblés exigent ces balises dans le HTML initial, ajouter du rendu serveur ou du pré-rendu avant d’ouvrir l’indexation.
 - Le catalogue React du workspace reste inchangé pour préserver la compatibilité des autres packages.
 
 ## Pointers
