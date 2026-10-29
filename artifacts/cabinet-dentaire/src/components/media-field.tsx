@@ -86,7 +86,7 @@ export function MediaField({ value, onChange, kind, protectedUrls, disabled = fa
       <div className="mt-1 flex justify-between text-[11px] text-muted-foreground"><span data-testid="text-upload-progress">{progress} %</span><button type="button" className="hover:text-destructive" onClick={() => { controller.current?.abort(); setProgress(null); setError('Téléversement annulé.'); }} data-testid="button-cancel-upload">Annuler</button></div>
     </div>}
     {error && <p role="alert" className="rounded-xl border border-[#e7c8c1] bg-[#f8e9e5] p-3 text-xs text-[#943d35]" data-testid="text-media-error">{error}</p>}
-    {success && <p role="status" className="rounded-xl border border-[#8c6f0b]/40 bg-[#e6e3eb] p-3 text-xs text-[#073e53]" data-testid="text-media-success">{success}</p>}
+    {success && <p role="status" className="rounded-xl border border-[#b94f5b]/30 bg-[#f7e9ec] p-3 text-xs text-[#073e53]" data-testid="text-media-success">{success}</p>}
     {value && <div className="overflow-hidden rounded-xl border border-border bg-secondary/40" data-testid={`preview-media-${kind}`}>
       {kind === 'image' ? <img src={value} alt="Aperçu du visuel sélectionné" className="h-48 w-full object-cover" /> : <video src={value} controls preload="metadata" className="h-56 w-full bg-[#070116]" aria-label="Aperçu de la vidéo sélectionnée" />}
     </div>}

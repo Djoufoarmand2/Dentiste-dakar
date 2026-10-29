@@ -123,8 +123,14 @@ async function inspect() {
   console.info(JSON.stringify(await sql("select json_build_object('content_rows',(select count(*) from public.cabinet_site_content),'admin_bindings',(select count(*) from public.cabinet_admins),'media_count',(select count(*) from public.cabinet_media),'rls_tables',(select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relname like 'cabinet_%' and c.relrowsecurity)) as checks", true)));
 }
 
+async function migrateReviews() {
+  await sql(await readFile(resolve(root, 'supabase/migrations/202610290001_cabinet_reviews.sql'), 'utf8'));
+  const result = await sql("select json_build_object('exists',to_regclass('public.cabinet_reviews') is not null,'rls',(select relrowsecurity from pg_class where oid=to_regclass('public.cabinet_reviews')),'rows',(select count(*) from public.cabinet_reviews)) as checks", true);
+  console.info(JSON.stringify({ reviewsMigration: 'applied', checks: result }));
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const operation = { setup, backup, deploy, inspect }[process.argv[2]];
-  if (!operation) throw new Error('Commande attendue : setup, backup, deploy ou inspect.');
+  const operation = { setup, backup, deploy, inspect, 'migrate-reviews': migrateReviews }[process.argv[2]];
+  if (!operation) throw new Error('Commande attendue : setup, backup, deploy, inspect ou migrate-reviews.');
   try { await operation(); } catch (error) { console.error(error.message); process.exitCode = 1; }
 }

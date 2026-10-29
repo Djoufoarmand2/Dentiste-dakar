@@ -4,6 +4,7 @@ import { ArrowUpRight, Check, Image as ImageIcon, Plus, ShieldCheck, Trash2 } fr
 import type { SiteContent } from '@workspace/api-client-react';
 import { AuthProvider, useCabinetSession } from '@/components/auth-provider';
 import { AuthPage } from '@/components/supabase-auth';
+import { AdminReviewsPanel } from '@/components/admin-reviews-panel';
 import { MediaField } from '@/components/media-field';
 import { adminAccessKey, adminContentKey, collectMediaUrls, publicContentKey, useAdminAccess, useAdminContent, usePublicContent, usePublishContent } from '@/lib/cms';
 import { CmsError, supabase } from '@/lib/supabase';
@@ -137,7 +138,8 @@ function AdminPage() {
       </div><p className="mt-6 hidden rounded-2xl border border-border bg-card p-4 text-[11px] leading-5 text-muted-foreground md:block">Les changements sont enregistrés ensemble et deviennent visibles dès leur publication.</p></aside>
       <main className="min-w-0">
         <div className="mb-6 flex flex-col justify-between gap-2 md:flex-row md:items-end"><div><p className="text-[10px] uppercase tracking-[.2em] text-primary">{section === 'clinic' ? 'Coordonnées & identité' : section === 'hero' ? 'Première impression' : sections.find((entry) => entry.key === section)?.label}</p><h2 className="mt-2 font-display text-3xl md:text-4xl">{section === 'clinic' ? 'Informations du cabinet' : section === 'hero' ? 'Contenu de l’accueil' : sections.find((entry) => entry.key === section)?.label}</h2></div><p className="text-xs text-muted-foreground">Modifications non publiées : enregistrées dans cette session</p></div>
-        {section === 'testimonials' && <div className="mb-5 rounded-2xl border border-[#8c6f0b]/50 bg-[#e6e3eb] p-4 text-xs leading-5 text-[#070116]" data-testid="notice-admin-sample-content"><b>Avant lancement :</b> témoignages, articles et textes d’exemple doivent être remplacés et vérifiés. Les avis ne doivent être publiés qu’avec l’accord des personnes concernées.</div>}
+        {section === 'testimonials' && <div className="mb-5 rounded-2xl border border-[#b94f5b]/40 bg-[#f7e9ec] p-4 text-xs leading-5 text-[#070116]" data-testid="notice-admin-sample-content"><b>Avant lancement :</b> témoignages, articles et textes d’exemple doivent être remplacés et vérifiés. Les avis ne doivent être publiés qu’avec l’accord des personnes concernées.</div>}
+        {section === 'testimonials' && <div className="mb-8"><AdminReviewsPanel /></div>}
         {(section === 'clinic' || section === 'hero') && <div className="grid gap-4 md:grid-cols-2">
           {Object.entries(currentFields || {}).map(([key, value]) => <AdminField key={`${section}-${key}`} name={key} value={value} onChange={(raw) => setObjectField(key, raw)} wide={key === 'description' || key === 'openingHours'} protectedUrls={protectedUrls} disabled={busy} />)}
         </div>}

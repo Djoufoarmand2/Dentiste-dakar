@@ -44,6 +44,74 @@ export interface ContactAppointmentAccepted {
   accepted: boolean;
 }
 
+export type ReviewSource = typeof ReviewSource[keyof typeof ReviewSource];
+
+
+export const ReviewSource = {
+  visitor: 'visitor',
+  admin: 'admin',
+} as const;
+
+export interface Review {
+  id: string;
+  /** @maxLength 80 */
+  name: string;
+  /** @maxLength 120 */
+  service: string;
+  /** @maxLength 1500 */
+  quote: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  createdAt: string;
+  source: ReviewSource;
+}
+
+export interface ReviewSubmission {
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  name: string;
+  /** @maxLength 120 */
+  service?: string;
+  /**
+     * @minLength 12
+     * @maxLength 1500
+     */
+  quote: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+  consent: true;
+  /** @maxLength 200 */
+  website?: string;
+}
+
+export interface AdminReviewInput {
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  name: string;
+  /** @maxLength 120 */
+  service?: string;
+  /**
+     * @minLength 1
+     * @maxLength 1500
+     */
+  quote: string;
+  /**
+     * @minimum 1
+     * @maximum 5
+     */
+  rating: number;
+}
+
 export interface ClinicInfo {
   name: string;
   city: string;

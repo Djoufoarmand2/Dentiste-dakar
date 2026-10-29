@@ -6,6 +6,8 @@ import {
 import type { BlogPost, Campaign, ServiceItem, SiteContent, Testimonial } from '@workspace/api-client-react';
 import { Link, useLocation } from 'wouter';
 import { AppointmentRequestForm } from './appointment-request-form';
+import { ReviewSubmissionForm } from './review-submission-form';
+import { usePublicReviews } from '@/lib/reviews';
 
 const navItems = [
   ['Soins', '/soins'], ['Notre équipe', '/equipe'], ['Le cabinet', '/galerie'],
@@ -22,7 +24,7 @@ export function LogoWordmark({ clinic, inverse = false }: { clinic?: SiteContent
     {clinic?.logoUrl?.trim() && <img src={clinic.logoUrl} alt={`${safeName(clinic.name)} logo`} className="h-10 w-10 rounded-md object-contain" data-testid="img-clinic-logo" />}
     <span className="flex flex-col leading-none">
       <span className="whitespace-nowrap font-display text-[20px] font-semibold">{safeName(clinic?.name)}</span>
-      <span className={`mt-1 text-[9px] uppercase tracking-[.25em] ${inverse ? 'text-[#c1b216]' : 'text-accent'}`}>{safeCity(clinic?.city)}</span>
+      <span className={`mt-1 text-[9px] uppercase tracking-[.25em] ${inverse ? 'text-[#f0a0a6]' : 'text-accent'}`}>{safeCity(clinic?.city)}</span>
     </span>
   </Link>;
 }
@@ -41,9 +43,9 @@ export function Header({ clinic, overlay = false }: { clinic?: SiteContent['clin
     <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-6 px-5 py-4 md:px-8">
       <LogoWordmark clinic={clinic} inverse={!lightHeader} />
       <nav aria-label="Navigation principale" className="hidden items-center gap-7 xl:flex">
-        <Link href="/" className={`text-[13px] font-medium transition-colors hover:text-[#c1b216] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid="nav-accueil">Accueil</Link>
-        {navItems.map(([label, href]) => <Link key={href} href={href} className={`text-[13px] font-medium transition-colors hover:text-[#c1b216] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid={`nav-${href.slice(1)}`}>{label}</Link>)}
-        <Link href="/informations" className={`text-[13px] font-medium transition-colors hover:text-[#c1b216] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid="nav-informations">Informations</Link>
+        <Link href="/" className={`text-[13px] font-medium transition-colors hover:text-[#b94f5b] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid="nav-accueil">Accueil</Link>
+        {navItems.map(([label, href]) => <Link key={href} href={href} className={`text-[13px] font-medium transition-colors hover:text-[#b94f5b] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid={`nav-${href.slice(1)}`}>{label}</Link>)}
+        <Link href="/informations" className={`text-[13px] font-medium transition-colors hover:text-[#b94f5b] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid="nav-informations">Informations</Link>
       </nav>
       <Link href="/contact" className="btn-gold hidden whitespace-nowrap xl:inline-flex" data-testid="button-header-rendez-vous">Prendre rendez-vous <ArrowRight size={15} /></Link>
       <button type="button" aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'} aria-expanded={open} onClick={() => setOpen(!open)} className={`grid h-10 w-10 place-items-center rounded-md border xl:hidden ${lightHeader ? 'border-[#073e53]/25 text-[#073e53]' : 'border-white/30 text-white'}`} data-testid="button-menu-mobile">{open ? <X size={19} /> : <Menu size={19} />}</button>
@@ -59,8 +61,8 @@ export function Footer({ clinic }: { clinic?: SiteContent['clinic'] }) {
   return <footer className="bg-[#070116] text-[#ffffff]">
     <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-14 md:grid-cols-[1.2fr_.8fr_.8fr_.9fr] md:px-8 lg:py-16">
       <div><LogoWordmark clinic={clinic} inverse /><p className="mt-5 max-w-sm text-sm leading-7 text-white/65">Un lieu de soin où l’on prend le temps de vous écouter, de vous expliquer et de vous accompagner.</p></div>
-      <div><p className="footer-title">Navigation</p><ul className="space-y-2 text-sm text-white/70">{navItems.map(([label, href]) => <li key={href}><Link href={href} className="hover:text-[#c1b216]" data-testid={`footer-nav-${href.slice(1)}`}>{label}</Link></li>)}<li><Link href="/informations" className="hover:text-[#c1b216]" data-testid="footer-nav-informations">Informations</Link></li></ul></div>
-      <div><p className="footer-title">Nous trouver</p><p className="text-sm leading-7 text-white/70">{clinic?.address || 'Douala, Cameroun'}<br />{safeCity(clinic?.city)}</p><a href={clinic?.mapUrl || 'https://maps.google.com/?q=Douala'} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs text-[#c1b216] hover:text-white" data-testid="link-footer-map">Itinéraire <ArrowRight size={14} /></a></div>
+      <div><p className="footer-title">Navigation</p><ul className="space-y-2 text-sm text-white/70">{navItems.map(([label, href]) => <li key={href}><Link href={href} className="hover:text-[#f0a0a6]" data-testid={`footer-nav-${href.slice(1)}`}>{label}</Link></li>)}<li><Link href="/informations" className="hover:text-[#f0a0a6]" data-testid="footer-nav-informations">Informations</Link></li></ul></div>
+      <div><p className="footer-title">Nous trouver</p><p className="text-sm leading-7 text-white/70">{clinic?.address || 'Douala, Cameroun'}<br />{safeCity(clinic?.city)}</p><a href={clinic?.mapUrl || 'https://maps.google.com/?q=Douala'} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs text-[#f0a0a6] hover:text-white" data-testid="link-footer-map">Itinéraire <ArrowRight size={14} /></a></div>
       <div><p className="footer-title">Contact</p><a href={`tel:${clinic?.phone || ''}`} className="block text-base font-medium" data-testid="link-footer-phone">{clinic?.phone || 'Contactez-nous'}</a><a href={`mailto:${clinic?.email || ''}`} className="mt-2 block text-sm text-white/70" data-testid="link-footer-email">{clinic?.email || 'Adresse à renseigner'}</a><p className="mt-4 whitespace-pre-line text-xs leading-6 text-white/60">{clinic?.openingHours || 'Horaires à renseigner'}</p></div>
     </div>
     <div className="border-t border-white/10"><div className="mx-auto flex max-w-[1240px] flex-col justify-between gap-2 px-5 py-5 text-[11px] text-white/75 md:flex-row md:px-8"><span>© {new Date().getFullYear()} {safeName(clinic?.name)} · Douala</span><span>Une présence attentive, un sourire à la fois.</span></div></div>
@@ -69,7 +71,7 @@ export function Footer({ clinic }: { clinic?: SiteContent['clinic'] }) {
 
 function AnnouncementBar({ clinic }: { clinic?: SiteContent['clinic'] }) {
   const hours = clinic?.openingHours?.trim().replace(/\s*\n\s*/g, ' · ');
-  return <div className="announcement-bar flex items-center justify-center bg-[#c1b216] px-4 py-2 text-center text-[10px] font-semibold tracking-[.04em] text-[#070116] sm:text-[11px]" data-testid="announcement-hours">
+  return <div className="announcement-bar flex items-center justify-center bg-[#b94f5b] px-4 py-2 text-center text-[10px] font-semibold tracking-[.04em] text-white sm:text-[11px]" data-testid="announcement-hours">
     {hours ? <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap" title={`Horaires du cabinet : ${hours}`}><Clock3 className="mr-2 inline-block align-[-3px]" size={13} aria-hidden="true" />Horaires du cabinet : {hours}</span> : <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap">Pour un rendez-vous, contactez le cabinet ou envoyez une demande en ligne.</span>}
   </div>;
 }
@@ -79,7 +81,7 @@ function FloatingCallButton({ phone }: { phone?: string }) {
   if (!number) return null;
   const dialable = number.replace(/[^\d+]/g, '');
   if (!dialable) return null;
-  return <a href={`tel:${dialable}`} aria-label={`Appeler le cabinet au ${number}`} className="floating-call grid h-14 w-14 place-items-center rounded-full bg-[#073e53] text-white shadow-[0_8px_24px_rgba(7,1,22,.24)] transition-transform hover:-translate-y-1 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#c1b216]" data-testid="button-floating-call"><Phone size={21} aria-hidden="true" /><span className="sr-only">Appeler le cabinet</span></a>;
+  return <a href={`tel:${dialable}`} aria-label={`Appeler le cabinet au ${number}`} className="floating-call grid h-14 w-14 place-items-center rounded-full bg-[#073e53] text-white shadow-[0_8px_24px_rgba(7,1,22,.24)] transition-transform hover:-translate-y-1 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#f0a0a6]" data-testid="button-floating-call"><Phone size={21} aria-hidden="true" /><span className="sr-only">Appeler le cabinet</span></a>;
 }
 
 export function SiteShell({ children, clinic, overlay = false }: { children: ReactNode; clinic?: SiteContent['clinic']; overlay?: boolean }) {
@@ -128,7 +130,7 @@ function SectionHead({ eyebrow, title, text, center = true }: { eyebrow: string;
   return <div className={center ? 'mx-auto max-w-2xl text-center' : 'max-w-2xl'}>
     <p className="eyebrow">{eyebrow}</p>
     <h2 className="mt-3 font-display text-3xl font-semibold leading-tight text-[#073e53] md:text-[2.6rem]">{title}</h2>
-    <span className={`mt-5 block h-[2px] w-14 bg-[#c1b216] ${center ? 'mx-auto' : ''}`} />
+    <span className={`mt-5 block h-[2px] w-14 bg-[#b94f5b] ${center ? 'mx-auto' : ''}`} />
     {text && <p className="mt-5 text-[15px] leading-7 text-muted-foreground">{text}</p>}
   </div>;
 }
@@ -136,7 +138,7 @@ function SectionHead({ eyebrow, title, text, center = true }: { eyebrow: string;
 function PageIntro({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
   return <section className="bg-[#073e53] text-white">
     <div className="mx-auto max-w-[1240px] px-5 pb-16 pt-12 md:px-8 md:pb-20 md:pt-16">
-      <p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#c1b216]">{eyebrow}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#f0a0a6]">{eyebrow}</p>
       <h1 className="mt-4 max-w-3xl font-display text-4xl font-semibold leading-[1.1] md:text-[3.4rem]">{title}</h1>
       <p className="mt-5 max-w-2xl text-[15px] leading-7 text-white/75">{text}</p>
     </div>
@@ -158,10 +160,6 @@ function ActionLink({ href, children, variant = 'gold', testId }: { href: string
 
 function EmptyInline({ title, text }: { title: string; text: string }) {
   return <div className="mt-10 rounded-lg border border-dashed border-border bg-card px-6 py-10 text-center" data-testid="empty-content"><p className="font-display text-xl text-[#073e53]">{title}</p><p className="mt-2 text-sm text-muted-foreground">{text}</p></div>;
-}
-
-function SampleNotice() {
-  return <div className="mx-auto mb-8 max-w-3xl rounded-md border border-accent/40 bg-[#e6e3eb] p-4 text-sm leading-6 text-[#070116]" data-testid="notice-sample-testimonials"><b>Contenu de démonstration :</b> témoignages fictifs, à remplacer par des avis réels avec consentement avant publication.</div>;
 }
 
 const serviceAnchor = (s: ServiceItem) => `soin-${s.slug || s.id}`;
@@ -194,8 +192,8 @@ function ReviewCarousel({ reviews, id = 'reviews' }: { reviews: Testimonial[]; i
     <div className="mt-5 flex items-center justify-between">
       <p className="text-xs font-medium tabular-nums text-muted-foreground" aria-label={`Témoignage ${active + 1} sur ${reviews.length}`}>{String(active + 1).padStart(2, '0')} <span className="mx-1 text-accent">/</span> {String(reviews.length).padStart(2, '0')}</p>
       <div className="flex gap-2">
-        <button type="button" onClick={() => move(-1)} aria-label="Témoignage précédent" className="grid h-10 w-10 place-items-center rounded-full border border-[#073e53]/20 text-[#073e53] transition-colors hover:bg-[#073e53] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6f0b]" data-testid={`${id}-previous`}><ArrowLeft size={17} /></button>
-        <button type="button" onClick={() => move(1)} aria-label="Témoignage suivant" className="grid h-10 w-10 place-items-center rounded-full border border-[#073e53]/20 text-[#073e53] transition-colors hover:bg-[#073e53] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8c6f0b]" data-testid={`${id}-next`}><ArrowRight size={17} /></button>
+        <button type="button" onClick={() => move(-1)} aria-label="Témoignage précédent" className="grid h-10 w-10 place-items-center rounded-full border border-[#073e53]/20 text-[#073e53] transition-colors hover:bg-[#073e53] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b94f5b]" data-testid={`${id}-previous`}><ArrowLeft size={17} /></button>
+        <button type="button" onClick={() => move(1)} aria-label="Témoignage suivant" className="grid h-10 w-10 place-items-center rounded-full border border-[#073e53]/20 text-[#073e53] transition-colors hover:bg-[#073e53] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b94f5b]" data-testid={`${id}-next`}><ArrowRight size={17} /></button>
       </div>
     </div>
   </div>;
@@ -204,7 +202,7 @@ function ReviewCarousel({ reviews, id = 'reviews' }: { reviews: Testimonial[]; i
 function FaqList({ faqs }: { faqs: SiteContent['faqs'] }) {
   const [expanded, setExpanded] = useState<string | null>(faqs[0]?.id || null);
   return <div className="space-y-3">{faqs.map((faq) => <article key={faq.id} className="card-ref overflow-hidden" data-testid={`faq-item-${faq.id}`}>
-    <button type="button" id={`faq-trigger-${faq.id}`} aria-controls={`faq-panel-${faq.id}`} aria-expanded={expanded === faq.id} onClick={() => setExpanded(expanded === faq.id ? null : faq.id)} className="flex w-full items-center justify-between gap-5 px-6 py-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[#8c6f0b]" data-testid={`button-faq-${faq.id}`}><span className="text-[15px] font-semibold text-[#073e53] md:text-base">{faq.question}</span><ChevronDown className={`shrink-0 text-accent transition-transform ${expanded === faq.id ? 'rotate-180' : ''}`} size={20} aria-hidden="true" /></button>
+    <button type="button" id={`faq-trigger-${faq.id}`} aria-controls={`faq-panel-${faq.id}`} aria-expanded={expanded === faq.id} onClick={() => setExpanded(expanded === faq.id ? null : faq.id)} className="flex w-full items-center justify-between gap-5 px-6 py-5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-inset focus-visible:outline-[#b94f5b]" data-testid={`button-faq-${faq.id}`}><span className="text-[15px] font-semibold text-[#073e53] md:text-base">{faq.question}</span><ChevronDown className={`shrink-0 text-accent transition-transform ${expanded === faq.id ? 'rotate-180' : ''}`} size={20} aria-hidden="true" /></button>
     <div id={`faq-panel-${faq.id}`} role="region" aria-labelledby={`faq-trigger-${faq.id}`} aria-hidden={expanded !== faq.id} className="faq-panel" data-open={expanded === faq.id}><div><p className="px-6 pb-6 text-sm leading-7 text-muted-foreground">{faq.answer}</p></div></div>
   </article>)}</div>;
 }
@@ -258,6 +256,8 @@ const visitSteps = [
 
 export function HomePage({ content }: { content: SiteContent }) {
   const { clinic, hero } = content;
+  const publicReviews = usePublicReviews();
+  const testimonials: Testimonial[] = [...(publicReviews.data ?? []), ...content.testimonials];
   const lead = content.team[0];
   const heroImg = hero.imageUrl?.trim();
   return <SiteShell clinic={clinic} overlay>
@@ -267,7 +267,7 @@ export function HomePage({ content }: { content: SiteContent }) {
         <div aria-hidden className={`absolute inset-0 ${heroImg ? 'bg-[#070116]/60' : 'bg-[#070116]/15'}`} />
         <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 pb-20 pt-32 md:px-8">
           <div className="mx-auto max-w-[620px] reveal">
-            {hero.eyebrow && <p className="mb-5 text-[11px] font-semibold uppercase tracking-[.26em] text-[#c1b216]">{hero.eyebrow}</p>}
+            {hero.eyebrow && <p className="mb-5 text-[11px] font-semibold uppercase tracking-[.26em] text-[#f0a0a6]">{hero.eyebrow}</p>}
             <h1 className="font-display text-[clamp(2.4rem,5.4vw,3.9rem)] font-semibold leading-[1.1]">{hero.title || 'Un sourire en confiance, un soin tout en douceur.'}</h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-white/85">{hero.description || 'À Douala, nous avons imaginé un cabinet où chaque visite commence par une écoute attentive.'}</p>
             <div className="mt-9 flex flex-wrap gap-4">
@@ -317,16 +317,15 @@ export function HomePage({ content }: { content: SiteContent }) {
 
       <section id="premiere-visite" className="section-pad bg-[#073e53] text-white">
         <div className="wrap">
-          <div className="mx-auto max-w-2xl text-center"><p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#c1b216]">Votre première visite</p><h2 className="mt-3 font-display text-3xl font-semibold md:text-[2.6rem]">Comment se déroule un premier rendez-vous ?</h2><span className="mx-auto mt-5 block h-[2px] w-14 bg-[#c1b216]" /></div>
-          <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{visitSteps.map((s) => <li key={s.n} className="rounded-md border border-white/12 bg-white/[.04] p-6" data-testid={`step-visit-${s.n}`}><span className="font-display text-3xl font-semibold text-[#c1b216]">0{s.n}</span><h3 className="mt-3 text-base font-semibold">{s.title}</h3><p className="mt-2 text-sm leading-6 text-white/70">{s.text}</p></li>)}</ol>
+          <div className="mx-auto max-w-2xl text-center"><p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#f0a0a6]">Votre première visite</p><h2 className="mt-3 font-display text-3xl font-semibold md:text-[2.6rem]">Comment se déroule un premier rendez-vous ?</h2><span className="mx-auto mt-5 block h-[2px] w-14 bg-[#f0a0a6]" /></div>
+          <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{visitSteps.map((s) => <li key={s.n} className="rounded-md border border-white/12 bg-white/[.04] p-6" data-testid={`step-visit-${s.n}`}><span className="font-display text-3xl font-semibold text-[#f0a0a6]">0{s.n}</span><h3 className="mt-3 text-base font-semibold">{s.title}</h3><p className="mt-2 text-sm leading-6 text-white/70">{s.text}</p></li>)}</ol>
         </div>
       </section>
 
       <section id="avis" className="section-pad bg-[#e6e3eb]">
         <div className="wrap">
           <SectionHead eyebrow="Témoignages" title="La confiance se construit ensemble." />
-          <div className="mt-10"><SampleNotice /></div>
-          <ReviewCarousel reviews={content.testimonials.slice(0, 3)} id="home-reviews" />
+          <ReviewCarousel reviews={testimonials.slice(0, 3)} id="home-reviews" />
           <div className="mt-10 text-center"><ActionLink href="/avis" variant="navy" testId="link-home-reviews">Tous les témoignages</ActionLink></div>
         </div>
       </section>
@@ -341,12 +340,12 @@ export function HomePage({ content }: { content: SiteContent }) {
 
       <section id="rendez-vous" className="bg-[#073e53] text-white">
         <div className="wrap grid gap-10 py-16 md:grid-cols-[1.2fr_1fr] md:items-center md:py-24">
-          <div><p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#c1b216]">Prendre rendez-vous</p><h2 className="mt-3 font-display text-3xl font-semibold leading-tight md:text-[2.6rem]">Votre prochain rendez-vous peut être plus simple que vous ne le pensez.</h2><div className="mt-8 flex flex-wrap gap-4"><BookButton clinic={clinic} testId="button-home-final-book">Prendre rendez-vous</BookButton><Link href="/contact" className="btn-outline-light" data-testid="link-home-contact">Nous contacter</Link></div></div>
+          <div><p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#f0a0a6]">Prendre rendez-vous</p><h2 className="mt-3 font-display text-3xl font-semibold leading-tight md:text-[2.6rem]">Votre prochain rendez-vous peut être plus simple que vous ne le pensez.</h2><div className="mt-8 flex flex-wrap gap-4"><BookButton clinic={clinic} testId="button-home-final-book">Prendre rendez-vous</BookButton><Link href="/contact" className="btn-outline-light" data-testid="link-home-contact">Nous contacter</Link></div></div>
           <ul className="space-y-5 rounded-md border border-white/12 bg-white/[.04] p-7 text-sm">
-            <li className="flex gap-4"><Phone size={18} className="mt-0.5 shrink-0 text-[#c1b216]" /><a href={`tel:${clinic.phone || ''}`} data-testid="link-home-phone">{clinic.phone || 'Téléphone à renseigner'}</a></li>
-            <li className="flex gap-4"><MessageCircle size={18} className="mt-0.5 shrink-0 text-[#c1b216]" /><a href={`mailto:${clinic.email || ''}`} className="break-all" data-testid="link-home-email">{clinic.email || 'Courriel à renseigner'}</a></li>
-            <li className="flex gap-4"><MapPin size={18} className="mt-0.5 shrink-0 text-[#c1b216]" /><span>{clinic.address || 'Douala, Cameroun'}</span></li>
-            <li className="flex gap-4"><Clock3 size={18} className="mt-0.5 shrink-0 text-[#c1b216]" /><span className="whitespace-pre-line text-white/80">{clinic.openingHours || 'Horaires à renseigner'}</span></li>
+            <li className="flex gap-4"><Phone size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><a href={`tel:${clinic.phone || ''}`} data-testid="link-home-phone">{clinic.phone || 'Téléphone à renseigner'}</a></li>
+            <li className="flex gap-4"><MessageCircle size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><a href={`mailto:${clinic.email || ''}`} className="break-all" data-testid="link-home-email">{clinic.email || 'Courriel à renseigner'}</a></li>
+            <li className="flex gap-4"><MapPin size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><span>{clinic.address || 'Douala, Cameroun'}</span></li>
+            <li className="flex gap-4"><Clock3 size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><span className="whitespace-pre-line text-white/80">{clinic.openingHours || 'Horaires à renseigner'}</span></li>
           </ul>
         </div>
       </section>
@@ -379,10 +378,20 @@ export function GalleryPage({ content }: { content: SiteContent }) {
 }
 
 export function ReviewsPage({ content }: { content: SiteContent }) {
-  return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Vos mots comptent" title="La confiance se construit ensemble." text="Chaque retour nous aide à mieux vous accueillir. Les témoignages ci-dessous sont des exemples de présentation et doivent être remplacés avant le lancement." />
-    <section className="wrap section-pad"><SampleNotice />
-      <ReviewCarousel reviews={content.testimonials} id="reviews-page" />
-      <div className="mt-12 text-center"><ActionLink href="/contact" testId="link-reviews-contact">Nous laisser un message</ActionLink></div>
+  const publicReviews = usePublicReviews();
+  const testimonials: Testimonial[] = [...(publicReviews.data ?? []), ...content.testimonials];
+  return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Vos mots comptent" title="La confiance se construit ensemble." text="Découvrez les expériences partagées par les visiteurs du cabinet. Votre retour nous aide à mieux vous accueillir." />
+    <section className="wrap section-pad">
+      {publicReviews.isError && <div className="mx-auto mb-8 max-w-3xl rounded-2xl border border-destructive/25 bg-destructive/5 p-4 text-sm" role="alert" data-testid="status-public-reviews-error">
+        <p>Les avis visiteurs ne sont pas disponibles pour le moment. Les témoignages du cabinet restent affichés.</p>
+        <button type="button" onClick={() => void publicReviews.refetch()} className="mt-2 font-semibold text-destructive underline" data-testid="button-retry-public-reviews">Réessayer</button>
+      </div>}
+      {publicReviews.isLoading && <p className="mb-6 text-center text-sm text-muted-foreground" role="status" data-testid="status-public-reviews-loading">Chargement des avis…</p>}
+      <ReviewCarousel reviews={testimonials} id="reviews-page" />
+      <div className="mx-auto mt-14 max-w-3xl border-t border-border pt-12">
+        <ReviewSubmissionForm />
+      </div>
+      <div className="mt-12 text-center"><ActionLink href="/contact" testId="link-reviews-contact">Nous contacter</ActionLink></div>
     </section></main></SiteShell>;
 }
 
@@ -443,10 +452,10 @@ export function InformationPage({ content }: { content: SiteContent }) {
 
 export function ContactPage({ content }: { content: SiteContent }) {
   const clinic = content.clinic;
-  const row = (icon: ReactNode, label: string, value: ReactNode) => <><span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/10 text-[#c1b216]">{icon}</span><span><b className="block font-semibold">{label}</b><span className="mt-1 block whitespace-pre-line text-white/70">{value}</span></span></>;
+  const row = (icon: ReactNode, label: string, value: ReactNode) => <><span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/10 text-[#f0a0a6]">{icon}</span><span><b className="block font-semibold">{label}</b><span className="mt-1 block whitespace-pre-line text-white/70">{value}</span></span></>;
   return <SiteShell clinic={clinic}><main><PageIntro eyebrow="Prenons le temps d’échanger" title="Nous sommes tout près." text="Un rendez-vous, une question, un besoin d’orientation ? Contactez-nous comme vous le souhaitez." />
     <section className="wrap section-pad grid gap-7 md:grid-cols-[.8fr_1.2fr]">
-      <div className="rounded-md bg-[#073e53] p-7 text-white md:p-10"><p className="text-[11px] uppercase tracking-[.24em] text-[#c1b216]">{safeName(clinic.name)} · {safeCity(clinic.city)}</p><h2 className="mt-4 font-display text-3xl font-semibold">À votre écoute.</h2><div className="mt-8 space-y-6 text-sm">
+      <div className="rounded-md bg-[#073e53] p-7 text-white md:p-10"><p className="text-[11px] uppercase tracking-[.24em] text-[#f0a0a6]">{safeName(clinic.name)} · {safeCity(clinic.city)}</p><h2 className="mt-4 font-display text-3xl font-semibold">À votre écoute.</h2><div className="mt-8 space-y-6 text-sm">
         <a href={`tel:${clinic.phone}`} className="flex items-start gap-4" data-testid="link-contact-phone">{row(<Phone size={17} />, 'Téléphone', clinic.phone || 'À renseigner')}</a>
         <a href={`mailto:${clinic.email}`} className="flex items-start gap-4" data-testid="link-contact-email">{row(<MessageCircle size={17} />, 'Courriel', clinic.email || 'À renseigner')}</a>
         <div className="flex items-start gap-4" data-testid="text-contact-address">{row(<MapPin size={17} />, 'Adresse', clinic.address || 'Douala, Cameroun')}</div>

@@ -1,0 +1,68 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { AdminReviewInput, Review, ReviewSubmission } from '@workspace/api-client-react';
+import { useCabinetSession } from '@/components/auth-provider';
+import { cmsRequest } from './supabase';
+
+export const publicReviewsKey = ['cabinet', 'reviews'] as const;
+export const adminReviewsKey = ['cabinet', 'admin-reviews'] as const;
+
+export function usePublicReviews() {
+  return useQuery({
+    queryKey: publicReviewsKey,
+    queryFn: () => cmsRequest<Review[]>('/reviews', {}, false),
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useAdminReviews(enabled: boolean) {
+  const { session, loading } = useCabinetSession();
+  const query = useQuery({
+    queryKey: [...adminReviewsKey, session?.user.id ?? 'anonymous'],
+    queryFn: () => cmsRequest<Review[]>('/admin/reviews'),
+    enabled: !loading && !!session && enabled,
+    retry: false,
+    staleTime: 0,
+  });
+  return { ...query, isLoading: loading || (!!session && enabled && query.isLoading) };
+}
+
+export function useSubmitReview() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (review: ReviewSubmission) =>
+      cmsRequest<Review>('/reviews', { method: 'POST', body: JSON.stringify(review) }, false),
+    onSuccess: (review) => {
+      client.setQueryData<Review[]>(publicReviewsKey, (current = []) =>
+        [review, ...current.filter((item) => item.id !== review.id)].sort((a, b) =>
+          b.createdAt.localeCompare(a.createdAt),
+        ),
+      );
+      void client.invalidateQueries({ queryKey: publicReviewsKey });
+    },
+  });
+}
+
+export function useCreateAdminReview() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (review: AdminReviewInput) =>
+      cmsRequest<Review>('/admin/reviews', { method: 'POST', body: JSON.stringify(review) }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: adminReviewsKey });
+      void client.invalidateQueries({ queryKey: publicReviewsKey });
+    },
+  });
+}
+
+export function useDeleteAdminReview() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      cmsRequest<void>(`/admin/reviews/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: adminReviewsKey });
+      void client.invalidateQueries({ queryKey: publicReviewsKey });
+    },
+  });
+}

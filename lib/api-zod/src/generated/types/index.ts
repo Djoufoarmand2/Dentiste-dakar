@@ -7,6 +7,7 @@
  */
 
 export * from './adminAccess';
+export * from './adminReviewInput';
 export * from './blogPost';
 export * from './campaign';
 export * from './campaignMediaType';
@@ -26,6 +27,9 @@ export * from './mediaLibrary';
 export * from './mediaReference';
 export * from './mediaUploadInput';
 export * from './mediaUploadInputMimeType';
+export * from './review';
+export * from './reviewSource';
+export * from './reviewSubmission';
 export * from './serviceItem';
 export * from './siteContent';
 export * from './siteContentInput';
