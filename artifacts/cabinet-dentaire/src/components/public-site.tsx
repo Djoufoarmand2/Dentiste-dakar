@@ -71,8 +71,21 @@ export function Footer({ clinic }: { clinic?: SiteContent['clinic'] }) {
 
 function AnnouncementBar({ clinic }: { clinic?: SiteContent['clinic'] }) {
   const hours = clinic?.openingHours?.trim().replace(/\s*\n\s*/g, ' · ');
-  return <div className="announcement-bar flex items-center justify-center bg-[#b94f5b] px-4 py-2 text-center text-[10px] font-semibold tracking-[.04em] text-white sm:text-[11px]" data-testid="announcement-hours">
-    {hours ? <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap" title={`Horaires du cabinet : ${hours}`}><Clock3 className="mr-2 inline-block align-[-3px]" size={13} aria-hidden="true" />Horaires du cabinet : {hours}</span> : <span className="max-w-full overflow-hidden text-ellipsis whitespace-nowrap">Pour un rendez-vous, contactez le cabinet ou envoyez une demande en ligne.</span>}
+  const message = hours ? `Horaires du cabinet : ${hours}` : 'Pour un rendez-vous, contactez le cabinet ou envoyez une demande en ligne.';
+  return <div className="announcement-bar" role="region" aria-label="Informations du cabinet" data-testid="announcement-hours">
+    <span className="sr-only">{message}</span>
+    <div className="announcement-marquee" aria-hidden="true">
+      <div className="announcement-track">
+        {[0, 1].map((group) => <div className="announcement-group" key={group}>
+          {Array.from({ length: 5 }, (_, item) => <span className="announcement-item" key={`${group}-${item}`}>
+            <Clock3 size={13} aria-hidden="true" />
+            {message}
+            <span className="announcement-divider" aria-hidden="true">✦</span>
+          </span>)}
+        </div>)}
+      </div>
+    </div>
+    <div className="announcement-static" aria-hidden="true"><Clock3 size={13} />{message}</div>
   </div>;
 }
 
