@@ -12,7 +12,7 @@ export const supabasePublicKey: string = key;
 export const mediaBucket = 'cabinet-media';
 
 export class CmsError extends Error {
-  constructor(message: string, public status: number) { super(message); }
+  constructor(message: string, public status: number, public retryAt?: string) { super(message); }
 }
 
 export async function cmsRequest<T>(path: string, options: RequestInit = {}, authenticated = true): Promise<T> {
@@ -27,6 +27,6 @@ export async function cmsRequest<T>(path: string, options: RequestInit = {}, aut
   const response = await fetch(`${url}/functions/v1/cabinet-api${path}`, { ...options, headers });
   if (response.status === 204) return undefined as T;
   const payload = await response.json().catch(() => null);
-  if (!response.ok) throw new CmsError(payload?.error || 'Le service est momentanément indisponible.', response.status);
+  if (!response.ok) throw new CmsError(payload?.error || 'Le service est momentanément indisponible.', response.status, payload?.retryAt);
   return payload as T;
 }

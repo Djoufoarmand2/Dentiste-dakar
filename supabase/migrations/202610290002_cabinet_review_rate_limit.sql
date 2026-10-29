@@ -15,8 +15,10 @@ create index if not exists cabinet_review_rate_limit_events_time_idx
 alter table public.cabinet_review_rate_limit_events enable row level security;
 revoke all on public.cabinet_review_rate_limit_events from public, anon, authenticated, service_role;
 
-create or replace function public.cabinet_allow_review_submission(p_ip_hash text)
-returns boolean
+drop function if exists public.cabinet_allow_review_submission(text);
+
+create function public.cabinet_allow_review_submission(p_ip_hash text)
+returns table (is_allowed boolean, retry_at timestamptz)
 language plpgsql
 security definer
 set search_path = ''
@@ -44,12 +46,24 @@ begin
      and attempted_at > check_time - interval '10 minutes';
 
   if recent_count >= 3 then
-    return false;
+    select events.attempted_at + interval '10 minutes'
+      into retry_at
+      from public.cabinet_review_rate_limit_events as events
+     where events.ip_hash = p_ip_hash
+       and events.attempted_at > check_time - interval '10 minutes'
+     order by events.attempted_at asc
+     limit 1;
+
+    is_allowed := false;
+    return next;
+    return;
   end if;
 
   insert into public.cabinet_review_rate_limit_events (ip_hash, attempted_at)
   values (p_ip_hash, check_time);
-  return true;
+  is_allowed := true;
+  retry_at := null;
+  return next;
 end;
 $$;
 

@@ -26,7 +26,7 @@ const reviewRateLimitKey = crypto.subtle.importKey(
 );
 
 class HttpError extends Error {
-  constructor(public status: number, message: string) { super(message); }
+  constructor(public status: number, message: string, public retryAt?: string) { super(message); }
 }
 
 async function body(request: Request) {
@@ -90,12 +90,23 @@ async function checkReviewRate(request: Request) {
     new TextEncoder().encode(ip),
   );
   const ipHash = Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, '0')).join('');
-  const { data: allowed, error } = await db.rpc('cabinet_allow_review_submission', { p_ip_hash: ipHash });
-  if (error || typeof allowed !== 'boolean') {
+  const { data, error } = await db.rpc('cabinet_allow_review_submission', { p_ip_hash: ipHash });
+  const decision = Array.isArray(data) ? data[0] : null;
+  if (
+    error
+    || !decision
+    || typeof decision.is_allowed !== 'boolean'
+    || (decision.retry_at !== null && typeof decision.retry_at !== 'string')
+  ) {
     throw new HttpError(503, 'La protection anti-abus est momentanément indisponible.');
   }
-  if (!allowed) {
-    throw new HttpError(429, 'Vous avez déjà envoyé plusieurs avis. Réessayez dans quelques minutes.');
+  if (!decision.is_allowed) {
+    const retryAtMilliseconds = typeof decision.retry_at === 'string' ? Date.parse(decision.retry_at) : Number.NaN;
+    if (!Number.isFinite(retryAtMilliseconds)) {
+      throw new HttpError(503, 'La protection anti-abus est momentanément indisponible.');
+    }
+    const retryAt = new Date(retryAtMilliseconds).toISOString();
+    throw new HttpError(429, 'Vous avez déjà envoyé plusieurs avis.', retryAt);
   }
 }
 
@@ -271,6 +282,10 @@ export async function handleRequest(request: Request): Promise<Response> {
     throw new HttpError(404, 'Ressource introuvable.');
   } catch (error) {
     // Do not leak database responses, JWTs, content or personal data in errors.
+    if (error instanceof HttpError && error.retryAt) {
+      headers['Retry-After'] = String(Math.max(1, Math.ceil((Date.parse(error.retryAt) - Date.now()) / 1000)));
+      return respond({ error: error.message, retryAt: error.retryAt }, error.status);
+    }
     return respond({ error: error instanceof HttpError ? error.message : 'Le service est momentanément indisponible.' }, error instanceof HttpError ? error.status : 503);
   }
 }

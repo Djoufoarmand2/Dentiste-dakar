@@ -33,17 +33,26 @@ async function run() {
     );
   }
 
-  const allowed = results.filter(({ data }) => data === true).length;
-  const denied = results.filter(({ data }) => data === false).length;
+  const decisions = results.map(({ data }) => Array.isArray(data) ? data[0] : null);
+  const allowed = decisions.filter((decision) => decision?.is_allowed === true).length;
+  const denied = decisions.filter((decision) => decision?.is_allowed === false).length;
   assert.equal(allowed, 3, `Expected exactly three concurrent submissions to pass; got ${allowed}`);
   assert.equal(denied, 9, `Expected the other concurrent submissions to be denied; got ${denied}`);
+  const retryTimes = decisions
+    .filter((decision) => decision?.is_allowed === false)
+    .map((decision) => Date.parse(decision.retry_at));
+  assert.ok(retryTimes.every(Number.isFinite), 'Every denied submission must include a valid retry timestamp');
+  assert.equal(new Set(retryTimes).size, 1, 'Denied submissions must agree on the same next available time');
+  assert.ok(retryTimes[0] > Date.now(), 'The retry timestamp must still be in the future');
+  assert.ok(retryTimes[0] <= Date.now() + 10 * 60 * 1000, 'The retry timestamp must be within the rate-limit window');
 
   const { data: followUp, error: followUpError } = await clients[0]
     .rpc('cabinet_allow_review_submission', { p_ip_hash: testDigest });
   assert.equal(followUpError, null, 'Follow-up PostgreSQL rate-limit RPC must succeed');
-  assert.equal(followUp, false, 'Submissions after the concurrent limit must be denied');
+  assert.equal(followUp?.[0]?.is_allowed, false, 'Submissions after the concurrent limit must be denied');
+  assert.equal(Date.parse(followUp?.[0]?.retry_at), retryTimes[0], 'A repeated denial must preserve the same retry timestamp');
 
-  console.info('PASS: exactly 3 of 12 concurrent submissions were allowed; the next was denied.');
+  console.info('PASS: exactly 3 of 12 concurrent submissions were allowed; denials shared a reliable retry timestamp.');
   console.info('PASS: requests used independent Supabase clients and no persistent raw IP fixture.');
 }
 

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { CmsError } from '@/lib/supabase';
 
 type ReviewFormValues = Omit<ReviewSubmission, 'consent'> & { consent: boolean };
 
@@ -41,6 +42,12 @@ export function ReviewSubmissionForm() {
   });
   const submitReview = useSubmitReview();
   const [sent, setSent] = useState(false);
+  const retryAt = submitReview.error instanceof CmsError && submitReview.error.status === 429
+    ? new Date(submitReview.error.retryAt ?? Number.NaN)
+    : null;
+  const retryMessage = retryAt && Number.isFinite(retryAt.getTime())
+    ? `Vous pourrez envoyer un nouvel avis à partir de ${new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' }).format(retryAt)}.`
+    : null;
 
   async function submit(values: ReviewFormValues) {
     setSent(false);
@@ -140,7 +147,7 @@ export function ReviewSubmissionForm() {
         </div>
 
         {submitReview.isError && <p role="alert" className="review-status review-status-error md:col-span-2" data-testid="status-review-error">
-          {submitReview.error.message || 'L’envoi n’a pas abouti. Réessayez dans quelques instants.'}
+          {retryMessage || submitReview.error.message || 'L’envoi n’a pas abouti. Réessayez dans quelques instants.'}
         </p>}
         {sent && <p role="status" className="review-status review-status-success md:col-span-2" data-testid="status-review-success">
           Merci pour votre retour. Votre avis est maintenant publié.
