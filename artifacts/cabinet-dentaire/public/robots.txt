@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+# Le HTML indique noindex tant que l’identité et les informations officielles ne sont pas validées.
