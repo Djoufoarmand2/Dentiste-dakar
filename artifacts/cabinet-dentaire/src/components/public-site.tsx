@@ -7,7 +7,7 @@ import type { BlogPost, Campaign, ServiceItem, SiteContent, Testimonial } from '
 import { Link, useLocation } from 'wouter';
 import { AppointmentRequestForm } from './appointment-request-form';
 import { ReviewSubmissionForm } from './review-submission-form';
-import { usePublicReviews } from '@/lib/reviews';
+import { combinePublicReviews, usePublicReviews } from '@/lib/reviews';
 
 const navItems = [
   ['Soins', '/soins'], ['Notre équipe', '/equipe'], ['Le cabinet', '/galerie'],
@@ -257,7 +257,7 @@ const visitSteps = [
 export function HomePage({ content }: { content: SiteContent }) {
   const { clinic, hero } = content;
   const publicReviews = usePublicReviews();
-  const testimonials: Testimonial[] = [...(publicReviews.data ?? []), ...content.testimonials];
+  const testimonials = combinePublicReviews(publicReviews.data ?? [], content.testimonials);
   const lead = content.team[0];
   const heroImg = hero.imageUrl?.trim();
   return <SiteShell clinic={clinic} overlay>
@@ -379,7 +379,7 @@ export function GalleryPage({ content }: { content: SiteContent }) {
 
 export function ReviewsPage({ content }: { content: SiteContent }) {
   const publicReviews = usePublicReviews();
-  const testimonials: Testimonial[] = [...(publicReviews.data ?? []), ...content.testimonials];
+  const testimonials = combinePublicReviews(publicReviews.data ?? [], content.testimonials);
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Vos mots comptent" title="La confiance se construit ensemble." text="Découvrez les expériences partagées par les visiteurs du cabinet. Votre retour nous aide à mieux vous accueillir." />
     <section className="wrap section-pad">
       {publicReviews.isError && <div className="mx-auto mb-8 max-w-3xl rounded-2xl border border-destructive/25 bg-destructive/5 p-4 text-sm" role="alert" data-testid="status-public-reviews-error">

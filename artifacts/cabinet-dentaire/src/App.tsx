@@ -27,7 +27,7 @@ const sections: { key: ArraySection; label: string; help: string }[] = [
   { key: 'services', label: 'Soins', help: 'Présentation des soins et images associées.' },
   { key: 'team', label: 'Équipe', help: 'Profils et photos de présentation.' },
   { key: 'gallery', label: 'Galerie', help: 'Images du cabinet et textes alternatifs.' },
-  { key: 'testimonials', label: 'Avis', help: 'Témoignages à remplacer par des retours réels avant lancement.' },
+  { key: 'testimonials', label: 'Avis', help: 'Avis récents et témoignages historiques du CMS.' },
   { key: 'faqs', label: 'FAQ', help: 'Questions et réponses visibles sur le site.' },
   { key: 'blogPosts', label: 'Blog', help: 'Articles publiés ou gardés en brouillon.' },
   { key: 'campaigns', label: 'Campagnes', help: 'Informations illustrées ou vidéos.' },
@@ -138,12 +138,17 @@ function AdminPage() {
       </div><p className="mt-6 hidden rounded-2xl border border-border bg-card p-4 text-[11px] leading-5 text-muted-foreground md:block">Les changements sont enregistrés ensemble et deviennent visibles dès leur publication.</p></aside>
       <main className="min-w-0">
         <div className="mb-6 flex flex-col justify-between gap-2 md:flex-row md:items-end"><div><p className="text-[10px] uppercase tracking-[.2em] text-primary">{section === 'clinic' ? 'Coordonnées & identité' : section === 'hero' ? 'Première impression' : sections.find((entry) => entry.key === section)?.label}</p><h2 className="mt-2 font-display text-3xl md:text-4xl">{section === 'clinic' ? 'Informations du cabinet' : section === 'hero' ? 'Contenu de l’accueil' : sections.find((entry) => entry.key === section)?.label}</h2></div><p className="text-xs text-muted-foreground">Modifications non publiées : enregistrées dans cette session</p></div>
-        {section === 'testimonials' && <div className="mb-5 rounded-2xl border border-[#b94f5b]/40 bg-[#f7e9ec] p-4 text-xs leading-5 text-[#070116]" data-testid="notice-admin-sample-content"><b>Avant lancement :</b> témoignages, articles et textes d’exemple doivent être remplacés et vérifiés. Les avis ne doivent être publiés qu’avec l’accord des personnes concernées.</div>}
+        {section === 'testimonials' && <div className="mb-5 rounded-2xl border border-[#b94f5b]/40 bg-[#f7e9ec] p-4 text-xs leading-5 text-[#070116]" data-testid="notice-admin-sample-content"><b>Consentement :</b> les témoignages historiques du CMS ne comportent pas de preuve de consentement enregistrée. Faites confirmer l’autorisation par le cabinet avant tout transfert ou nouvelle publication. Les exemples fictifs identifiés sont masqués du site public.</div>}
         {section === 'testimonials' && <div className="mb-8"><AdminReviewsPanel /></div>}
         {(section === 'clinic' || section === 'hero') && <div className="grid gap-4 md:grid-cols-2">
           {Object.entries(currentFields || {}).map(([key, value]) => <AdminField key={`${section}-${key}`} name={key} value={value} onChange={(raw) => setObjectField(key, raw)} wide={key === 'description' || key === 'openingHours'} protectedUrls={protectedUrls} disabled={busy} />)}
         </div>}
         {section !== 'clinic' && section !== 'hero' && <div className="space-y-5">
+          {section === 'testimonials' && <section className="rounded-2xl border border-border bg-card p-5 md:p-7" data-testid="cms-testimonials-section">
+            <p className="eyebrow">Document CMS du site</p>
+            <h3 className="mt-2 font-display text-2xl text-[#073e53]">Témoignages historiques</h3>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Gérez ici les témoignages déjà présents dans le contenu du site. Les avis du formulaire et ceux publiés par le cabinet se gèrent dans la liste ci-dessus. Après confirmation du consentement, ajoutez l’ancien témoignage dans la liste d’avis gérés ci-dessus, puis retirez son entrée CMS. Les doublons temporaires sont masqués sur le site public.</p>
+          </section>}
           {entries.map((item, index) => <section key={String(item.id ?? index)} className="rounded-[22px] border border-border bg-card p-5 md:p-6" data-testid={`admin-entry-${section}-${String(item.id ?? index)}`}>
             <div className="mb-5 flex items-center justify-between border-b border-border pb-4"><div><p className="text-[9px] uppercase tracking-[.18em] text-muted-foreground">{sections.find((entry) => entry.key === section)?.label} · {String(item.id || `Élément ${index + 1}`)}</p><h3 className="mt-1 font-display text-xl">{String(item.title || item.name || item.question || `Élément ${index + 1}`)}</h3></div><button type="button" onClick={() => removeItem(index)} aria-label="Supprimer cet élément" className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive" data-testid={`button-remove-${section}-${index}`}><Trash2 size={16} /></button></div>
             <div className="grid gap-4 md:grid-cols-2">{Object.entries(item).map(([key, value]) => <AdminField key={`${String(item.id)}-${key}`} name={key} value={value} onChange={(raw) => setArrayField(index, key, raw)} wide={['description', 'biography', 'quote', 'answer', 'content', 'excerpt'].includes(key)} protectedUrls={protectedUrls} disabled={busy} />)}</div>
