@@ -1,2 +1,3 @@
 - [Clés serveur Supabase](supabase-server-keys.md) — pour le stockage privé, demander une Secret key du projet, pas la clé publique proposée par Connect.
 - [PostgreSQL local isolé](local-postgres-tests.md) — un cluster temporaire nécessite un répertoire socket explicite et utilise par défaut le rôle du compte système.
+- [Logo et visuel d’accueil](cms-brand-assets.md) — vérifier les médias publiés séparément et ne pas déplacer un visuel CMS sans autorisation.

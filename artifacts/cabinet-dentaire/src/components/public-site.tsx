@@ -16,16 +16,33 @@ const navItems = [
 
 export const safeName = (name?: string) => name?.trim() || 'Cabinet Naya';
 export const safeCity = (city?: string) => city?.trim() || 'Douala';
+const brandMarkUrl = `${import.meta.env.BASE_URL}brand/logo-mark.webp`;
+const brandLockupUrl = `${import.meta.env.BASE_URL}brand/logo-lockup.webp`;
 
 const bookHref = (clinic: SiteContent['clinic']) => clinic.bookingUrl || `tel:${clinic.phone || ''}`;
 
 export function LogoWordmark({ clinic, inverse = false }: { clinic?: SiteContent['clinic']; inverse?: boolean }) {
-  return <Link href="/" className={`inline-flex shrink-0 items-center gap-3 ${inverse ? 'text-[#ffffff]' : 'text-foreground'}`} data-testid="link-home-brand">
-    {clinic?.logoUrl?.trim() && <img src={clinic.logoUrl} alt={`${safeName(clinic.name)} logo`} className="h-10 w-10 rounded-md object-contain" data-testid="img-clinic-logo" />}
+  return <Link href="/" aria-label={`${safeName(clinic?.name)} — accueil`} className={`brand-wordmark inline-flex shrink-0 items-center gap-3 ${inverse ? 'text-[#ffffff]' : 'text-foreground'}`} data-testid="link-home-brand">
+    <span className="brand-mark-frame" aria-hidden="true">
+      <img src={brandMarkUrl} alt="" width="64" height="48" className="brand-mark-image" data-testid="img-clinic-logo" />
+    </span>
     <span className="flex flex-col leading-none">
       <span className="whitespace-nowrap font-display text-[20px] font-semibold">{safeName(clinic?.name)}</span>
       <span className={`mt-1 text-[9px] uppercase tracking-[.25em] ${inverse ? 'text-[#f0a0a6]' : 'text-accent'}`}>{safeCity(clinic?.city)}</span>
     </span>
+  </Link>;
+}
+
+function BrandLockup() {
+  return <Link href="/" className="brand-lockup-link" aria-label="Dental, Clinique Dentaire — accueil" data-testid="link-footer-brand">
+    <img
+      src={brandLockupUrl}
+      alt="Dental — Clinique Dentaire. Un sourire en bonne santé."
+      width="708"
+      height="720"
+      className="brand-lockup-image"
+      data-testid="img-brand-lockup"
+    />
   </Link>;
 }
 
@@ -60,7 +77,7 @@ export function Header({ clinic, overlay = false }: { clinic?: SiteContent['clin
 export function Footer({ clinic }: { clinic?: SiteContent['clinic'] }) {
   return <footer className="bg-[#070116] text-[#ffffff]">
     <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-14 md:grid-cols-[1.2fr_.8fr_.8fr_.9fr] md:px-8 lg:py-16">
-      <div><LogoWordmark clinic={clinic} inverse /><p className="mt-5 max-w-sm text-sm leading-7 text-white/65">Un lieu de soin où l’on prend le temps de vous écouter, de vous expliquer et de vous accompagner.</p></div>
+      <div><BrandLockup /><p className="mt-5 max-w-sm text-sm leading-7 text-white/65">Un lieu de soin où l’on prend le temps de vous écouter, de vous expliquer et de vous accompagner.</p></div>
       <div><p className="footer-title">Navigation</p><ul className="space-y-2 text-sm text-white/70">{navItems.map(([label, href]) => <li key={href}><Link href={href} className="hover:text-[#f0a0a6]" data-testid={`footer-nav-${href.slice(1)}`}>{label}</Link></li>)}<li><Link href="/informations" className="hover:text-[#f0a0a6]" data-testid="footer-nav-informations">Informations</Link></li><li><Link href="/confidentialite" className="hover:text-[#f0a0a6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" data-testid="footer-nav-confidentialite">Confidentialité</Link></li></ul></div>
       <div><p className="footer-title">Nous trouver</p><p className="text-sm leading-7 text-white/70">{clinic?.address || 'Douala, Cameroun'}<br />{safeCity(clinic?.city)}</p><a href={clinic?.mapUrl || 'https://maps.google.com/?q=Douala'} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs text-[#f0a0a6] hover:text-white" data-testid="link-footer-map">Itinéraire <ArrowRight size={14} /></a></div>
       <div><p className="footer-title">Contact</p><a href={`tel:${clinic?.phone || ''}`} className="block text-base font-medium" data-testid="link-footer-phone">{clinic?.phone || 'Contactez-nous'}</a><a href={`mailto:${clinic?.email || ''}`} className="mt-2 block text-sm text-white/70" data-testid="link-footer-email">{clinic?.email || 'Adresse à renseigner'}</a><p className="mt-4 whitespace-pre-line text-xs leading-6 text-white/60">{clinic?.openingHours || 'Horaires à renseigner'}</p></div>
