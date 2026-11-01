@@ -3,8 +3,29 @@ import assert from 'node:assert/strict';
 const rawBaseUrl = process.env.CABINET_BASE_URL;
 assert.ok(rawBaseUrl, 'Set CABINET_BASE_URL to the running Cabinet Naya preview.');
 const baseUrl = new URL(rawBaseUrl.endsWith('/') ? rawBaseUrl : `${rawBaseUrl}/`);
-const faviconUrl = new URL('favicon-logo-v2.png', baseUrl);
+const faviconResources = [
+  {
+    url: new URL('favicon.ico', baseUrl),
+    label: 'ICO favicon',
+    contentType: /image\/(?:x-icon|vnd\.microsoft\.icon)/i,
+  },
+  {
+    url: new URL('favicon-32.png', baseUrl),
+    label: '32px favicon',
+    contentType: /image\/png/i,
+  },
+  {
+    url: new URL('favicon-logo-v2.png', baseUrl),
+    label: '128px favicon',
+    contentType: /image\/png/i,
+  },
+];
 const appleTouchIconUrl = new URL('apple-touch-icon.png', baseUrl);
+const iconResources = [...faviconResources, {
+  url: appleTouchIconUrl,
+  label: 'Apple touch icon',
+  contentType: /image\/png/i,
+}];
 const routes = [
   '/', '/soins', '/equipe', '/galerie', '/avis', '/faq', '/blog',
   '/informations', '/contact', '/confidentialite', '/admin', '/sign-in',
@@ -17,20 +38,18 @@ for (const route of routes) {
   assert.match(response.headers.get('content-type') || '', /text\/html/i, `${route} should return HTML`);
   const html = await response.text();
   assert.match(html, /<div id="root"><\/div>/, `${route} should include the app root`);
-  assert.ok(html.includes(`href="${faviconUrl.pathname}"`), `${route} should reference the versioned clinic favicon`);
-  assert.ok(html.includes(`href="${appleTouchIconUrl.pathname}"`), `${route} should reference the Apple touch icon`);
+  for (const icon of iconResources) {
+    assert.ok(html.includes(`href="${icon.url.pathname}"`), `${route} should reference the ${icon.label}`);
+  }
   assert.match(html, /<meta name="robots" content="noindex, nofollow"/i, `${route} should stay non-indexable while data is provisional`);
   assert.doesNotMatch(html, /property="og:url"[^>]+replit\.(?:dev|app)/i, `${route} must not advertise the preview URL as canonical`);
 }
 
-for (const [url, label] of [
-  [faviconUrl, 'favicon'],
-  [appleTouchIconUrl, 'Apple touch icon'],
-]) {
-  const response = await fetch(url);
-  assert.equal(response.status, 200, `${label} should be served`);
-  assert.match(response.headers.get('content-type') || '', /image\/png/i, `${label} should be a PNG image`);
-  assert.ok(Number(response.headers.get('content-length') || 0) > 0, `${label} should not be empty`);
+for (const icon of iconResources) {
+  const response = await fetch(icon.url);
+  assert.equal(response.status, 200, `${icon.label} should be served`);
+  assert.match(response.headers.get('content-type') || '', icon.contentType, `${icon.label} should have a browser-compatible image type`);
+  assert.ok(Number(response.headers.get('content-length') || 0) > 0, `${icon.label} should not be empty`);
 }
 
 const robotsResponse = await fetch(new URL('robots.txt', baseUrl));
