@@ -378,6 +378,18 @@ body:not(.public-site) :is(a,button,input,textarea,select):focus-visible { outli
 .public-site footer { background:linear-gradient(135deg,#171a35,#24234c) !important; }
 .public-site .public-header nav a, .public-site .public-header { transition:color .28s ease,background-color .28s ease,backdrop-filter .28s ease,box-shadow .28s ease; }
 .public-site .review-form-kicker { font-family:var(--app-font-serif); letter-spacing:.1em; color:#7778bd; }
+.brand-wordmark { border-radius:18px; }
+.brand-mark-frame { position:relative; display:grid; width:64px; height:52px; flex:0 0 auto; place-items:center; overflow:hidden; border:1px solid rgba(18,80,139,.12); border-radius:15px; background:rgba(255,255,255,.96); box-shadow:0 7px 18px rgba(7,62,83,.12); animation:brand-mark-arrive .72s cubic-bezier(.2,.75,.25,1) both; }
+.brand-mark-frame::after { position:absolute; inset:-40% auto -40% -65%; width:38%; content:""; pointer-events:none; background:linear-gradient(100deg,transparent,rgba(19,166,164,.24),rgba(255,255,255,.82),transparent); transform:skewX(-20deg); opacity:0; }
+.brand-mark-image { display:block; width:58px; height:44px; object-fit:contain; transition:transform .35s cubic-bezier(.2,.75,.25,1); }
+.brand-wordmark:hover .brand-mark-image, .brand-wordmark:focus-visible .brand-mark-image { transform:scale(1.06); }
+.brand-wordmark:hover .brand-mark-frame, .brand-wordmark:focus-visible .brand-mark-frame { box-shadow:0 10px 24px rgba(15,153,158,.22); }
+.brand-wordmark:hover .brand-mark-frame::after, .brand-wordmark:focus-visible .brand-mark-frame::after { animation:brand-mark-sheen .85s ease-out both; }
+.brand-lockup-link { display:inline-flex; max-width:100%; align-items:center; justify-content:center; overflow:hidden; border:1px solid rgba(255,255,255,.72); border-radius:20px; background:#fff; padding:.45rem; box-shadow:0 12px 30px rgba(7,1,22,.2); animation:brand-mark-arrive .8s .08s cubic-bezier(.2,.75,.25,1) both; transition:transform .3s ease,box-shadow .3s ease; }
+.brand-lockup-link:hover, .brand-lockup-link:focus-visible { transform:translateY(-2px); box-shadow:0 16px 34px rgba(7,1,22,.28); }
+.brand-lockup-image { display:block; width:clamp(132px,16vw,176px); height:auto; object-fit:contain; }
+@keyframes brand-mark-arrive { from { opacity:0; transform:translateY(8px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes brand-mark-sheen { 0% { left:-65%; opacity:0; } 24% { opacity:.9; } 100% { left:135%; opacity:0; } }
 .admin-review-card { background:rgba(255,255,255,.68); border-radius:16px; }
 .min-h-\[100dvh\].bg-\[\#e6e3eb\] { background-color:#e9eaf4 !important; background-image:radial-gradient(ellipse at 8% 0%,rgba(92,95,163,.08),transparent 38%); }
 .min-h-\[100dvh\].bg-\[\#e6e3eb\] main section { box-shadow:0 12px 32px -28px rgba(25,32,74,.28); }
@@ -413,6 +425,15 @@ body:not(.public-site) :is(a,button,input,textarea,select):focus-visible { outli
   .public-header.home-header { margin-bottom: -68px; }
   .announcement-bar { min-height: 36px; }
   .public-header { top: 36px; }
+  .brand-mark-frame { width:54px; height:46px; border-radius:13px; }
+  .brand-mark-image { width:49px; height:38px; }
+  .brand-wordmark { gap:.55rem; }
+  .brand-wordmark .font-display { font-size:18px; }
+  .brand-lockup-image { width:142px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark-frame, .brand-lockup-link { animation:none !important; }
+  .brand-wordmark:hover .brand-mark-frame::after, .brand-wordmark:focus-visible .brand-mark-frame::after { animation:none !important; }
 }
 
 /**
