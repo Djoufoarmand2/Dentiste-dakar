@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 const rawBaseUrl = process.env.CABINET_BASE_URL;
 assert.ok(rawBaseUrl, 'Set CABINET_BASE_URL to the running Cabinet Naya preview.');
 const baseUrl = new URL(rawBaseUrl.endsWith('/') ? rawBaseUrl : `${rawBaseUrl}/`);
+const supabaseUrl = process.env.VITE_SUPABASE_URL?.trim();
+const publishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY?.trim();
+assert.ok(supabaseUrl && publishableKey, 'Set the site Supabase runtime configuration before running this check.');
 const faviconResources = [
   {
     url: new URL('favicon.ico', baseUrl),
@@ -52,8 +55,33 @@ for (const icon of iconResources) {
   assert.ok(Number(response.headers.get('content-length') || 0) > 0, `${icon.label} should not be empty`);
 }
 
+let contentResponse;
+try {
+  contentResponse = await fetch(`${supabaseUrl.replace(/\/$/, '')}/functions/v1/cabinet-api/site-content`, {
+    headers: { apikey: publishableKey },
+    signal: AbortSignal.timeout(10_000),
+  });
+} catch {
+  throw new Error('Site Supabase runtime public-content request failed; connection details were suppressed.');
+}
+assert.equal(contentResponse.status, 200, `Site Supabase runtime public-content request should return HTTP 200 (received ${contentResponse.status}).`);
+assert.match(contentResponse.headers.get('content-type') || '', /application\/json/i, 'Site Supabase runtime public-content response should be JSON.');
+let publicContent;
+try {
+  publicContent = await contentResponse.json();
+} catch {
+  throw new Error('Site Supabase runtime public-content response was not valid JSON; response details were suppressed.');
+}
+assert.ok(publicContent && typeof publicContent === 'object' && !Array.isArray(publicContent), 'Site Supabase runtime should return a public content object.');
+assert.ok(publicContent.clinic && typeof publicContent.clinic === 'object', 'Public content should include clinic information.');
+assert.ok(publicContent.hero && typeof publicContent.hero === 'object', 'Public content should include hero content.');
+for (const collection of ['services', 'team', 'gallery', 'testimonials', 'faqs', 'blogPosts', 'campaigns']) {
+  assert.ok(Array.isArray(publicContent[collection]), `Public content should include the ${collection} collection.`);
+}
+
 const robotsResponse = await fetch(new URL('robots.txt', baseUrl));
 assert.equal(robotsResponse.status, 200, 'robots.txt should be served');
 assert.match(await robotsResponse.text(), /User-agent:\s*\*/i);
 
 console.log(`Public smoke check passed for ${routes.length} direct routes; appointment/contact form was not submitted.`);
+console.log('Site Supabase runtime check passed: public content loaded with the site publishable key. Supabase management access was not tested.');
