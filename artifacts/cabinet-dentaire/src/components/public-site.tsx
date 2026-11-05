@@ -40,6 +40,30 @@ const clinicGalleryPhotos = [
     alt: 'Un professionnel de santé travaille à son bureau au cabinet.',
     caption: 'Un temps de travail au cabinet',
   },
+  {
+    id: 'waiting-room',
+    src: clinicPhotoUrl('waiting-room.jpg'),
+    alt: 'La salle d’attente de la clinique.',
+    caption: 'L’espace d’accueil',
+  },
+  {
+    id: 'care-team-conversation',
+    src: clinicPhotoUrl('care-team-conversation.jpg'),
+    alt: 'Une professionnelle échange avec une patiente dans les locaux de la clinique.',
+    caption: 'Un temps d’échange',
+  },
+  {
+    id: 'family-welcome',
+    src: clinicPhotoUrl('family-welcome.jpg'),
+    alt: 'Une soignante accueille une famille au sein de la clinique.',
+    caption: 'L’accueil des familles',
+  },
+  {
+    id: 'patient-support',
+    src: clinicPhotoUrl('patient-support.jpg'),
+    alt: 'Une professionnelle accompagne une patiente lors d’un échange au cabinet.',
+    caption: 'Un accompagnement attentif',
+  },
 ];
 const visibleGallery = (gallery: SiteContent['gallery']) => gallery.filter((item) => item.id !== partnerLogoId);
 const galleryCaption = (item: SiteContent['gallery'][number]) => {
