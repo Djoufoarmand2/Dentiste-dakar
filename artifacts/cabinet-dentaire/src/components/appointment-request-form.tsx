@@ -151,6 +151,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
                 <FormControl>
                   <Input
                     {...field}
+                    name={field.name}
                     autoComplete="name"
                     placeholder="Ex. Jean Dupont"
                     maxLength={120}
@@ -182,6 +183,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
                 <FormControl>
                   <Input
                     {...field}
+                    name={field.name}
                     type="tel"
                     autoComplete="tel"
                     placeholder="+237 6XX XX XX XX"
@@ -217,6 +219,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
               <FormControl>
                 <Input
                   {...field}
+                  name={field.name}
                   type="email"
                   autoComplete="email"
                   placeholder="patient@email.com"
@@ -244,6 +247,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
               <FormControl>
                 <select
                   {...field}
+                  name={field.name}
                   value={field.value}
                   className="editor-input bg-white"
                   data-testid="select-appointment-service"
@@ -273,6 +277,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
               <FormControl>
                 <Input
                   {...field}
+                  name={field.name}
                   type="date"
                   className="bg-white"
                   data-testid="input-appointment-date"
@@ -295,6 +300,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
               <FormControl>
                 <Textarea
                   {...field}
+                  name={field.name}
                   rows={4}
                   maxLength={2000}
                   placeholder="Décrivez votre besoin ou vos disponibilités..."
@@ -321,6 +327,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             tabIndex={-1}
             autoComplete="off"
             {...form.register("website")}
+            name="website"
           />
         </div>
 
