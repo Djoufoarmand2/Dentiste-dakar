@@ -31,11 +31,10 @@ function getCanonicalBaseUrl() {
   if (!configured) return null;
   try {
     const url = new URL(configured);
-    const previewOrLocal = url.hostname === 'localhost'
+    const developmentOrLocal = url.hostname === 'localhost'
       || url.hostname === '127.0.0.1'
-      || url.hostname.endsWith('.replit.dev')
-      || url.hostname.endsWith('.replit.app');
-    if (url.protocol !== 'https:' || url.pathname !== '/' || url.search || url.hash || previewOrLocal) return null;
+      || url.hostname.endsWith('.replit.dev');
+    if (url.protocol !== 'https:' || url.pathname !== '/' || url.search || url.hash || developmentOrLocal) return null;
     return url.origin;
   } catch {
     return null;
@@ -52,11 +51,15 @@ function isHttpsUrl(value?: string) {
 }
 
 const canonicalBaseUrl = getCanonicalBaseUrl();
-const indexableSeoConfigured = import.meta.env.VITE_SITE_INDEXABLE === 'true'
-  && !!canonicalBaseUrl
-  && !!import.meta.env.VITE_SITE_TITLE?.trim()
-  && !!import.meta.env.VITE_SITE_DESCRIPTION?.trim()
-  && isHttpsUrl(import.meta.env.VITE_SITE_OG_IMAGE_URL?.trim());
+
+function indexableSeoConfigured(content: SiteContent) {
+  const sharingImage = import.meta.env.VITE_SITE_OG_IMAGE_URL?.trim() || content.hero.imageUrl?.trim();
+  return import.meta.env.VITE_SITE_INDEXABLE === 'true'
+    && !!canonicalBaseUrl
+    && !!content.clinic.name?.trim()
+    && !!content.hero.description?.trim()
+    && isHttpsUrl(sharingImage);
+}
 
 function metaText(value: string, maximumLength: number) {
   const normalized = value.replace(/\s+/g, ' ').trim();
@@ -88,26 +91,38 @@ function PublicRoute({ page }: { page: (content: SiteContent) => ReactNode }) {
   const pageNames: Record<string, string> = {
     '/': 'Accueil',
     '/soins': 'Soins dentaires',
-    '/equipe': 'Notre équipe',
-    '/galerie': 'Le cabinet',
-    '/avis': 'Avis',
+    '/equipe': 'Équipe du cabinet dentaire',
+    '/galerie': 'Photos du cabinet dentaire',
+    '/avis': 'Avis sur le cabinet dentaire',
     '/faq': 'Questions fréquentes',
     '/blog': 'Conseils dentaires',
-    '/informations': 'Informations',
-    '/contact': 'Contact',
+    '/informations': 'Informations pratiques',
+    '/contact': 'Contact et rendez-vous',
     '/confidentialite': 'Confidentialité',
   };
   const pageName = article?.title || pageNames[path] || 'Cabinet Sourire Serein';
-  const description = metaText(article?.excerpt ||
-    (path === '/'
-      ? query.data.hero.description
-      : `${pageName} au ${query.data.clinic.name}, à ${query.data.clinic.city}. Informations, conseils et contact.`), 160);
+  const clinicName = query.data.clinic.name;
+  const city = query.data.clinic.city;
+  const routeDescriptions: Record<string, string> = {
+    '/soins': `Découvrez les soins dentaires présentés par ${clinicName} à ${city}. Contactez le cabinet pour organiser une consultation.`,
+    '/equipe': `Découvrez l’équipe et les informations présentées par ${clinicName}, cabinet dentaire à ${city}.`,
+    '/galerie': `Découvrez en images les espaces et la vie du cabinet dentaire ${clinicName} à ${city}.`,
+    '/avis': `Lisez les avis publiés sur ${clinicName}, cabinet dentaire à ${city}, et partagez votre expérience.`,
+    '/faq': `Réponses aux questions fréquentes sur les soins dentaires, les rendez-vous et la première visite à ${city}.`,
+    '/blog': `Articles et informations générales sur l’hygiène bucco-dentaire et les soins dentaires à ${city}.`,
+    '/informations': `Retrouvez les coordonnées et les informations pratiques communiquées pour ${clinicName} à ${city}.`,
+    '/contact': `Contactez ${clinicName}, cabinet dentaire à ${city}, pour demander des renseignements ou un rendez-vous.`,
+    '/confidentialite': 'Informations sur la collecte, l’utilisation et la protection de vos données personnelles sur le site.',
+  };
+  const description = metaText(article?.excerpt || (path === '/'
+    ? query.data.hero.description
+    : routeDescriptions[path] || `${pageName} au ${clinicName}, à ${city}. Informations et contact.`), 160);
   const title = seoTitle(path === '/' ? `Cabinet dentaire à ${query.data.clinic.city}` : pageName, query.data.clinic.name);
   const imageUrl = article?.imageUrl?.trim() || query.data.hero.imageUrl?.trim() || query.data.clinic.logoUrl?.trim() || undefined;
-  return <><DocumentMetadata title={title} description={description} imageUrl={imageUrl} imageAlt={article ? `Illustration de l’article : ${article.title}` : query.data.hero.title} isArticle={!!article} />{page(query.data)}</>;
+  return <><DocumentMetadata title={title} description={description} imageUrl={imageUrl} imageAlt={article ? `Illustration de l’article : ${article.title}` : query.data.hero.title} isArticle={!!article} indexable={indexableSeoConfigured(query.data)} />{page(query.data)}</>;
 }
 
-function DocumentMetadata({ title, description, imageUrl, imageAlt, isArticle = false }: { title: string; description: string; imageUrl?: string; imageAlt?: string; isArticle?: boolean }) {
+function DocumentMetadata({ title, description, imageUrl, imageAlt, isArticle = false, indexable = false }: { title: string; description: string; imageUrl?: string; imageAlt?: string; isArticle?: boolean; indexable?: boolean }) {
   useEffect(() => {
     document.title = title;
     const setMeta = (selector: string, attribute: string, key: string, content?: string) => {
@@ -156,10 +171,10 @@ function DocumentMetadata({ title, description, imageUrl, imageAlt, isArticle = 
     setMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description);
     setMeta('meta[name="twitter:image"]', 'name', 'twitter:image', socialImage);
     setMeta('meta[name="twitter:card"]', 'name', 'twitter:card', socialImage ? 'summary_large_image' : 'summary');
-    setMeta('meta[name="robots"]', 'name', 'robots', indexableSeoConfigured ? 'index, follow' : 'noindex, nofollow');
+    setMeta('meta[name="robots"]', 'name', 'robots', indexable ? 'index, follow' : 'noindex, nofollow');
 
     let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
-    if (!canonicalUrl || !indexableSeoConfigured) {
+    if (!canonicalUrl || !indexable) {
       canonical?.remove();
     } else {
       if (!canonical) {
@@ -169,7 +184,7 @@ function DocumentMetadata({ title, description, imageUrl, imageAlt, isArticle = 
       }
       canonical.href = canonicalUrl;
     }
-  }, [description, imageAlt, imageUrl, isArticle, title]);
+  }, [description, imageAlt, imageUrl, indexable, isArticle, title]);
 
   return null;
 }

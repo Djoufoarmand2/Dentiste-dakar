@@ -405,7 +405,7 @@ export function HomePage({ content }: { content: SiteContent }) {
               <p className="mt-4 text-sm font-medium text-[#073e53]">{clinic.address || 'Ancienne gare routière, Dakar, Douala, Cameroun'}</p>
               <div className="mt-7 flex flex-wrap gap-3">
                 <a href={partnerSite} target="_blank" rel="noopener noreferrer" className="btn-navy" data-testid="link-partner-clinic">Visiter la Clinique La Bienveillance <ArrowRight size={15} /></a>
-                <a href={clinic.mapUrl || mapsDirections} target="_blank" rel="noopener noreferrer" className="btn-outline-light !border-[#073e53]/20 !text-[#073e53] hover:!bg-[#073e53] hover:!text-white bg-background" data-testid="link-partner-directions">Voir l’itinéraire <MapPin size={15} /></a>
+                <a href={clinic.mapUrl || mapsDirections} target="_blank" rel="noopener noreferrer" className="btn-teal" data-testid="link-partner-directions">Voir l’itinéraire <MapPin size={15} /></a>
               </div>
             </div>
           </div>
