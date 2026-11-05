@@ -27,7 +27,7 @@ function Frame({ title, eyebrow, children }: { title: string; eyebrow: string; c
     <aside className="relative hidden overflow-hidden bg-[#073e53] p-12 text-[#e6e3eb] md:flex md:flex-col md:justify-between lg:p-16">
       <LogoWordmark inverse />
       <div><p className="text-[10px] uppercase tracking-[.25em] text-[#f0a0a6]">Espace de publication</p><p className="mt-5 max-w-lg font-display text-5xl leading-tight">La confiance commence par une présence attentive.</p><p className="mt-5 max-w-sm text-sm leading-7 text-white/70">Accès réservé à l’équipe du cabinet, sur invitation.</p></div>
-      <p className="text-[10px] tracking-wide text-white/55">Clinique Sourire Serein · Douala, Cameroun</p>
+      <p className="text-[10px] tracking-wide text-white/55">Cabinet Sourire Serein · Douala, Cameroun</p>
     </aside>
     <div className="flex flex-col items-center justify-center px-5 py-12">
       <div className="mb-6 md:hidden"><LogoWordmark /></div>

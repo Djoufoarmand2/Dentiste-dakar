@@ -303,7 +303,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             {request.error instanceof Error && request.error.message
               ? request.error.message
               : "L’envoi n’a pas abouti. Réessayez."}{" "}
-            Contactez la clinique par téléphone au{" "}
+            Contactez le cabinet par téléphone au{" "}
             <a href={`tel:${phoneLink}`} className="font-semibold underline underline-offset-2">
               {phone}
             </a>.
