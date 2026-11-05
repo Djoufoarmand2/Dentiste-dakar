@@ -26,6 +26,21 @@ export const safeName = (name?: string) => name?.trim() || 'Clinique Sourire Ser
 export const safeCity = (city?: string) => city?.trim() || 'Douala';
 const brandMarkUrl = `${import.meta.env.BASE_URL}brand/logo-mark.webp`;
 const brandLockupUrl = `${import.meta.env.BASE_URL}brand/logo-lockup.webp`;
+const clinicPhotoUrl = (filename: string) => `${import.meta.env.BASE_URL}images/clinic/${filename}`;
+const clinicGalleryPhotos = [
+  {
+    id: 'clinic-sign',
+    src: clinicPhotoUrl('clinic-sign.jpg'),
+    alt: 'Enseigne extérieure de la Clinique La Bienveillance à Douala.',
+    caption: 'L’enseigne de la clinique',
+  },
+  {
+    id: 'clinic-professional',
+    src: clinicPhotoUrl('clinic-professional.jpg'),
+    alt: 'Un professionnel de santé travaille à son bureau au cabinet.',
+    caption: 'Un temps de travail au cabinet',
+  },
+];
 const visibleGallery = (gallery: SiteContent['gallery']) => gallery.filter((item) => item.id !== partnerLogoId);
 const galleryCaption = (item: SiteContent['gallery'][number]) => {
   const captions: Record<string, string> = {
@@ -456,14 +471,31 @@ export function ServicesPage({ content }: { content: SiteContent }) {
 
 export function TeamPage({ content }: { content: SiteContent }) {
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Derrière chaque sourire" title="Une équipe, avant tout humaine." text="Nous sommes là pour vous accueillir tels que vous êtes et construire avec vous un parcours de soin qui a du sens." />
-    <section className="wrap section-pad">{content.team.length ? <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">{content.team.map((m) => <article key={m.id} className="card-ref overflow-hidden" data-testid={`card-team-${m.id}`}><ImageFrame src={m.imageUrl} alt={`Portrait de ${m.name}`} label="Portrait à ajouter" className="aspect-[4/5]" /><div className="p-6"><p className="eyebrow">{m.role}</p><h2 className="mt-2 font-display text-2xl font-semibold text-[#073e53]">{m.name}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{m.biography}</p></div></article>)}</div> : <EmptyInline title="Faisons connaissance bientôt" text="Les portraits et présentations de l’équipe seront publiés ici." />}
+    <section className="wrap section-pad">
+      <figure className="mb-10 overflow-hidden rounded-2xl border border-[#073e53]/10 bg-white shadow-sm" data-testid="photo-clinic-team">
+        <ImageFrame src={clinicPhotoUrl('clinic-team.jpg')} alt="Un groupe de professionnels de santé réuni dans les locaux de la clinique." className="aspect-[3/2] md:aspect-[16/8]" />
+        <figcaption className="px-4 py-3 text-sm text-muted-foreground">L’équipe réunie à la clinique.</figcaption>
+      </figure>
+      {content.team.length ? <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">{content.team.map((m) => <article key={m.id} className="card-ref overflow-hidden" data-testid={`card-team-${m.id}`}><ImageFrame src={m.imageUrl} alt={`Portrait de ${m.name}`} label="Portrait à ajouter" className="aspect-[4/5]" /><div className="p-6"><p className="eyebrow">{m.role}</p><h2 className="mt-2 font-display text-2xl font-semibold text-[#073e53]">{m.name}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{m.biography}</p></div></article>)}</div> : <EmptyInline title="Faisons connaissance bientôt" text="Les portraits et présentations de l’équipe seront publiés ici." />}
     </section></main></SiteShell>;
 }
 
 export function GalleryPage({ content }: { content: SiteContent }) {
   const photos = visibleGallery(content.gallery);
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Le cabinet en images" title="Un lieu pensé pour votre confort." text="Retrouvez les visuels officiels du lieu qui accueille le cabinet dentaire." />
-    <section className="wrap section-pad"><p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">La façade et le logo sont les visuels officiels transmis. Les autres images d’activités sont des illustrations générées par IA; elles ne représentent pas les locaux ni l’équipe réelle.</p>{photos.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.map((p) => <figure key={p.id} className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-black/5" data-testid={`gallery-image-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Illustration de l’activité" className="aspect-[4/3]" /><figcaption className="px-3 py-2 text-xs font-medium text-[#073e53] md:px-4 md:py-3 md:text-sm">{galleryCaption(p)}</figcaption></figure>)}</div> : <EmptyInline title="L’espace se dévoilera bientôt" text="La galerie du cabinet est en préparation." />}</section></main></SiteShell>;
+    <section className="wrap section-pad">
+      <p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">Cette galerie réunit des photos fournies par la clinique et, pour certains soins, des illustrations générées par IA qui ne représentent pas les locaux ni l’équipe réelle.</p>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
+        {clinicGalleryPhotos.map((photo) => <figure key={photo.id} className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-black/5" data-testid={`gallery-image-${photo.id}`}>
+          <ImageFrame src={photo.src} alt={photo.alt} label="Photo de la clinique" className="aspect-[4/3]" />
+          <figcaption className="px-3 py-2 text-xs font-medium text-[#073e53] md:px-4 md:py-3 md:text-sm">{photo.caption}</figcaption>
+        </figure>)}
+        {photos.map((photo) => <figure key={photo.id} className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-black/5" data-testid={`gallery-image-${photo.id}`}>
+          <ImageFrame src={photo.imageUrl} alt={photo.alt} label="Illustration de l’activité" className="aspect-[4/3]" />
+          <figcaption className="px-3 py-2 text-xs font-medium text-[#073e53] md:px-4 md:py-3 md:text-sm">{galleryCaption(photo)}</figcaption>
+        </figure>)}
+      </div>
+    </section></main></SiteShell>;
 }
 
 export function ReviewsPage({ content }: { content: SiteContent }) {
