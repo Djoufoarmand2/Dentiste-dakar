@@ -215,7 +215,7 @@ function Router() {
     <Route path="/informations" component={() => <PublicRoute page={(content) => <LazyInformationPage content={content} />} />} />
     <Route path="/contact" component={() => <PublicRoute page={(content) => <LazyContactPage content={content} />} />} />
     <Route path="/confidentialite" component={() => <PublicRoute page={(content) => <LazyPrivacyPage content={content} />} />} />
-    <Route path="/admin" component={() => <><PrivatePageMetadata title="Administration | Cabinet dentaire" /><AdminRoute /></>} />
+    <Route path="/arm" component={() => <><PrivatePageMetadata title="Administration | Cabinet dentaire" /><AdminRoute /></>} />
     <Route path="/sign-in/*?" component={() => <><PrivatePageMetadata title="Connexion | Cabinet dentaire" /><LazyAuthPage mode="signin" /></>} />
     <Route path="/sign-up/*?" component={() => <><PrivatePageMetadata title="Créer un compte | Cabinet dentaire" /><LazyAuthPage mode="signup" /></>} />
     <Route path="/forgot-password" component={() => <><PrivatePageMetadata title="Récupération du compte | Cabinet dentaire" /><LazyAuthPage mode="recover" /></>} />
