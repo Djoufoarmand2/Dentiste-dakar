@@ -261,7 +261,7 @@ export const UpdateSiteContentResponse = zod.object({
 
 
 /**
- * @summary Send a website appointment request by email
+ * @summary Persist a website appointment request privately
  */
 export const submitContactAppointmentBodyNameMax = 120;
 
@@ -282,12 +282,35 @@ export const SubmitContactAppointmentBody = zod.object({
   "service": zod.enum(['Consultation dentaire', 'Détartrage et polissage', 'Traitement des caries', 'Plombage / composite', 'Kinésithérapie dentaire / maxillo-faciale', 'Laboratoire prothétique', 'Chirurgie dentaire']),
   "preferredDate": zod.coerce.date().optional(),
   "message": zod.string().max(submitContactAppointmentBodyMessageMax).optional(),
-  "website": zod.string().max(submitContactAppointmentBodyWebsiteMax).optional()
+  "website": zod.string().max(submitContactAppointmentBodyWebsiteMax).optional(),
+  "submissionId": zod.string().uuid().optional()
 })
 
 export const SubmitContactAppointmentResponse = zod.object({
-  "accepted": zod.boolean()
+  "accepted": zod.boolean(),
+  "requestId": zod.string().uuid().optional(),
+  "notificationSent": zod.boolean().optional()
 })
+
+
+export const GetAdminAppointmentsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "phone": zod.string(),
+  "email": zod.string(),
+  "service": zod.string(),
+  "preferredDate": zod.string().nullish(),
+  "message": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const GetAdminAppointmentsResponse = zod.array(GetAdminAppointmentsResponseItem)
+
+
+export const DeleteAdminAppointmentParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const DeleteAdminAppointmentResponse = zod.void()
 
 
 /**

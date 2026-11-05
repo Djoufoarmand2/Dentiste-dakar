@@ -2,6 +2,7 @@ import type {
   ContactAppointmentAccepted,
   ContactAppointmentInput,
 } from "@workspace/api-client-react";
+import { cmsRequest } from "./supabase";
 
 // The FormBold endpoint is public configuration, not a secret. When present,
 // it takes precedence; until then the existing Web3Forms flow remains active.
@@ -16,8 +17,8 @@ export const appointmentProviderName = formBoldEndpoint
     : null;
 
 export const appointmentProviderDisclosure = appointmentProviderName
-  ? `Les demandes sont transmises au cabinet via ${appointmentProviderName}.`
-  : "Aucun service d’envoi n’est configuré pour le moment.";
+  ? `Les demandes sont conservées dans Supabase; une notification est envoyée via ${appointmentProviderName}.`
+  : "Les demandes sont conservées dans Supabase et consultables par le cabinet.";
 
 function validateFormBoldEndpoint(endpoint: string): string {
   let url: URL;
@@ -66,6 +67,7 @@ async function submitToFormBold(
       method: "POST",
       headers: { Accept: "application/json" },
       body: formData,
+      signal: AbortSignal.timeout(15_000),
     });
   } catch {
     throw new Error(
@@ -114,6 +116,7 @@ async function submitToWeb3Forms(
         preferred_date: data.preferredDate,
         message: data.message,
       }),
+      signal: AbortSignal.timeout(15_000),
     });
   } catch {
     throw new Error(
@@ -137,6 +140,19 @@ export async function submitAppointmentRequest(
   data: ContactAppointmentInput,
 ): Promise<ContactAppointmentAccepted> {
   if (data.website?.trim()) return { accepted: true };
-  if (formBoldEndpoint) return submitToFormBold(data, formBoldEndpoint);
-  return submitToWeb3Forms(data);
+  const saved = await cmsRequest<ContactAppointmentAccepted>(
+    "/contact/appointment",
+    { method: "POST", body: JSON.stringify(data), signal: AbortSignal.timeout(15_000) },
+    false,
+  );
+  if (!saved.accepted || !saved.requestId) throw new Error("Le cabinet n’a pas confirmé l’enregistrement.");
+  // Storage is authoritative: a failed email must never hide a saved request
+  // or encourage resubmitting the same patient data.
+  try {
+    if (formBoldEndpoint) await submitToFormBold(data, formBoldEndpoint);
+    else await submitToWeb3Forms(data);
+    return { ...saved, notificationSent: true };
+  } catch {
+    return { ...saved, notificationSent: false };
+  }
 }

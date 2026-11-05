@@ -4,6 +4,7 @@ import { ArrowUpRight, Check, Image as ImageIcon, Plus, ShieldCheck, Trash2 } fr
 import type { SiteContent } from '@workspace/api-client-react';
 import { useCabinetSession } from '@/components/auth-provider';
 import { AdminReviewsPanel } from '@/components/admin-reviews-panel';
+import { AdminAppointmentsPanel } from '@/components/admin-appointments-panel';
 import { MediaField } from '@/components/media-field';
 import { LogoWordmark } from '@/components/public-site';
 import {
@@ -152,6 +153,7 @@ export default function AdminPage() {
       <main className="min-w-0">
         <div className="mb-6 flex flex-col justify-between gap-2 md:flex-row md:items-end"><div><p className="text-[10px] uppercase tracking-[.2em] text-primary">{section === 'clinic' ? 'Coordonnées & identité' : section === 'hero' ? 'Première impression' : sections.find((entry) => entry.key === section)?.label}</p><h2 className="mt-2 font-display text-3xl md:text-4xl">{section === 'clinic' ? 'Informations du cabinet' : section === 'hero' ? 'Contenu de l’accueil' : sections.find((entry) => entry.key === section)?.label}</h2></div><p className="text-xs text-muted-foreground">Modifications non publiées : enregistrées dans cette session</p></div>
         {section === 'testimonials' && <div className="mb-5 rounded-2xl border border-[#b94f5b]/40 bg-[#f7e9ec] p-4 text-xs leading-5 text-[#070116]" data-testid="notice-admin-sample-content"><b>Consentement :</b> les témoignages historiques du CMS ne comportent pas de preuve de consentement enregistrée. Faites confirmer l’autorisation par le cabinet avant tout transfert ou nouvelle publication. Les exemples fictifs identifiés sont masqués du site public.</div>}
+        <AdminAppointmentsPanel />
         {section === 'testimonials' && <div className="mb-8"><AdminReviewsPanel /></div>}
         {(section === 'clinic' || section === 'hero') && <div className="grid gap-4 md:grid-cols-2">
           {Object.entries(currentFields || {}).map(([key, value]) => <AdminField key={`${section}-${key}`} name={key} value={value} onChange={(raw) => setObjectField(key, raw)} wide={key === 'description' || key === 'openingHours'} protectedUrls={protectedUrls} disabled={busy} />)}

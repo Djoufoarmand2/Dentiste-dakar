@@ -2,7 +2,7 @@
  * Cabinet migration operations. Credentials are read from the environment only;
  * no keys, session tokens, emails or raw provider responses are printed.
  */
-import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -73,7 +73,10 @@ async function setup() {
     if (String(result.error?.statusCode) === '409' || result.error?.message?.includes('already exists')) return { data: null, error: null };
     return result;
   }), 'Sauvegarde de la configuration');
-  await sql(await readFile(resolve(root, 'supabase/migrations/202610280001_cabinet_backend.sql'), 'utf8'));
+  const migrations = resolve(root, 'supabase/migrations');
+  for (const name of (await readdir(migrations)).filter(name => name.endsWith('.sql')).sort()) {
+    await sql(await readFile(resolve(migrations, name), 'utf8'));
+  }
   const adminEmail = required('ADMIN_EMAIL').trim().toLowerCase();
   await sql(`insert into public.cabinet_config(id,admin_email,media_base_url) values (true,${sqlString(adminEmail)},${sqlString(mediaBaseUrl)}) on conflict(id) do nothing;`);
   checked(await supabase.from('cabinet_site_content').upsert({ id: true, content: original.data, version: 1 }, { onConflict: 'id', ignoreDuplicates: true }), 'Import initial');
@@ -101,13 +104,8 @@ async function setup() {
 }
 
 async function deploy() {
-  const web3FormsAccessKey = process.env.WEB3FORMS_ACCESS_KEY?.trim();
-  if (web3FormsAccessKey) {
-    await management('/secrets', {
-      method: 'POST',
-      body: JSON.stringify([{ name: 'WEB3FORMS_ACCESS_KEY', value: web3FormsAccessKey }]),
-    });
-  }
+  const readiness = await sql("select to_regclass('public.cabinet_appointments') is not null and to_regclass('public.cabinet_reviews') is not null and to_regprocedure('public.cabinet_allow_review_submission(text)') is not null as ready", true);
+  if (readiness?.[0]?.ready !== true) throw new Error('Appliquez toutes les migrations Supabase avant de déployer la fonction.');
   const result = await build({
     entryPoints: [resolve(root, 'supabase/functions/cabinet-api/index.ts')], bundle: true, write: false,
     platform: 'neutral', format: 'esm', target: 'es2022', minify: false,
@@ -136,8 +134,13 @@ async function migrateReviews() {
   console.info(JSON.stringify({ reviewsMigration: 'applied', checks: result }));
 }
 
+async function migrateAppointments() {
+  await sql(await readFile(resolve(root, 'supabase/migrations/202611050001_cabinet_appointments.sql'), 'utf8'));
+  console.info(JSON.stringify({ appointmentsMigration: 'applied' }));
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const operation = { setup, backup, deploy, inspect, 'migrate-reviews': migrateReviews }[process.argv[2]];
+  const operation = { setup, backup, deploy, inspect, 'migrate-reviews': migrateReviews, 'migrate-appointments': migrateAppointments }[process.argv[2]];
   if (!operation) throw new Error('Commande attendue : setup, backup, deploy, inspect ou migrate-reviews.');
   try { await operation(); } catch (error) { console.error(error.message); process.exitCode = 1; }
 }

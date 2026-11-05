@@ -8,4 +8,6 @@
 
 export interface ContactAppointmentAccepted {
   accepted: boolean;
+  requestId?: string;
+  notificationSent?: boolean;
 }

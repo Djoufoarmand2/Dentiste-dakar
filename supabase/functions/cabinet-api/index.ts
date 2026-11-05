@@ -107,7 +107,7 @@ async function checkReviewRate(request: Request) {
       throw new HttpError(503, 'La protection anti-abus est momentanément indisponible.');
     }
     const retryAt = new Date(retryAtMilliseconds).toISOString();
-    throw new HttpError(429, 'Vous avez déjà envoyé plusieurs avis.', retryAt);
+    throw new HttpError(429, 'Vous avez déjà envoyé plusieurs demandes. Réessayez plus tard.', retryAt);
   }
 }
 
@@ -149,40 +149,18 @@ export async function handleRequest(request: Request): Promise<Response> {
         return respond(SubmitContactAppointmentResponse.parse({ accepted: true }));
       }
 
-      const accessKey = Deno.env.get('WEB3FORMS_ACCESS_KEY')?.trim();
-      if (!accessKey) {
-        throw new HttpError(503, 'Le formulaire est temporairement indisponible. Contactez le cabinet par téléphone.');
-      }
       const name = parsed.data.name.trim();
       const phone = parsed.data.phone.trim();
       if (!name || !phone) throw new HttpError(400, 'Le nom et le numéro de téléphone sont obligatoires.');
-
-      let upstream: Response;
-      try {
-        upstream = await fetch('https://api.web3forms.com/submit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-          body: JSON.stringify({
-            access_key: accessKey,
-            subject: 'Nouvelle demande de rendez-vous — Cabinet Sourire Serein',
-            from_name: 'Cabinet Sourire Serein',
-            name,
-            phone,
-            email: parsed.data.email.trim().toLowerCase(),
-            service: parsed.data.service,
-            preferred_date: parsed.data.preferredDate,
-            message: parsed.data.message?.trim(),
-          }),
-          signal: AbortSignal.timeout(10_000),
-        });
-      } catch {
-        throw new HttpError(502, 'L’envoi a échoué. Réessayez ou contactez le cabinet par téléphone.');
-      }
-      const result = await upstream.json().catch(() => null) as { success?: boolean } | null;
-      if (!upstream.ok || result?.success !== true) {
-        throw new HttpError(502, 'L’envoi a échoué. Réessayez ou contactez le cabinet par téléphone.');
-      }
-      return respond(SubmitContactAppointmentResponse.parse({ accepted: true }));
+      await checkReviewRate(request); // Shared anti-abuse quota for public submissions.
+      const id = parsed.data.submissionId ?? crypto.randomUUID();
+      const { error } = await db.from('cabinet_appointments').upsert({
+        id, name, phone, email: parsed.data.email.trim().toLowerCase(),
+        service: parsed.data.service, preferred_date: parsed.data.preferredDate || null,
+        message: parsed.data.message?.trim() || null,
+      }, { onConflict: 'id', ignoreDuplicates: true });
+      if (error) throw new HttpError(503, 'Impossible d’enregistrer votre demande. Réessayez ou contactez le cabinet.');
+      return respond(SubmitContactAppointmentResponse.parse({ accepted: true, requestId: id }));
     }
     if (request.method === 'GET' && path === '/reviews') {
       const { data, error } = await db.from('cabinet_reviews').select('*').order('created_at', { ascending: false }).limit(100);
@@ -214,6 +192,22 @@ export async function handleRequest(request: Request): Promise<Response> {
     const admin = await administrator(request);
     if (request.method === 'GET' && path === '/admin/access') return respond({ isAdmin: admin.isAdmin });
     if (!admin.isAdmin) throw new HttpError(403, 'Accès réservé à l’administrateur du cabinet.');
+    if (request.method === 'GET' && path === '/admin/appointments') {
+      const { data, error } = await db.from('cabinet_appointments').select('*').order('created_at', { ascending: false }).limit(500);
+      if (error) throw new HttpError(503, 'Impossible de charger les demandes.');
+      return respond((data ?? []).map(row => ({
+        id: row.id, name: row.name, phone: row.phone, email: row.email,
+        service: row.service, preferredDate: row.preferred_date, message: row.message,
+        createdAt: row.created_at,
+      })));
+    }
+    if (request.method === 'DELETE' && path.startsWith('/admin/appointments/')) {
+      const id = path.slice('/admin/appointments/'.length);
+      if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id)) throw new HttpError(400, 'Identifiant invalide.');
+      const { error } = await db.from('cabinet_appointments').delete().eq('id', id);
+      if (error) throw new HttpError(503, 'Impossible de supprimer la demande.');
+      return respond(null, 204);
+    }
     if (request.method === 'GET' && path === '/admin/reviews') {
       const { data, error } = await db.from('cabinet_reviews').select('*').order('created_at', { ascending: false }).limit(500);
       if (error) throw new HttpError(503, 'Impossible de charger les avis.');

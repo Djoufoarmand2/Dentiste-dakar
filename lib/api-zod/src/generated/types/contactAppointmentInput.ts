@@ -26,4 +26,5 @@ export interface ContactAppointmentInput {
   message?: string;
   /** @maxLength 200 */
   website?: string;
+  submissionId?: string;
 }

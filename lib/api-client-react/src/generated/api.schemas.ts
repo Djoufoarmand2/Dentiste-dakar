@@ -37,10 +37,26 @@ export interface ContactAppointmentInput {
   message?: string;
   /** @maxLength 200 */
   website?: string;
+  submissionId?: string;
 }
 
 export interface ContactAppointmentAccepted {
   accepted: boolean;
+  requestId?: string;
+  notificationSent?: boolean;
+}
+
+export interface AppointmentRequest {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  service: string;
+  /** @nullable */
+  preferredDate?: string | null;
+  /** @nullable */
+  message?: string | null;
+  createdAt: string;
 }
 
 export type ReviewSource = typeof ReviewSource[keyof typeof ReviewSource];
