@@ -54,7 +54,7 @@ const defaultValues: AppointmentFormValues = {
   website: "",
 };
 
-export function AppointmentRequestForm() {
+export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?: string }) {
   const form = useForm<AppointmentFormValues>({ defaultValues, mode: "onChange" });
   const request = useMutation({
     mutationFn: (data: ContactAppointmentInput) =>
@@ -70,6 +70,7 @@ export function AppointmentRequestForm() {
   const phoneDigits = phoneValue.replace(/\D/g, "");
   const phoneValid = phoneDigits.length >= 8 && phoneDigits.length <= 15;
   const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
+  const phoneLink = phone.replace(/[^\d+]/g, "");
 
   const submit = async (values: AppointmentFormValues) => {
     request.reset();
@@ -297,8 +298,13 @@ export function AppointmentRequestForm() {
             className="rounded-md border border-[#e7c8c1] bg-[#f8e9e5] p-4 text-sm leading-6 text-[#943d35]"
             data-testid="status-appointment-error"
           >
-            L’envoi n’a pas abouti. Réessayez ou contactez le cabinet par
-            téléphone.
+            {request.error instanceof Error && request.error.message
+              ? request.error.message
+              : "L’envoi n’a pas abouti. Réessayez."}{" "}
+            Contactez la clinique par téléphone au{" "}
+            <a href={`tel:${phoneLink}`} className="font-semibold underline underline-offset-2">
+              {phone}
+            </a>.
           </p>
         )}
 
