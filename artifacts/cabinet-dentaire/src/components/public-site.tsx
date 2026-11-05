@@ -7,6 +7,7 @@ import type { BlogPost, Campaign, ServiceItem, SiteContent, Testimonial } from '
 import { Link, useLocation } from 'wouter';
 import { AppointmentRequestForm } from './appointment-request-form';
 import { ReviewSubmissionForm } from './review-submission-form';
+import { VideoPlayer } from './video-player';
 import { combinePublicReviews, usePublicReviews } from '@/lib/reviews';
 import heroIllustration from '@/lib/hero-illustration.json';
 import { supabaseUrl } from '@/lib/supabase';
@@ -579,15 +580,12 @@ function CampaignGrid({ campaigns }: { campaigns: Campaign[] }) {
     return <article key={c.id} className="card-ref overflow-hidden" data-testid={`card-campaign-${c.id}`}>
       <div className="relative">
         {hasVideo
-          ? <video
+          ? <VideoPlayer
             src={videoUrl}
             poster={c.imageUrl?.trim() || undefined}
-            controls
-            playsInline
-            preload="metadata"
-            aria-label={`Vidéo de la campagne : ${c.title}`}
-            className="block h-60 w-full bg-[#070116] object-contain"
-            data-testid={`video-campaign-${c.id}`}
+            title={`Vidéo de la campagne : ${c.title}`}
+            className="h-60"
+            testId={`video-campaign-${c.id}`}
           />
           : <ImageFrame src={c.imageUrl} alt={c.title} label={c.mediaType === 'video' ? 'Miniature vidéo à ajouter' : 'Visuel à ajouter'} className="h-60" />}
       </div>
