@@ -7,6 +7,9 @@ const outputDirectory = process.env.CABINET_SITEMAP_OUTPUT_DIR
   : path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../dist/public');
 const sitemapPath = path.join(outputDirectory, 'sitemap.xml');
 const robotsPath = path.join(outputDirectory, 'robots.txt');
+const rawBasePath = process.env.BASE_PATH?.trim() || '/';
+const basePath = `/${rawBasePath.split('/').filter(Boolean).join('/')}${rawBasePath.split('/').filter(Boolean).length ? '/' : ''}`;
+const appPath = (route) => `${basePath}${String(route).replace(/^\/+/, '')}`;
 
 function canonicalOrigin(value) {
   if (!value) return null;
@@ -60,7 +63,7 @@ const configuredImageUrl = (() => {
 const canIndex = indexable && !!origin && !!siteTitle && !!siteDescription && !!configuredImageUrl;
 
 const fixedRoutes = [
-  '/', '/soins', '/equipe', '/galerie', '/avis', '/faq', '/blog',
+  '/', '/soins', '/equipe', '/galerie', '/avis', '/faq', '/blog/',
   '/informations', '/contact', '/confidentialite',
 ];
 const routes = new Set(fixedRoutes);
@@ -77,7 +80,7 @@ if (supabaseUrl && publishableKey) {
       publicContent = await response.json();
       for (const post of publicContent.blogPosts ?? []) {
         if (post?.published === true && typeof post.slug === 'string' && /^[a-z0-9-]+$/.test(post.slug)) {
-          routes.add(`/blog/${post.slug}`);
+          routes.add(`/blog/${post.slug}/`);
         }
       }
     } else {
@@ -166,8 +169,9 @@ function pageMetadata(route) {
   const clinic = publicContent?.clinic ?? {};
   const name = clinic.name || 'Clinique Sourire Serein';
   const city = clinic.city || 'Douala';
-  const article = route.startsWith('/blog/')
-    ? (publicContent?.blogPosts ?? []).find((post) => post.published && route === `/blog/${post.slug}`)
+  const normalizedRoute = route.replace(/\/+$/, '') || '/';
+  const article = normalizedRoute.startsWith('/blog/')
+    ? (publicContent?.blogPosts ?? []).find((post) => post.published && normalizedRoute === `/blog/${post.slug}`)
     : undefined;
   const titles = {
     '/soins': `Soins dentaires à ${city}`,
@@ -191,7 +195,8 @@ function pageMetadata(route) {
     160,
   );
   const socialImage = article?.imageUrl || publicContent?.hero?.imageUrl || configuredImageUrl;
-  const canonical = canIndex && origin ? `${origin}${route === '/' ? '/' : route}` : undefined;
+  const canonicalRoute = normalizedRoute === '/blog' || normalizedRoute.startsWith('/blog/') ? `${normalizedRoute}/` : normalizedRoute;
+  const canonical = canIndex && origin ? `${origin}${canonicalRoute === '/' ? '/' : canonicalRoute}` : undefined;
   return { title, description, socialImage, canonical, type: article ? 'article' : 'website', article, clinicName: name };
 }
 
@@ -233,24 +238,25 @@ function renderArticleContent(content) {
 }
 
 function renderBlogMarkup(route) {
+  const normalizedRoute = route.replace(/\/+$/, '') || '/';
   const posts = (publicContent?.blogPosts ?? []).filter((post) => post.published && /^[a-z0-9-]+$/.test(post.slug || ''));
-  if (route === '/blog') {
-    const cards = posts.map((post) => `<article><a href="/blog/${escapeAttribute(post.slug)}">${post.imageUrl ? `<img src="${escapeAttribute(post.imageUrl)}" alt="${escapeAttribute(blogImageAlt(post))}" loading="lazy" decoding="async" />` : ''}<h2>${escapeXml(post.title)}</h2><p>${escapeXml(post.excerpt)}</p><span>Lire l’article</span></a></article>`).join('\n');
+  if (normalizedRoute === '/blog') {
+    const cards = posts.map((post) => `<article><a href="${escapeAttribute(appPath(`/blog/${post.slug}/`))}">${post.imageUrl ? `<img src="${escapeAttribute(post.imageUrl)}" alt="${escapeAttribute(blogImageAlt(post))}" loading="lazy" decoding="async" />` : ''}<h2>${escapeXml(post.title)}</h2><p>${escapeXml(post.excerpt)}</p><span>Lire l’article</span></a></article>`).join('\n');
     return `<main><h1>Conseils dentaires à ${escapeXml(publicContent?.clinic?.city || 'Douala')}</h1><p>Des informations générales sur les soins dentaires et la santé bucco-dentaire, à compléter par les conseils de votre praticien.</p>${cards || '<p>Les articles seront publiés prochainement.</p>'}</main>`;
   }
-  const post = posts.find((entry) => route === `/blog/${entry.slug}`);
+  const post = posts.find((entry) => route.replace(/\/+$/, '') === `/blog/${entry.slug}`);
   if (!post) return '';
   const image = post.imageUrl
     ? `<img src="${escapeAttribute(post.imageUrl)}" alt="${escapeAttribute(blogImageAlt(post))}" fetchpriority="high" decoding="async" />`
     : '';
-  return `<main><a href="/blog">Tous les articles</a><article><time datetime="${escapeAttribute(post.date)}">${escapeXml(post.date)} · ${escapeXml(post.author)}</time><h1>${escapeXml(post.title)}</h1><p>${escapeXml(post.excerpt)}</p>${image}<div>${renderArticleContent(post.content)}</div></article></main>`;
+  return `<main><a href="${escapeAttribute(appPath('/blog/'))}">Tous les articles</a><article><time datetime="${escapeAttribute(post.date)}">${escapeXml(post.date)} · ${escapeXml(post.author)}</time><h1>${escapeXml(post.title)}</h1><p>${escapeXml(post.excerpt)}</p>${image}<div>${renderArticleContent(post.content)}</div></article></main>`;
 }
 
 const baseTemplate = await readFile(indexPath, 'utf8');
 const routesToRender = [...routes];
 for (const route of routesToRender) {
   const metadata = pageMetadata(route);
-  const body = route === '/blog' || route.startsWith('/blog/')
+  const body = route.replace(/\/+$/, '') === '/blog' || route.startsWith('/blog/')
     ? renderBlogMarkup(route)
     : `<main><h1>${escapeXml(metadata.title.split(' | ')[0])}</h1><p>${escapeXml(metadata.description)}</p></main>`;
   const prerendered = withPageMetadata(baseTemplate, route).replace(
