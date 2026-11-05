@@ -67,7 +67,7 @@ function SignedInNotice({ onLogout }: { onLogout: () => void }) {
   return <div className="mt-5 rounded-xl border border-border bg-secondary/50 p-4 text-sm" data-testid="notice-signed-in">
     <p>Session ouverte : <b data-testid="text-session-email">{session.user.email}</b></p>
     <div className="mt-3 flex flex-wrap gap-2">
-      <Link href="/admin" className="btn-navy" data-testid="link-go-admin">Ouvrir l’espace</Link>
+      <Link href="/arm" className="btn-navy" data-testid="link-go-admin">Ouvrir l’espace</Link>
       <button type="button" onClick={() => void logout()} disabled={busy} className="btn-gold disabled:opacity-60" data-testid="button-logout">{busy ? 'Déconnexion…' : 'Changer de compte'}</button>
     </div>
     <Alert error={error} />
@@ -91,7 +91,7 @@ function SignIn() {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) { setError(translate(error.message)); return; }
       clearCredentials();
-      setLocation('/admin');
+      setLocation('/arm');
     } catch (err) { setError(translate(err instanceof Error ? err.message : '')); }
     finally { setBusy(false); }
   }
@@ -163,7 +163,7 @@ function Reset() {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) { setError(translate(error.message)); return; }
-      setLocation('/admin');
+      setLocation('/arm');
     } catch (err) { setError(translate(err instanceof Error ? err.message : '')); }
     finally { setBusy(false); }
   }
