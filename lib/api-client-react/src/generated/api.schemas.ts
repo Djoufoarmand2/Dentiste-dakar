@@ -9,14 +9,13 @@ export type ContactAppointmentInputService = typeof ContactAppointmentInputServi
 
 
 export const ContactAppointmentInputService = {
-  'Consultation_générale_/_Bilan': 'Consultation générale / Bilan',
-  Facettes_dentaires_en_composite: 'Facettes dentaires en composite',
-  Esthétique_dentaire: 'Esthétique dentaire',
-  Blanchiment_dentaire: 'Blanchiment dentaire',
-  Implants_dentaires: 'Implants dentaires',
-  Orthodontie: 'Orthodontie',
+  Consultation_dentaire: 'Consultation dentaire',
+  Détartrage_et_polissage: 'Détartrage et polissage',
+  Traitement_des_caries: 'Traitement des caries',
+  'Plombage_/_composite': 'Plombage / composite',
+  'Kinésithérapie_dentaire_/_maxillo-faciale': 'Kinésithérapie dentaire / maxillo-faciale',
+  Laboratoire_prothétique: 'Laboratoire prothétique',
   Chirurgie_dentaire: 'Chirurgie dentaire',
-  Urgence_dentaire: 'Urgence dentaire',
 } as const;
 
 export interface ContactAppointmentInput {

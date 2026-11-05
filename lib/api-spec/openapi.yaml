@@ -277,14 +277,13 @@ components:
         service:
           type: string
           enum:
-            - Consultation générale / Bilan
-            - Facettes dentaires en composite
-            - Esthétique dentaire
-            - Blanchiment dentaire
-            - Implants dentaires
-            - Orthodontie
+            - Consultation dentaire
+            - Détartrage et polissage
+            - Traitement des caries
+            - Plombage / composite
+            - Kinésithérapie dentaire / maxillo-faciale
+            - Laboratoire prothétique
             - Chirurgie dentaire
-            - Urgence dentaire
         preferredDate: { type: string, format: date }
         message: { type: string, maxLength: 2000 }
         website: { type: string, maxLength: 200 }

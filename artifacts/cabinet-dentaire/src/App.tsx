@@ -81,7 +81,7 @@ function PublicRoute({ page }: { page: (content: SiteContent) => ReactNode }) {
     '/contact': 'Contact',
     '/confidentialite': 'Confidentialité',
   };
-  const pageName = article?.title || pageNames[path] || 'Cabinet dentaire';
+  const pageName = article?.title || pageNames[path] || 'Clinique Sourire Serein';
   const description = article?.excerpt ||
     (path === '/'
       ? query.data.hero.description

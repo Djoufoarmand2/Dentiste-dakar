@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import {
   CreateAdminReviewBody, DeleteAdminReviewParams, PublishAdminContentBody, PrepareAdminMediaBody,
   FinalizeAdminMediaBody, DeleteAdminMediaBody, SubmitReviewBody,
+  SubmitContactAppointmentBody, SubmitContactAppointmentResponse,
 } from '../../../lib/api-zod/src/generated/api';
 import { mimeExtensions, parseContent, publicContent, signatureMatches } from './validation';
 
@@ -140,6 +141,48 @@ export async function handleRequest(request: Request): Promise<Response> {
       const { data, error } = await db.from('cabinet_site_content').select('content').eq('id', true).single();
       if (error || !data) throw new HttpError(503, 'Le contenu du site est temporairement indisponible.');
       return respond(publicContent(data.content));
+    }
+    if (request.method === 'POST' && path === '/contact/appointment') {
+      const parsed = SubmitContactAppointmentBody.safeParse(await body(request));
+      if (!parsed.success) throw new HttpError(400, 'Vérifiez les informations du formulaire.');
+      if (parsed.data.website?.trim()) {
+        return respond(SubmitContactAppointmentResponse.parse({ accepted: true }));
+      }
+
+      const accessKey = Deno.env.get('WEB3FORMS_ACCESS_KEY')?.trim();
+      if (!accessKey) {
+        throw new HttpError(503, 'Le formulaire est temporairement indisponible. Contactez la clinique par téléphone.');
+      }
+      const name = parsed.data.name.trim();
+      const phone = parsed.data.phone.trim();
+      if (!name || !phone) throw new HttpError(400, 'Le nom et le numéro de téléphone sont obligatoires.');
+
+      let upstream: Response;
+      try {
+        upstream = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          body: JSON.stringify({
+            access_key: accessKey,
+            subject: 'Nouvelle demande de rendez-vous — Clinique Sourire Serein',
+            from_name: 'Clinique Sourire Serein',
+            name,
+            phone,
+            email: parsed.data.email.trim().toLowerCase(),
+            service: parsed.data.service,
+            preferred_date: parsed.data.preferredDate,
+            message: parsed.data.message?.trim(),
+          }),
+          signal: AbortSignal.timeout(10_000),
+        });
+      } catch {
+        throw new HttpError(502, 'L’envoi a échoué. Réessayez ou contactez la clinique par téléphone.');
+      }
+      const result = await upstream.json().catch(() => null) as { success?: boolean } | null;
+      if (!upstream.ok || result?.success !== true) {
+        throw new HttpError(502, 'L’envoi a échoué. Réessayez ou contactez la clinique par téléphone.');
+      }
+      return respond(SubmitContactAppointmentResponse.parse({ accepted: true }));
     }
     if (request.method === 'GET' && path === '/reviews') {
       const { data, error } = await db.from('cabinet_reviews').select('*').order('created_at', { ascending: false }).limit(100);

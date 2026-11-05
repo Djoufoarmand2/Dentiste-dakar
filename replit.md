@@ -1,6 +1,16 @@
-# Cabinet Naya
+# Clinique Sourire Serein
 
-Site vitrine fictif, en français, pour un cabinet dentaire à Douala. Les coordonnées, textes, articles, avis et campagnes de démonstration doivent être remplacés par des informations approuvées avant publication.
+Site vitrine en français pour la Clinique Sourire Serein, cabinet dentaire situé au sein de la Clinique La Bienveillance à Douala. Les informations confirmées proviennent du cahier des charges remis par le cabinet; ne pas inventer de praticiens, témoignages ou mentions légales.
+
+## Données officielles confirmées
+
+- Adresse : Ancienne gare routière, Dakar, Douala, Cameroun.
+- Téléphone / WhatsApp : +237 677 87 34 42.
+- Courriel : bienveillanceclinique4@gmail.com.
+- Horaires communiqués : 24 h/24, 7 j/7 ; inviter les visiteurs à appeler pour confirmer la disponibilité dentaire.
+- Carte : lien Google Maps officiel fourni dans le contenu Supabase.
+- Établissement d’accueil : Clinique La Bienveillance — https://cliniquelabienveillance.com.
+- Le site reste `noindex` tant que le domaine public final et les paramètres SEO officiels ne sont pas confirmés.
 
 ## Run & Operate
 
@@ -31,7 +41,7 @@ Site vitrine fictif, en français, pour un cabinet dentaire à Douala. Les coord
 - `scripts/src/cabinet-supabase.mjs` — sauvegarde, installation et déploiement du backend
 - `docs/supabase-cabinet.md` — exploitation, accès, limites et retour arrière
 - `artifacts/api-server/src/routes/site-content.ts` — ancien backend, conservé pour restauration
-- `artifacts/api-server/src/lib/siteContentDefaults.ts` — contenu initial fictif; toutes les URL d’images sont vides
+- `artifacts/api-server/src/lib/siteContentDefaults.ts` — contenu historique du backend retiré
 - `lib/api-spec/openapi.yaml` — contrat source de l’API; régénérer les fichiers générés après modification
 
 ## Architecture decisions
@@ -51,7 +61,7 @@ Site vitrine fictif, en français, pour un cabinet dentaire à Douala. Les coord
 
 ## User preferences
 
-- Garder les contenus de départ fictifs et les zones de photos/logo sans image jusqu’à ce que le cabinet fournisse ses propres visuels.
+- Utiliser les coordonnées et visuels fournis par le cabinet ; ne jamais inventer les identités de praticiens, qualifications, témoignages ou mentions légales manquants.
 - Reprendre fidèlement la présentation et la structure de base de cabinetdentairegloria.com, tout en gardant notre logique de base, nos contenus, Supabase et l’administration. Ne pas reprendre son code, ses textes, son logo ni ses photos.
 - Les couleurs doivent être plus vives et éclatantes : garder le bleu et le doré, avec un rendu plus lumineux et des fonds blancs nets.
 - Supabase doit s'occuper entièrement du backend ; le passage sur Cloudflare est différé.
