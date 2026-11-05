@@ -364,118 +364,120 @@ export function HomePage({ content }: { content: SiteContent }) {
   const partnerPhoto = content.gallery.find((item) => item.id === partnerPhotoId);
   const heroImg = hero.imageUrl?.trim();
   const isIllustrativeHero = heroImg === `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public/cabinet-media/${heroIllustration.storagePath}`;
-  return <SiteShell clinic={clinic} overlay>
-    <main>
-      <section className="relative flex min-h-[92dvh] items-center overflow-hidden bg-[#073e53] text-white md:min-h-[100dvh]" data-testid="section-hero">
-        {heroImg ? <img src={heroImg} alt={isIllustrativeHero ? heroIllustration.alt : heroImg === partnerPhoto?.imageUrl ? partnerPhoto.alt : 'Vue du cabinet dentaire'} fetchPriority="high" className={`absolute inset-0 h-full w-full object-cover ${isIllustrativeHero ? 'object-[100%_38%] md:object-[center_40%]' : 'object-center'}`} data-testid="img-hero" /> : <div aria-hidden className="hero-fallback absolute inset-0" />}
-        <div aria-hidden className={`absolute inset-0 ${heroImg ? 'bg-[#070116]/60' : 'bg-[#070116]/15'}`} />
-        <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 pb-20 pt-32 md:px-8">
-          <div className="mx-auto max-w-[620px] reveal">
-            {hero.eyebrow && <p className="mb-5 text-[11px] font-semibold uppercase tracking-[.26em] text-[#f0a0a6]">{hero.eyebrow}</p>}
-            <h1 className="font-display text-[clamp(2.4rem,5.4vw,3.9rem)] font-semibold leading-[1.1]">{hero.title || 'Un sourire en confiance, un soin tout en douceur.'}</h1>
-            <p className="mt-6 max-w-xl text-base leading-7 text-white/85">{hero.description || 'À Douala, nous avons imaginé un cabinet où chaque visite commence par une écoute attentive.'}</p>
-            <div className="mt-9 flex flex-wrap gap-4">
-              <BookButton clinic={clinic} testId="button-hero-book">{hero.primaryAction || 'Prendre rendez-vous'}</BookButton>
-              <Link href="/soins" className="btn-outline-light" data-testid="link-hero-care">{hero.secondaryAction || 'Découvrir nos soins'}</Link>
+  return (
+    <SiteShell clinic={clinic} overlay>
+      <main>
+        <section className="relative flex min-h-[92dvh] items-center overflow-hidden bg-[#073e53] text-white md:min-h-[100dvh]" data-testid="section-hero">
+          {heroImg ? <img src={heroImg} alt={isIllustrativeHero ? heroIllustration.alt : heroImg === partnerPhoto?.imageUrl ? partnerPhoto.alt : 'Vue du cabinet dentaire'} fetchPriority="high" className={`absolute inset-0 h-full w-full object-cover ${isIllustrativeHero ? 'object-[100%_38%] md:object-[center_40%]' : 'object-center'}`} data-testid="img-hero" /> : <div aria-hidden className="hero-fallback absolute inset-0" />}
+          <div aria-hidden className={`absolute inset-0 ${heroImg ? 'bg-[#070116]/60' : 'bg-[#070116]/15'}`} />
+          <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 pb-20 pt-32 md:px-8">
+            <div className="mx-auto max-w-[620px] reveal">
+              {hero.eyebrow && <p className="mb-5 text-[11px] font-semibold uppercase tracking-[.26em] text-[#f0a0a6]">{hero.eyebrow}</p>}
+              <h1 className="font-display text-[clamp(2.4rem,5.4vw,3.9rem)] font-semibold leading-[1.1]">{hero.title || 'Un sourire en confiance, un soin tout en douceur.'}</h1>
+              <p className="mt-6 max-w-xl text-base leading-7 text-white/85">{hero.description || 'À Douala, nous avons imaginé un cabinet où chaque visite commence par une écoute attentive.'}</p>
+              <div className="mt-9 flex flex-wrap gap-4">
+                <BookButton clinic={clinic} testId="button-hero-book">{hero.primaryAction || 'Prendre rendez-vous'}</BookButton>
+                <Link href="/soins" className="btn-outline-light" data-testid="link-hero-care">{hero.secondaryAction || 'Découvrir nos soins'}</Link>
+              </div>
             </div>
           </div>
-        </div>
-        {isIllustrativeHero && <p className="absolute bottom-4 left-5 z-10 max-w-[calc(100%-6rem)] text-[10px] leading-4 text-white/75 md:left-8">Illustration générée par IA — ne représente pas les locaux ni l’équipe réelle.</p>}
-      </section>
+          {isIllustrativeHero && <p className="absolute bottom-4 left-5 z-10 max-w-[calc(100%-6rem)] text-[10px] leading-4 text-white/75 md:left-8">Illustration générée par IA — ne représente pas les locaux ni l’équipe réelle.</p>}
+        </section>
 
-      {[content.services.length, content.team.length, photos.length].some((count) => count > 0) && <section className="border-b border-[#073e53]/10 bg-[#f3f1f5] py-8 md:py-10" aria-label="Le cabinet en quelques repères">
-        <div className="wrap flex flex-wrap items-center justify-center gap-x-10 gap-y-6 sm:justify-start">
-          {content.services.length > 0 && <MetricCounter value={content.services.length} label="Soins présentés" />}
-          {content.team.length > 0 && <MetricCounter value={content.team.length} label="Membres de l’équipe" />}
-          {photos.length > 0 && <MetricCounter value={photos.length} label="Images en galerie" />}
-        </div>
-      </section>}
-
-      <section id="clinique-partenaire" className="section-pad bg-[#e6e3eb]" aria-labelledby="partner-heading">
-        <div className="wrap grid items-center gap-8 md:grid-cols-[1fr_1.05fr] md:gap-12">
-          <div className="overflow-hidden rounded-2xl">
-            <ImageFrame src={partnerPhoto?.imageUrl || heroImg} alt="Façade de la Clinique La Bienveillance à Douala" label="Photo de l’établissement partenaire" className="aspect-[4/3] w-full" />
+        {[content.services.length, content.team.length, photos.length].some((count) => count > 0) && <section className="border-b border-[#073e53]/10 bg-[#f3f1f5] py-8 md:py-10" aria-label="Le cabinet en quelques repères">
+          <div className="wrap flex flex-wrap items-center justify-center gap-x-10 gap-y-6 sm:justify-start">
+            {content.services.length > 0 && <MetricCounter value={content.services.length} label="Soins présentés" />}
+            {content.team.length > 0 && <MetricCounter value={content.team.length} label="Membres de l’équipe" />}
+            {photos.length > 0 && <MetricCounter value={photos.length} label="Images en galerie" />}
           </div>
-          <div className="rounded-2xl border border-[#073e53]/10 bg-white p-7 shadow-[0_18px_55px_rgba(7,1,22,.08)] md:p-10">
-            {partnerLogo?.imageUrl && <img src={partnerLogo.imageUrl} alt={partnerLogo.alt || 'Logo de la Clinique La Bienveillance'} width="96" height="96" loading="lazy" className="mb-5 h-20 w-20 rounded-full bg-white object-contain ring-1 ring-[#073e53]/10" />}
-            <p className="eyebrow">Établissement partenaire</p>
-            <h2 id="partner-heading" className="mt-3 font-display text-3xl font-semibold leading-tight text-[#073e53] md:text-4xl">Le Cabinet Sourire Serein, au sein de La Bienveillance.</h2>
-            <p className="mt-4 text-sm leading-7 text-muted-foreground">Le cabinet dentaire vous accueille au sein de la Clinique La Bienveillance, à Douala. Retrouvez les informations sur l’établissement partenaire et ses autres services sur son site officiel.</p>
-            <p className="mt-4 text-sm font-medium text-[#073e53]">{clinic.address || 'Ancienne gare routière, Dakar, Douala, Cameroun'}</p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <a href={partnerSite} target="_blank" rel="noopener noreferrer" className="btn-navy" data-testid="link-partner-clinic">Visiter la Clinique La Bienveillance <ArrowRight size={15} /></a>
-              <a href={clinic.mapUrl || mapsDirections} target="_blank" rel="noopener noreferrer" className="btn-outline-light !border-[#073e53]/20 !text-[#073e53] hover:!bg-[#073e53] hover:!text-white" data-testid="link-partner-directions">Voir l’itinéraire <MapPin size={15} /></a>
+        </section>}
+
+        <section id="clinique-partenaire" className="section-pad bg-[#e6e3eb]" aria-labelledby="partner-heading">
+          <div className="wrap grid items-center gap-8 md:grid-cols-[1fr_1.05fr] md:gap-12">
+            <div className="overflow-hidden rounded-2xl">
+              <ImageFrame src={partnerPhoto?.imageUrl || heroImg} alt="Façade de la Clinique La Bienveillance à Douala" label="Photo de l’établissement partenaire" className="aspect-[4/3] w-full" />
+            </div>
+            <div className="rounded-2xl border border-[#073e53]/10 bg-white p-7 shadow-[0_18px_55px_rgba(7,1,22,.08)] md:p-10">
+              {partnerLogo?.imageUrl && <img src={partnerLogo.imageUrl} alt={partnerLogo.alt || 'Logo de la Clinique La Bienveillance'} width="96" height="96" loading="lazy" className="mb-5 h-20 w-20 rounded-full bg-white object-contain ring-1 ring-[#073e53]/10" />}
+              <p className="eyebrow">Établissement partenaire</p>
+              <h2 id="partner-heading" className="mt-3 font-display text-3xl font-semibold leading-tight text-[#073e53] md:text-4xl">Le Cabinet Sourire Serein, au sein de La Bienveillance.</h2>
+              <p className="mt-4 text-sm leading-7 text-muted-foreground">Le cabinet dentaire vous accueille au sein de la Clinique La Bienveillance, à Douala. Retrouvez les informations sur l’établissement partenaire et ses autres services sur son site officiel.</p>
+              <p className="mt-4 text-sm font-medium text-[#073e53]">{clinic.address || 'Ancienne gare routière, Dakar, Douala, Cameroun'}</p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <a href={partnerSite} target="_blank" rel="noopener noreferrer" className="btn-navy" data-testid="link-partner-clinic">Visiter la Clinique La Bienveillance <ArrowRight size={15} /></a>
+                <a href={clinic.mapUrl || mapsDirections} target="_blank" rel="noopener noreferrer" className="btn-outline-light !border-[#073e53]/20 !text-[#073e53] hover:!bg-[#073e53] hover:!text-white bg-background" data-testid="link-partner-directions">Voir l’itinéraire <MapPin size={15} /></a>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section id="soins" className="section-pad bg-background">
-        <div className="wrap">
-          <SectionHead eyebrow="Nos soins" title="Prendre soin, avec justesse." text="Des soins pensés pour préserver votre santé et vous aider à vous sentir bien, tout simplement." />
-          <p className="mt-4 max-w-3xl text-xs leading-5 text-muted-foreground">Les visuels des soins sont des illustrations générées par IA. Ils ne représentent ni les locaux ni l’équipe réelle.</p>
-          {content.services.length ? <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{content.services.slice(0, 6).map((s) => <ServiceCard key={s.id} item={s} href={`/soins#${serviceAnchor(s)}`} />)}</div>
-            : <EmptyInline title="Nos soins seront bientôt présentés ici" text="Les informations du cabinet seront mises à jour prochainement." />}
-          <div className="mt-10 text-center"><ActionLink href="/soins" variant="navy" testId="link-home-all-services">Tous les soins</ActionLink></div>
-        </div>
-      </section>
-
-      <section id="galerie" className="section-pad bg-[#e6e3eb]">
-        <div className="wrap">
-          <SectionHead eyebrow="Le cabinet" title="Un lieu pensé pour votre confort." text="Un aperçu de l’atmosphère qui vous attend." />
-          {photos.length ? <div className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.slice(0, 6).map((p) => <figure key={p.id} className="overflow-hidden rounded-md" data-testid={`home-gallery-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Photo du cabinet à ajouter" className="aspect-[4/3] transition-transform duration-500 hover:scale-[1.03]" /><figcaption className="sr-only">{p.alt}</figcaption></figure>)}</div>
-            : <EmptyInline title="L’espace se dévoilera bientôt" text="La galerie du cabinet est en préparation." />}
-          <div className="mt-10 text-center"><ActionLink href="/galerie" variant="navy" testId="link-home-gallery">Voir la galerie</ActionLink></div>
-        </div>
-      </section>
-
-      {lead && <section id="praticien" className="section-pad bg-background">
-        <div className="wrap grid items-center gap-10 md:grid-cols-2 md:gap-16">
-          <ImageFrame src={lead?.imageUrl} alt={lead ? `Portrait de ${lead.name}` : 'Présentation de l’équipe'} label="Portrait à ajouter" className="aspect-[4/5] w-full rounded-md md:max-h-[560px]" />
-          <div>
-            <SectionHead center={false} eyebrow={lead?.role || 'Votre praticien'} title={lead?.name || 'Une équipe, avant tout humaine.'} />
-            <p className="mt-6 text-[15px] leading-7 text-muted-foreground">{lead?.biography || 'Nous sommes là pour vous accueillir tels que vous êtes et construire avec vous un parcours de soin qui a du sens.'}</p>
-            <div className="mt-8"><ActionLink href="/equipe" testId="link-home-team">Rencontrer l’équipe</ActionLink></div>
+        <section id="soins" className="section-pad bg-background">
+          <div className="wrap">
+            <SectionHead eyebrow="Nos soins" title="Prendre soin, avec justesse." text="Des soins pensés pour préserver votre santé et vous aider à vous sentir bien, tout simplement." />
+            <p className="mt-4 max-w-3xl text-xs leading-5 text-muted-foreground">Les visuels des soins sont des illustrations générées par IA. Ils ne représentent ni les locaux ni l’équipe réelle.</p>
+            {content.services.length ? <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{content.services.slice(0, 6).map((s) => <ServiceCard key={s.id} item={s} href={`/soins#${serviceAnchor(s)}`} />)}</div>
+              : <EmptyInline title="Nos soins seront bientôt présentés ici" text="Les informations du cabinet seront mises à jour prochainement." />}
+            <div className="mt-10 text-center"><ActionLink href="/soins" variant="navy" testId="link-home-all-services">Tous les soins</ActionLink></div>
           </div>
-        </div>
-      </section>}
+        </section>
 
-      <section id="premiere-visite" className="section-pad bg-[#073e53] text-white">
-        <div className="wrap">
-          <div className="mx-auto max-w-2xl text-center"><p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#f0a0a6]">Votre première visite</p><h2 className="mt-3 font-display text-3xl font-semibold md:text-[2.6rem]">Comment se déroule un premier rendez-vous ?</h2><span className="mx-auto mt-5 block h-[2px] w-14 bg-[#f0a0a6]" /></div>
-          <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{visitSteps.map((s) => <li key={s.n} className="rounded-md border border-white/12 bg-white/[.04] p-6" data-testid={`step-visit-${s.n}`}><span className="font-display text-3xl font-semibold text-[#f0a0a6]">0{s.n}</span><h3 className="mt-3 text-base font-semibold">{s.title}</h3><p className="mt-2 text-sm leading-6 text-white/70">{s.text}</p></li>)}</ol>
-        </div>
-      </section>
+        <section id="galerie" className="section-pad bg-[#e6e3eb]">
+          <div className="wrap">
+            <SectionHead eyebrow="Le cabinet" title="Un lieu pensé pour votre confort." text="Un aperçu de l’atmosphère qui vous attend." />
+            {photos.length ? <div className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.slice(0, 6).map((p) => <figure key={p.id} className="overflow-hidden rounded-md" data-testid={`home-gallery-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Photo du cabinet à ajouter" className="aspect-[4/3] transition-transform duration-500 hover:scale-[1.03]" /><figcaption className="sr-only">{p.alt}</figcaption></figure>)}</div>
+              : <EmptyInline title="L’espace se dévoilera bientôt" text="La galerie du cabinet est en préparation." />}
+            <div className="mt-10 text-center"><ActionLink href="/galerie" variant="navy" testId="link-home-gallery">Voir la galerie</ActionLink></div>
+          </div>
+        </section>
 
-      <section id="avis" className="section-pad bg-[#e6e3eb]">
-        <div className="wrap">
-          <SectionHead eyebrow="Témoignages" title="La confiance se construit ensemble." />
-          <ReviewCarousel reviews={testimonials.slice(0, 3)} id="home-reviews" />
-          <div className="mt-10 text-center"><ActionLink href="/avis" variant="navy" testId="link-home-reviews">Tous les témoignages</ActionLink></div>
-        </div>
-      </section>
+        {lead && <section id="praticien" className="section-pad bg-background">
+          <div className="wrap grid items-center gap-10 md:grid-cols-2 md:gap-16">
+            <ImageFrame src={lead?.imageUrl} alt={lead ? `Portrait de ${lead.name}` : 'Présentation de l’équipe'} label="Portrait à ajouter" className="aspect-[4/5] w-full rounded-md md:max-h-[560px]" />
+            <div>
+              <SectionHead center={false} eyebrow={lead?.role || 'Votre praticien'} title={lead?.name || 'Une équipe, avant tout humaine.'} />
+              <p className="mt-6 text-[15px] leading-7 text-muted-foreground">{lead?.biography || 'Nous sommes là pour vous accueillir tels que vous êtes et construire avec vous un parcours de soin qui a du sens.'}</p>
+              <div className="mt-8"><ActionLink href="/equipe" testId="link-home-team">Rencontrer l’équipe</ActionLink></div>
+            </div>
+          </div>
+        </section>}
 
-      <section id="faq" className="section-pad bg-background">
-        <div className="mx-auto max-w-3xl px-5 md:px-8">
-          <SectionHead eyebrow="Questions fréquentes" title="Les réponses, sans détour." />
-          <div className="mt-10">{content.faqs.length ? <FaqList faqs={content.faqs.slice(0, 5)} /> : <EmptyInline title="Une question particulière ?" text="Contactez-nous, nous serons heureux de vous répondre." />}</div>
-          <div className="mt-8 text-center"><ActionLink href="/faq" variant="text" testId="link-home-faq">Toutes les questions</ActionLink></div>
-        </div>
-      </section>
+        <section id="premiere-visite" className="section-pad bg-[#073e53] text-white">
+          <div className="wrap">
+            <div className="mx-auto max-w-2xl text-center"><p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#f0a0a6]">Votre première visite</p><h2 className="mt-3 font-display text-3xl font-semibold md:text-[2.6rem]">Comment se déroule un premier rendez-vous ?</h2><span className="mx-auto mt-5 block h-[2px] w-14 bg-[#f0a0a6]" /></div>
+            <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{visitSteps.map((s) => <li key={s.n} className="rounded-md border border-white/12 bg-white/[.04] p-6" data-testid={`step-visit-${s.n}`}><span className="font-display text-3xl font-semibold text-[#f0a0a6]">0{s.n}</span><h3 className="mt-3 text-base font-semibold">{s.title}</h3><p className="mt-2 text-sm leading-6 text-white/70">{s.text}</p></li>)}</ol>
+          </div>
+        </section>
 
-      <section id="rendez-vous" className="bg-[#073e53] text-white">
-        <div className="wrap grid gap-10 py-16 md:grid-cols-[1.2fr_1fr] md:items-center md:py-24">
-          <div><p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#f0a0a6]">Prendre rendez-vous</p><h2 className="mt-3 font-display text-3xl font-semibold leading-tight md:text-[2.6rem]">Votre prochain rendez-vous peut être plus simple que vous ne le pensez.</h2><div className="mt-8 flex flex-wrap gap-4"><BookButton clinic={clinic} testId="button-home-final-book">Prendre rendez-vous</BookButton><Link href="/contact" className="btn-outline-light" data-testid="link-home-contact">Nous contacter</Link></div></div>
-          <ul className="space-y-5 rounded-md border border-white/12 bg-white/[.04] p-7 text-sm">
-            <li className="flex gap-4"><Phone size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><a href={`tel:${clinic.phone || ''}`} data-testid="link-home-phone">{clinic.phone || 'Téléphone à renseigner'}</a></li>
-            <li className="flex gap-4"><MessageCircle size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><a href={`mailto:${clinic.email || ''}`} className="break-all" data-testid="link-home-email">{clinic.email || 'Courriel à renseigner'}</a></li>
-            <li className="flex gap-4"><MapPin size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><span>{clinic.address || 'Douala, Cameroun'}</span></li>
-            <li className="flex gap-4"><Clock3 size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><span className="whitespace-pre-line text-white/80">{clinic.openingHours || 'Horaires à renseigner'}</span></li>
-          </ul>
-        </div>
-      </section>
-    </main>
-  </SiteShell>;
+        <section id="avis" className="section-pad bg-[#e6e3eb]">
+          <div className="wrap">
+            <SectionHead eyebrow="Témoignages" title="La confiance se construit ensemble." />
+            <ReviewCarousel reviews={testimonials.slice(0, 3)} id="home-reviews" />
+            <div className="mt-10 text-center"><ActionLink href="/avis" variant="navy" testId="link-home-reviews">Tous les témoignages</ActionLink></div>
+          </div>
+        </section>
+
+        <section id="faq" className="section-pad bg-background">
+          <div className="mx-auto max-w-3xl px-5 md:px-8">
+            <SectionHead eyebrow="Questions fréquentes" title="Les réponses, sans détour." />
+            <div className="mt-10">{content.faqs.length ? <FaqList faqs={content.faqs.slice(0, 5)} /> : <EmptyInline title="Une question particulière ?" text="Contactez-nous, nous serons heureux de vous répondre." />}</div>
+            <div className="mt-8 text-center"><ActionLink href="/faq" variant="text" testId="link-home-faq">Toutes les questions</ActionLink></div>
+          </div>
+        </section>
+
+        <section id="rendez-vous" className="bg-[#073e53] text-white">
+          <div className="wrap grid gap-10 py-16 md:grid-cols-[1.2fr_1fr] md:items-center md:py-24">
+            <div><p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#f0a0a6]">Prendre rendez-vous</p><h2 className="mt-3 font-display text-3xl font-semibold leading-tight md:text-[2.6rem]">Votre prochain rendez-vous peut être plus simple que vous ne le pensez.</h2><div className="mt-8 flex flex-wrap gap-4"><BookButton clinic={clinic} testId="button-home-final-book">Prendre rendez-vous</BookButton><Link href="/contact" className="btn-outline-light" data-testid="link-home-contact">Nous contacter</Link></div></div>
+            <ul className="space-y-5 rounded-md border border-white/12 bg-white/[.04] p-7 text-sm">
+              <li className="flex gap-4"><Phone size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><a href={`tel:${clinic.phone || ''}`} data-testid="link-home-phone">{clinic.phone || 'Téléphone à renseigner'}</a></li>
+              <li className="flex gap-4"><MessageCircle size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><a href={`mailto:${clinic.email || ''}`} className="break-all" data-testid="link-home-email">{clinic.email || 'Courriel à renseigner'}</a></li>
+              <li className="flex gap-4"><MapPin size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><span>{clinic.address || 'Douala, Cameroun'}</span></li>
+              <li className="flex gap-4"><Clock3 size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><span className="whitespace-pre-line text-white/80">{clinic.openingHours || 'Horaires à renseigner'}</span></li>
+            </ul>
+          </div>
+        </section>
+      </main>
+    </SiteShell>
+  );
 }
 
 export function ServicesPage({ content }: { content: SiteContent }) {
