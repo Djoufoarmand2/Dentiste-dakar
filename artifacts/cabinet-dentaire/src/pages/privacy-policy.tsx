@@ -36,7 +36,7 @@ export function PrivacyPage({ content }: { content: SiteContent }) {
             <div className="mt-5 space-y-5 text-sm leading-7 text-muted-foreground">
               <div>
                 <h3 className="font-semibold text-foreground">Demande de rendez-vous</h3>
-                <p>Le formulaire existant demande un nom, un numéro de téléphone, une adresse e-mail et un soin souhaité ; la date et le message sont facultatifs. Son fonctionnement et le destinataire des demandes n’ont pas été revalidés dans cette tâche. N’y saisissez pas de données réelles ni de détails médicaux dans l’aperçu.</p>
+                <p>Le formulaire demande un nom, un numéro de téléphone, une adresse e-mail et un soin souhaité ; la date et le message sont facultatifs. Les demandes sont transmises à Web3Forms pour acheminement au cabinet. L’envoi n’ayant pas encore été validé depuis le navigateur, n’y saisissez pas de données réelles ni de détails médicaux dans l’aperçu.</p>
               </div>
               <div>
                 <h3 className="font-semibold text-foreground">Avis public</h3>
@@ -53,7 +53,7 @@ export function PrivacyPage({ content }: { content: SiteContent }) {
             <h2 className="font-display text-2xl text-[#073e53]">Utilisation, destinataires et conservation</h2>
             <div className="mt-4 space-y-4 text-sm leading-7 text-muted-foreground">
               <p>Les avis envoyés sont enregistrés dans Supabase et publiés sur le site après leur soumission. Ils restent visibles jusqu’à leur suppression par le cabinet ; aucune durée automatique d’effacement n’est définie dans l’application.</p>
-              <p>Les demandes de rendez-vous sont destinées à permettre au cabinet de répondre. Leur prestataire de transmission et leur durée de conservation doivent être confirmés avant la collecte de demandes réelles.</p>
+              <p>Les demandes de rendez-vous sont transmises à Web3Forms afin que le cabinet puisse y répondre. Les modalités de traitement et la durée de conservation des données par ce prestataire restent à confirmer par le cabinet avant la collecte de demandes réelles.</p>
               <p>La durée de conservation des autres données, les personnes autorisées à y accéder et les modalités d’exercice des demandes liées aux données personnelles : <strong className="text-foreground">à préciser par le responsable du cabinet.</strong></p>
             </div>
           </section>
