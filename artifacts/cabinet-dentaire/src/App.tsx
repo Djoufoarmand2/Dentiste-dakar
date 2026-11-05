@@ -79,7 +79,8 @@ function PublicRoute({ page }: { page: (content: SiteContent) => ReactNode }) {
   if (query.isLoading) return <main className="grid min-h-[100dvh] place-items-center bg-background px-5" role="status" aria-live="polite"><p className="animate-pulse text-sm text-muted-foreground">Chargement du site…</p></main>;
   if (query.isError || !query.data) return <main className="grid min-h-[100dvh] place-items-center bg-background px-5"><section className="max-w-xl rounded-2xl border border-border bg-card p-8 text-center" role="alert"><h1 className="font-display text-2xl text-[#073e53]">Le site n’a pas pu charger ses informations</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">Réessayez dans quelques instants.</p><button onClick={() => void query.refetch()} className="btn-gold mt-6">Réessayer</button></section></main>;
 
-  const path = location.split('?')[0] || '/';
+  const rawPath = location.split('?')[0] || '/';
+  const path = rawPath.length > 1 ? rawPath.replace(/\/+$/, '') : rawPath;
   const pathParts = path.split('/').filter(Boolean);
   const article = pathParts[0] === 'blog'
     ? query.data.blogPosts.find((post) => post.slug === pathParts[1] && post.published)
@@ -126,6 +127,7 @@ function DocumentMetadata({ title, description, imageUrl, imageAlt, isArticle = 
     let pathname = window.location.pathname;
     if (basePath && (pathname === basePath || pathname.startsWith(`${basePath}/`))) pathname = pathname.slice(basePath.length) || '/';
     if (pathname.length > 1) pathname = pathname.replace(/\/+$/, '');
+    if (/^\/blog(?:\/.*)?$/.test(pathname)) pathname = `${pathname}/`;
     const canonicalUrl = canonicalBaseUrl ? new URL(pathname, `${canonicalBaseUrl}/`).href : undefined;
     let socialImage: string | undefined;
     for (const candidate of [imageUrl, import.meta.env.VITE_SITE_OG_IMAGE_URL]) {

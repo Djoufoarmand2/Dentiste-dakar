@@ -53,10 +53,10 @@ const iconResources = [...faviconResources, {
   contentType: /image\/png/i,
 }];
 const routes = [
-  '/', '/soins', '/equipe', '/galerie', '/avis', '/faq', '/blog',
+  '/', '/soins', '/equipe', '/galerie', '/avis', '/faq', '/blog/',
   '/informations', '/contact', '/confidentialite', '/admin', '/sign-in',
   '/sign-up', '/forgot-password', '/auth/callback',
-  ...publicContent.blogPosts.filter((post) => post.published && /^[a-z0-9-]+$/.test(post.slug || '')).map((post) => `/blog/${post.slug}`),
+  ...publicContent.blogPosts.filter((post) => post.published && /^[a-z0-9-]+$/.test(post.slug || '')).map((post) => `/blog/${post.slug}/`),
 ];
 
 for (const route of routes) {
@@ -70,16 +70,16 @@ for (const route of routes) {
   }
   assert.match(html, /<meta name="robots" content="noindex, nofollow"/i, `${route} should stay non-indexable while data is provisional`);
   assert.doesNotMatch(html, /property="og:url"[^>]+replit\.(?:dev|app)/i, `${route} must not advertise the preview URL as canonical`);
-  if (route.startsWith('/blog/')) {
-    const post = publicContent.blogPosts.find((candidate) => route === `/blog/${candidate.slug}`);
+  if (route.startsWith('/blog/') && route !== '/blog/') {
+    const post = publicContent.blogPosts.find((candidate) => route.replace(/\/+$/, '') === `/blog/${candidate.slug}`);
     assert.ok(post?.imageUrl, `${route} should have a published illustration`);
-    assert.match(html, /data-seo-prerender="\/blog\/[a-z0-9-]+"/, `${route} should include a static article snapshot`);
+    assert.match(html, /data-seo-prerender="\/blog\/[a-z0-9-]+\/"/, `${route} should include a static article snapshot`);
     assert.ok(html.includes(post.imageUrl), `${route} should expose its article image before JavaScript runs`);
     assert.match(html, /property="og:image"[^>]+content="https:\/\//i, `${route} should expose a hosted social-sharing image`);
     assert.match(html, /<h1>[^<]+<\/h1>/i, `${route} should expose its heading before JavaScript runs`);
   }
-  if (route === '/blog') {
-    assert.match(html, /data-seo-prerender="\/blog"/, 'Blog listing should include a static snapshot');
+  if (route === '/blog/') {
+    assert.match(html, /data-seo-prerender="\/blog\/"/, 'Blog listing should include a static snapshot');
     for (const post of publicContent.blogPosts.filter((candidate) => candidate.published)) {
       assert.ok(html.includes(post.slug), `Blog listing should link to ${post.slug}`);
     }
