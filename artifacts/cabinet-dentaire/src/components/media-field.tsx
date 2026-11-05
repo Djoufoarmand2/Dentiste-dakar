@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent } from 'react';
 import { FolderOpen, Trash2, Upload, X } from 'lucide-react';
 import { deleteMedia, imageAccept, listMedia, uploadMedia, videoAccept, type MediaAsset } from '@/lib/media';
+import { VideoPlayer } from './video-player';
 
 type Props = { value: string; onChange: (url: string) => void; kind: 'image' | 'video'; protectedUrls: string[]; disabled?: boolean };
 
@@ -73,8 +74,9 @@ export function MediaField({ value, onChange, kind, protectedUrls, disabled = fa
   const visible = (assets ?? []).filter(isKind);
 
   return <div className="space-y-3 md:col-span-2" data-testid={`media-field-${kind}`}>
-    <label htmlFor={`${id}-url`} className="block text-xs font-medium text-foreground/80">{kind === 'image' ? 'Image (URL ou téléversement)' : 'Vidéo (URL ou téléversement)'}</label>
-    <input id={`${id}-url`} type="url" className="editor-input" placeholder="https://…" value={value} disabled={disabled || uploading} onChange={(e) => onChange(e.target.value)} data-testid={`input-media-url-${kind}`} />
+    <label htmlFor={`${id}-url`} className="block text-xs font-medium text-foreground/80">{kind === 'image' ? 'Image (URL ou téléversement)' : 'Vidéo (YouTube, URL ou téléversement)'}</label>
+    <input id={`${id}-url`} type="url" className="editor-input" placeholder={kind === 'video' ? 'https://youtube.com/watch?v=… ou https://youtu.be/…' : 'https://…'} value={value} disabled={disabled || uploading} onChange={(e) => onChange(e.target.value)} data-testid={`input-media-url-${kind}`} />
+    {kind === 'video' && <p className="text-xs leading-5 text-muted-foreground">Collez un lien YouTube pour afficher son aperçu, ou téléversez une vidéo MP4/WebM.</p>}
     <div className="flex flex-wrap gap-2">
       <input ref={fileRef} id={`${id}-file`} type="file" accept={accept} className="sr-only" onChange={(e) => void onFile(e)} disabled={disabled || uploading} aria-label={kind === 'image' ? 'Choisir une image (10 Mo max.)' : 'Choisir une vidéo (50 Mo max.)'} data-testid={`input-media-file-${kind}`} />
       <button type="button" className="btn-navy disabled:opacity-60" disabled={disabled || uploading} onClick={() => fileRef.current?.click()} data-testid={`button-upload-${kind}`}><Upload size={15} /> {uploading ? 'Téléversement…' : `Téléverser (${kind === 'image' ? '10' : '50'} Mo max.)`}</button>
@@ -88,7 +90,7 @@ export function MediaField({ value, onChange, kind, protectedUrls, disabled = fa
     {error && <p role="alert" className="rounded-xl border border-[#e7c8c1] bg-[#f8e9e5] p-3 text-xs text-[#943d35]" data-testid="text-media-error">{error}</p>}
     {success && <p role="status" className="rounded-xl border border-[#b94f5b]/30 bg-[#f7e9ec] p-3 text-xs text-[#073e53]" data-testid="text-media-success">{success}</p>}
     {value && <div className="overflow-hidden rounded-xl border border-border bg-secondary/40" data-testid={`preview-media-${kind}`}>
-      {kind === 'image' ? <img src={value} alt="Aperçu du visuel sélectionné" className="h-48 w-full object-cover" /> : <video src={value} controls preload="metadata" className="h-56 w-full bg-[#070116]" aria-label="Aperçu de la vidéo sélectionnée" />}
+      {kind === 'image' ? <img src={value} alt="Aperçu du visuel sélectionné" className="h-48 w-full object-cover" /> : <VideoPlayer src={value} title="Aperçu de la vidéo sélectionnée" />}
     </div>}
     {open && <div id={`${id}-lib`} className="rounded-xl border border-border bg-card p-3" data-testid={`library-${kind}`}>
       <div className="mb-2 flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-primary">Médiathèque · {kind === 'image' ? 'images' : 'vidéos'}</p><button type="button" className="text-xs text-primary hover:underline disabled:opacity-60" disabled={loadingLib} onClick={() => void refresh()} data-testid="button-refresh-library">Actualiser</button></div>
