@@ -1,0 +1,523 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: site
+    description: Public website content and administrator access
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /site-content:
+    get:
+      operationId: getSiteContent
+      tags: [site]
+      summary: Get public website content
+      responses:
+        "200":
+          description: Current website content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteContent"
+    put:
+      operationId: updateSiteContent
+      tags: [site]
+      summary: Replace website content
+      description: Administrator-only. Updates all editable website content in one operation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiteContentInput"
+      responses:
+        "200":
+          description: Updated website content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteContent"
+        "400":
+          description: Invalid website content
+        "401":
+          description: Sign-in required
+        "403":
+          description: Administrator access required
+  /contact/appointment:
+    post:
+      operationId: submitContactAppointment
+      tags: [site]
+      summary: Send a website appointment request by email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactAppointmentInput"
+      responses:
+        "200":
+          description: Appointment request accepted for delivery
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactAppointmentAccepted"
+        "400": { description: Invalid request }
+        "403": { description: Origin not allowed }
+        "502": { description: Email delivery failed }
+        "503": { description: Email delivery is not configured }
+  /reviews:
+    get:
+      operationId: getPublicReviews
+      tags: [site]
+      summary: List published visitor and administrator reviews
+      responses:
+        "200":
+          description: Published reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Review" }
+    post:
+      operationId: submitReview
+      tags: [site]
+      summary: Submit a review for immediate public display
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ReviewSubmission" }
+      responses:
+        "201":
+          description: Review saved and published
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Review" }
+        "400": { description: Invalid review }
+        "403": { description: Origin not allowed }
+        "429": { description: Too many review submissions }
+  /admin/reviews:
+    get:
+      operationId: getAdminReviews
+      tags: [site]
+      summary: List reviews for administrator management
+      responses:
+        "200":
+          description: All reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Review" }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator access required }
+    post:
+      operationId: createAdminReview
+      tags: [site]
+      summary: Create a review as administrator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AdminReviewInput" }
+      responses:
+        "201":
+          description: Review created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Review" }
+        "400": { description: Invalid review }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator access required }
+  /admin/reviews/{id}:
+    delete:
+      operationId: deleteAdminReview
+      tags: [site]
+      summary: Delete a review as administrator
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204": { description: Review deleted }
+        "400": { description: Invalid review ID }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator access required }
+        "404": { description: Review not found }
+  /admin/access:
+    get:
+      operationId: getAdminAccess
+      tags: [site]
+      summary: Check current administrator access
+      responses:
+        "200":
+          description: Access check result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAccess"
+        "401":
+          description: Sign-in required
+  /admin/site-content:
+    get:
+      operationId: getAdminContent
+      tags: [site]
+      summary: Read complete content and publication version
+      responses:
+        "200":
+          description: Administrator document
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentDocument" }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+    put:
+      operationId: publishAdminContent
+      tags: [site]
+      summary: Publish content with optimistic concurrency
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContentPublication" }
+      responses:
+        "200":
+          description: Published document
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContentDocument" }
+        "409": { description: Concurrent publication or invalid media reference }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+  /admin/media:
+    get:
+      operationId: getAdminMedia
+      tags: [site]
+      summary: List cabinet media
+      responses:
+        "200":
+          description: Media library
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MediaLibrary" }
+  /admin/media/prepare:
+    post:
+      operationId: prepareAdminMedia
+      tags: [site]
+      summary: Reserve a unique path before direct resumable upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MediaUploadInput" }
+      responses:
+        "201":
+          description: Reserved media
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MediaAsset" }
+  /admin/media/finalize:
+    post:
+      operationId: finalizeAdminMedia
+      tags: [site]
+      summary: Verify an uploaded file before selection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MediaReference" }
+      responses:
+        "200":
+          description: Verified media
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MediaAsset" }
+  /admin/media/delete:
+    post:
+      operationId: deleteAdminMedia
+      tags: [site]
+      summary: Delete media only when not referenced by content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MediaReference" }
+      responses:
+        "204": { description: Media deleted }
+        "409": { description: Media still referenced }
+components:
+  schemas:
+    ContactAppointmentInput:
+      type: object
+      required: [name, phone, email, service]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        phone: { type: string, minLength: 1, maxLength: 40 }
+        email: { type: string, format: email, maxLength: 254 }
+        service:
+          type: string
+          enum:
+            - Consultation dentaire
+            - Détartrage et polissage
+            - Traitement des caries
+            - Plombage / composite
+            - Kinésithérapie dentaire / maxillo-faciale
+            - Laboratoire prothétique
+            - Chirurgie dentaire
+        preferredDate: { type: string, format: date }
+        message: { type: string, maxLength: 2000 }
+        website: { type: string, maxLength: 200 }
+    ContactAppointmentAccepted:
+      type: object
+      required: [accepted]
+      properties:
+        accepted: { type: boolean }
+    Review:
+      type: object
+      required: [id, name, service, quote, rating, createdAt, source]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, maxLength: 80 }
+        service: { type: string, maxLength: 120 }
+        quote: { type: string, maxLength: 1500 }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        createdAt: { type: string, format: date-time }
+        source: { type: string, enum: [visitor, admin] }
+    ReviewSubmission:
+      type: object
+      required: [name, quote, rating, consent]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        service: { type: string, maxLength: 120 }
+        quote: { type: string, minLength: 12, maxLength: 1500 }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        consent: { type: boolean, enum: [true] }
+        website: { type: string, maxLength: 200 }
+    AdminReviewInput:
+      type: object
+      required: [name, quote, rating]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        service: { type: string, maxLength: 120 }
+        quote: { type: string, minLength: 1, maxLength: 1500 }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+    ContentDocument:
+      type: object
+      required: [content, version]
+      properties:
+        content: { $ref: "#/components/schemas/SiteContent" }
+        version: { type: integer, minimum: 1 }
+    ContentPublication:
+      type: object
+      required: [content, expectedVersion]
+      properties:
+        content: { $ref: "#/components/schemas/SiteContentInput" }
+        expectedVersion: { type: integer, minimum: 1 }
+    MediaReference:
+      type: object
+      required: [path]
+      properties:
+        path: { type: string, minLength: 1, maxLength: 200 }
+    MediaUploadInput:
+      type: object
+      required: [name, mimeType, size]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 200 }
+        mimeType:
+          type: string
+          enum: [image/jpeg, image/png, image/webp, image/gif, video/mp4, video/webm]
+        size: { type: integer, minimum: 1, maximum: 52428800 }
+    MediaAsset:
+      type: object
+      required: [path, url, name, mimeType, size, status]
+      properties:
+        path: { type: string }
+        url: { type: string }
+        name: { type: string }
+        mimeType: { type: string }
+        size: { type: integer }
+        status: { type: string, enum: [uploading, ready, deleting] }
+    MediaLibrary:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/MediaAsset" }
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    AdminAccess:
+      type: object
+      properties:
+        isAdmin:
+          type: boolean
+      required: [isAdmin]
+    ClinicInfo:
+      type: object
+      properties:
+        name: { type: string }
+        city: { type: string }
+        address: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        openingHours: { type: string }
+        bookingUrl: { type: string }
+        mapUrl: { type: string }
+        logoUrl: { type: string }
+      required: [name, city, address, phone, email, openingHours, bookingUrl, mapUrl, logoUrl]
+    HeroContent:
+      type: object
+      properties:
+        eyebrow: { type: string }
+        title: { type: string }
+        description: { type: string }
+        primaryAction: { type: string }
+        secondaryAction: { type: string }
+        imageUrl: { type: string }
+      required: [eyebrow, title, description, primaryAction, secondaryAction, imageUrl]
+    ServiceItem:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        slug: { type: string }
+        summary: { type: string }
+        description: { type: string }
+        imageUrl: { type: string }
+      required: [id, title, slug, summary, description, imageUrl]
+    TeamMember:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        role: { type: string }
+        biography: { type: string }
+        imageUrl: { type: string }
+      required: [id, name, role, biography, imageUrl]
+    GalleryImage:
+      type: object
+      properties:
+        id: { type: string }
+        alt: { type: string }
+        imageUrl: { type: string }
+      required: [id, alt, imageUrl]
+    Testimonial:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        service: { type: string }
+        quote: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+      required: [id, name, service, quote, rating]
+    FAQItem:
+      type: object
+      properties:
+        id: { type: string }
+        question: { type: string }
+        answer: { type: string }
+      required: [id, question, answer]
+    BlogPost:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        slug: { type: string }
+        excerpt: { type: string }
+        content: { type: string }
+        imageUrl: { type: string }
+        author: { type: string }
+        date: { type: string }
+        published: { type: boolean }
+      required: [id, title, slug, excerpt, content, imageUrl, author, date, published]
+    Campaign:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        mediaType: { type: string, enum: [image, video] }
+        imageUrl: { type: string }
+        videoUrl: { type: ["string", "null"] }
+        active: { type: boolean }
+      required: [id, title, description, mediaType, imageUrl, videoUrl, active]
+    SiteContent:
+      type: object
+      properties:
+        clinic: { $ref: "#/components/schemas/ClinicInfo" }
+        hero: { $ref: "#/components/schemas/HeroContent" }
+        services:
+          type: array
+          items: { $ref: "#/components/schemas/ServiceItem" }
+        team:
+          type: array
+          items: { $ref: "#/components/schemas/TeamMember" }
+        gallery:
+          type: array
+          items: { $ref: "#/components/schemas/GalleryImage" }
+        testimonials:
+          type: array
+          items: { $ref: "#/components/schemas/Testimonial" }
+        faqs:
+          type: array
+          items: { $ref: "#/components/schemas/FAQItem" }
+        blogPosts:
+          type: array
+          items: { $ref: "#/components/schemas/BlogPost" }
+        campaigns:
+          type: array
+          items: { $ref: "#/components/schemas/Campaign" }
+      required: [clinic, hero, services, team, gallery, testimonials, faqs, blogPosts, campaigns]
+    SiteContentInput:
+      type: object
+      properties:
+        clinic: { $ref: "#/components/schemas/ClinicInfo" }
+        hero: { $ref: "#/components/schemas/HeroContent" }
+        services:
+          type: array
+          items: { $ref: "#/components/schemas/ServiceItem" }
+        team:
+          type: array
+          items: { $ref: "#/components/schemas/TeamMember" }
+        gallery:
+          type: array
+          items: { $ref: "#/components/schemas/GalleryImage" }
+        testimonials:
+          type: array
+          items: { $ref: "#/components/schemas/Testimonial" }
+        faqs:
+          type: array
+          items: { $ref: "#/components/schemas/FAQItem" }
+        blogPosts:
+          type: array
+          items: { $ref: "#/components/schemas/BlogPost" }
+        campaigns:
+          type: array
+          items: { $ref: "#/components/schemas/Campaign" }
+      required: [clinic, hero, services, team, gallery, testimonials, faqs, blogPosts, campaigns]
+

@@ -1,0 +1,5 @@
+# One function serves both public reads and authenticated admin operations.
+# Every /admin/* request is verified server-side with auth.getUser, followed by
+# a trusted database role check. Never rely on a decoded, unverified JWT.
+[functions.cabinet-api]
+verify_jwt = false

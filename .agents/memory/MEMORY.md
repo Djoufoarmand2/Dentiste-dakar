@@ -1,0 +1,6 @@
+- [Clés serveur Supabase](supabase-server-keys.md) — pour le stockage privé, demander une Secret key du projet, pas la clé publique proposée par Connect.
+- [PostgreSQL local isolé](local-postgres-tests.md) — un cluster temporaire nécessite un répertoire socket explicite et utilise par défaut le rôle du compte système.
+- [Médias du cabinet](cms-brand-assets.md) — distinguer logo et bannière, préserver les médias CMS et ne pas publier de visages en contexte de soins sans accord.
+- [Noms du cabinet et partenaire](cabinet-brand-names.md) — employer « Cabinet Sourire Serein » pour le cabinet et préserver « Clinique La Bienveillance » comme nom officiel du partenaire.
+- [Prérendu des routes Vite](seo-prerender-vite.md) — les pages statiques dans des sous-dossiers doivent garder leur barre oblique finale, sinon l’aperçu peut servir l’accueil SPA à la place.
+- [Formulaire de rendez-vous](web3forms-delivery.md) — FormBold est le fournisseur cible; conserver Web3Forms côté navigateur jusqu’à la configuration de l’endpoint.
