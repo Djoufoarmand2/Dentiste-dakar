@@ -535,7 +535,7 @@ export function ContactPage({ content }: { content: SiteContent }) {
         <p className="eyebrow">À votre rythme</p>
         <h2 className="mt-2 font-display text-2xl font-semibold text-[#073e53] md:text-3xl">Faire une demande de rendez-vous</h2>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">L’équipe vous recontactera pour convenir d’un créneau adapté.</p>
-        <AppointmentRequestForm />
+        <AppointmentRequestForm phone={clinic.phone} />
       </div>
     </section>
     <section className="wrap pb-16">
