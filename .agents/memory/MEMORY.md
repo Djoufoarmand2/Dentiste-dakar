@@ -4,3 +4,4 @@
 - [Noms du cabinet et partenaire](cabinet-brand-names.md) — employer « Cabinet Sourire Serein » pour le cabinet et préserver « Clinique La Bienveillance » comme nom officiel du partenaire.
 - [Prérendu des routes Vite](seo-prerender-vite.md) — les pages statiques dans des sous-dossiers doivent garder leur barre oblique finale, sinon l’aperçu peut servir l’accueil SPA à la place.
 - [Formulaire de rendez-vous](web3forms-delivery.md) — FormBold est le fournisseur cible; conserver Web3Forms côté navigateur jusqu’à la configuration de l’endpoint.
+- [Export GitHub depuis Replit](replit-github-export.md) — vérifier le remote effectif après sélection du dépôt; l’interface Git peut en relier un autre que celui demandé.
