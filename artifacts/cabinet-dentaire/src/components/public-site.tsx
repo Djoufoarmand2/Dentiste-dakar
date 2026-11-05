@@ -23,17 +23,16 @@ const partnerSite = 'https://cliniquelabienveillance.com';
 const mapsDirections = 'https://www.google.com/maps/place/Clinique+La+Bienveillance/@4.0307524,9.7258638,17z/data=!4m6!3m5!1s0x10610d2ffb339343:0xcc207a6138777c30!8m2!3d4.0307524!4d9.7307347!16s%2Fg%2F11fltnv9l8';
 const mapEmbedUrl = 'https://maps.google.com/maps?q=4.0307524%2C9.7307347&z=17&output=embed';
 
-export const safeName = (name?: string) => name?.trim() || 'Clinique Sourire Serein';
+export const safeName = (name?: string) => name?.trim() || 'Cabinet Sourire Serein';
 export const safeCity = (city?: string) => city?.trim() || 'Douala';
 const brandMarkUrl = `${import.meta.env.BASE_URL}brand/logo-mark.webp`;
-const brandLockupUrl = `${import.meta.env.BASE_URL}brand/logo-lockup.webp`;
 const clinicPhotoUrl = (filename: string) => `${import.meta.env.BASE_URL}images/clinic/${filename}`;
 const clinicGalleryPhotos = [
   {
     id: 'clinic-sign',
     src: clinicPhotoUrl('clinic-sign.jpg'),
     alt: 'Enseigne extérieure de la Clinique La Bienveillance à Douala.',
-    caption: 'L’enseigne de la clinique',
+    caption: 'L’enseigne de la Clinique La Bienveillance',
   },
   {
     id: 'clinic-professional',
@@ -44,19 +43,19 @@ const clinicGalleryPhotos = [
   {
     id: 'waiting-room',
     src: clinicPhotoUrl('waiting-room.jpg'),
-    alt: 'La salle d’attente de la clinique.',
+    alt: 'La salle d’attente de l’établissement partenaire.',
     caption: 'L’espace d’accueil',
   },
   {
     id: 'care-team-conversation',
     src: clinicPhotoUrl('care-team-conversation.jpg'),
-    alt: 'Une professionnelle échange avec une patiente dans les locaux de la clinique.',
+    alt: 'Une professionnelle échange avec une patiente dans les locaux de l’établissement partenaire.',
     caption: 'Un temps d’échange',
   },
   {
     id: 'family-welcome',
     src: clinicPhotoUrl('family-welcome.jpg'),
-    alt: 'Une soignante accueille une famille au sein de la clinique.',
+    alt: 'Une soignante accueille une famille au sein de l’établissement partenaire.',
     caption: 'L’accueil des familles',
   },
   {
@@ -96,16 +95,15 @@ export function LogoWordmark({ clinic, inverse = false }: { clinic?: SiteContent
   </Link>;
 }
 
-function BrandLockup() {
-  return <Link href="/" className="brand-lockup-link" aria-label="Dental, Clinique Dentaire — accueil" data-testid="link-footer-brand">
-    <img
-      src={brandLockupUrl}
-      alt="Dental — Clinique Dentaire. Un sourire en bonne santé."
-      width="708"
-      height="720"
-      className="brand-lockup-image"
-      data-testid="img-brand-lockup"
-    />
+function BrandLockup({ clinic }: { clinic?: SiteContent['clinic'] }) {
+  return <Link href="/" aria-label={`${safeName(clinic?.name)} — accueil`} className="brand-wordmark inline-flex shrink-0 items-center gap-3 text-white" data-testid="link-footer-brand">
+    <span className="brand-mark-frame" aria-hidden="true">
+      <img src={clinic?.logoUrl?.trim() || brandMarkUrl} alt="" width="64" height="48" className="brand-mark-image" />
+    </span>
+    <span className="flex flex-col leading-none">
+      <span className="whitespace-nowrap font-display text-[20px] font-semibold">{safeName(clinic?.name)}</span>
+      <span className="mt-1 text-[9px] uppercase tracking-[.2em] text-white/65">Cabinet dentaire · {safeCity(clinic?.city)}</span>
+    </span>
   </Link>;
 }
 
@@ -140,9 +138,9 @@ export function Header({ clinic, overlay = false }: { clinic?: SiteContent['clin
 export function Footer({ clinic }: { clinic?: SiteContent['clinic'] }) {
   return <footer className="bg-[#070116] text-[#ffffff]">
     <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-14 md:grid-cols-[1.2fr_.8fr_.8fr_.9fr] md:px-8 lg:py-16">
-      <div><BrandLockup /><p className="mt-5 max-w-sm text-sm leading-7 text-white/65">Un lieu de soin où l’on prend le temps de vous écouter, de vous expliquer et de vous accompagner.</p></div>
+      <div><BrandLockup clinic={clinic} /><p className="mt-5 max-w-sm text-sm leading-7 text-white/65">Un lieu de soin où l’on prend le temps de vous écouter, de vous expliquer et de vous accompagner.</p></div>
       <div><p className="footer-title">Navigation</p><ul className="space-y-2 text-sm text-white/70">{navItems.map(([label, href]) => <li key={href}><Link href={href} className="hover:text-[#f0a0a6]" data-testid={`footer-nav-${href.slice(1)}`}>{label}</Link></li>)}<li><Link href="/informations" className="hover:text-[#f0a0a6]" data-testid="footer-nav-informations">Informations</Link></li><li><Link href="/confidentialite" className="hover:text-[#f0a0a6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" data-testid="footer-nav-confidentialite">Confidentialité</Link></li></ul></div>
-      <div><p className="footer-title">Nous trouver</p><p className="text-sm leading-7 text-white/70">{clinic?.address || 'Douala, Cameroun'}<br />{safeCity(clinic?.city)}</p><a href={clinic?.mapUrl || mapsDirections} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs text-[#f0a0a6] hover:text-white" data-testid="link-footer-map">Itinéraire <ArrowRight size={14} /></a><a href={partnerSite} target="_blank" rel="noopener noreferrer" className="mt-3 block text-xs text-white/60 hover:text-white">Clinique partenaire : La Bienveillance</a></div>
+      <div><p className="footer-title">Nous trouver</p><p className="text-sm leading-7 text-white/70">{clinic?.address || 'Douala, Cameroun'}<br />{safeCity(clinic?.city)}</p><a href={clinic?.mapUrl || mapsDirections} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs text-[#f0a0a6] hover:text-white" data-testid="link-footer-map">Itinéraire <ArrowRight size={14} /></a><a href={partnerSite} target="_blank" rel="noopener noreferrer" className="mt-3 block text-xs text-white/60 hover:text-white">Établissement partenaire : La Bienveillance</a></div>
       <div><p className="footer-title">Contact</p><a href={`tel:${clinic?.phone || ''}`} className="block text-base font-medium" data-testid="link-footer-phone">{clinic?.phone || 'Contactez-nous'}</a><a href={`mailto:${clinic?.email || ''}`} className="mt-2 block text-sm text-white/70" data-testid="link-footer-email">{clinic?.email || 'Adresse à renseigner'}</a><p className="mt-4 whitespace-pre-line text-xs leading-6 text-white/60">{clinic?.openingHours || 'Horaires à renseigner'}</p></div>
     </div>
     <div className="border-t border-white/10"><div className="mx-auto flex max-w-[1240px] flex-col justify-between gap-2 px-5 py-5 text-[11px] text-white/75 md:flex-row md:px-8"><span>© {new Date().getFullYear()} {safeName(clinic?.name)} · Douala</span><span>Une présence attentive, un sourire à la fois.</span></div></div>
@@ -396,12 +394,12 @@ export function HomePage({ content }: { content: SiteContent }) {
       <section id="clinique-partenaire" className="section-pad bg-[#e6e3eb]" aria-labelledby="partner-heading">
         <div className="wrap grid items-center gap-8 md:grid-cols-[1fr_1.05fr] md:gap-12">
           <div className="overflow-hidden rounded-2xl">
-            <ImageFrame src={partnerPhoto?.imageUrl || heroImg} alt="Façade de la Clinique La Bienveillance à Douala" label="Photo de la clinique partenaire" className="aspect-[4/3] w-full" />
+            <ImageFrame src={partnerPhoto?.imageUrl || heroImg} alt="Façade de la Clinique La Bienveillance à Douala" label="Photo de l’établissement partenaire" className="aspect-[4/3] w-full" />
           </div>
           <div className="rounded-2xl border border-[#073e53]/10 bg-white p-7 shadow-[0_18px_55px_rgba(7,1,22,.08)] md:p-10">
             {partnerLogo?.imageUrl && <img src={partnerLogo.imageUrl} alt={partnerLogo.alt || 'Logo de la Clinique La Bienveillance'} width="96" height="96" loading="lazy" className="mb-5 h-20 w-20 rounded-full bg-white object-contain ring-1 ring-[#073e53]/10" />}
-            <p className="eyebrow">Clinique partenaire</p>
-            <h2 id="partner-heading" className="mt-3 font-display text-3xl font-semibold leading-tight text-[#073e53] md:text-4xl">La Clinique Sourire Serein, au sein de La Bienveillance.</h2>
+            <p className="eyebrow">Établissement partenaire</p>
+            <h2 id="partner-heading" className="mt-3 font-display text-3xl font-semibold leading-tight text-[#073e53] md:text-4xl">Le Cabinet Sourire Serein, au sein de La Bienveillance.</h2>
             <p className="mt-4 text-sm leading-7 text-muted-foreground">Le cabinet dentaire vous accueille au sein de la Clinique La Bienveillance, à Douala. Retrouvez les informations sur l’établissement partenaire et ses autres services sur son site officiel.</p>
             <p className="mt-4 text-sm font-medium text-[#073e53]">{clinic.address || 'Ancienne gare routière, Dakar, Douala, Cameroun'}</p>
             <div className="mt-7 flex flex-wrap gap-3">
@@ -488,7 +486,7 @@ export function ServicesPage({ content }: { content: SiteContent }) {
   }, [location]);
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Des soins à votre mesure" title="La santé d’abord. Le confort, toujours." text="Nous prenons soin de votre sourire avec une approche préventive, des gestes précis et des explications qui vous ressemblent." />
     <section className="wrap section-pad">
-      <p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">Les visuels des soins sont des illustrations générées par IA. Ils ne représentent ni les locaux ni l’équipe réelle de la Clinique Sourire Serein.</p>
+      <p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">Les visuels des soins sont des illustrations générées par IA. Ils ne représentent ni les locaux ni l’équipe réelle du Cabinet Sourire Serein.</p>
       {content.services.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{content.services.map((s) => <ServiceCard key={s.id} item={s} href="/contact" />)}</div> : <EmptyInline title="La carte des soins se prépare" text="Revenez bientôt pour découvrir les soins proposés par le cabinet." />}
       <div className="mt-16 flex flex-col gap-6 rounded-md bg-[#073e53] p-8 text-white md:flex-row md:items-center md:justify-between md:p-10"><div><h2 className="font-display text-2xl font-semibold md:text-3xl">Une question avant de venir ?</h2><p className="mt-2 text-sm text-white/70">Nous sommes là pour vous orienter, sans engagement.</p></div><ActionLink href="/contact" testId="link-services-contact">Échanger avec nous</ActionLink></div>
     </section></main></SiteShell>;
@@ -498,8 +496,8 @@ export function TeamPage({ content }: { content: SiteContent }) {
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Derrière chaque sourire" title="Une équipe, avant tout humaine." text="Nous sommes là pour vous accueillir tels que vous êtes et construire avec vous un parcours de soin qui a du sens." />
     <section className="wrap section-pad">
       <figure className="mb-10 overflow-hidden rounded-2xl border border-[#073e53]/10 bg-white shadow-sm" data-testid="photo-clinic-team">
-        <ImageFrame src={clinicPhotoUrl('clinic-team.jpg')} alt="Un groupe de professionnels de santé réuni dans les locaux de la clinique." className="aspect-[3/2] md:aspect-[16/8]" />
-        <figcaption className="px-4 py-3 text-sm text-muted-foreground">L’équipe réunie à la clinique.</figcaption>
+        <ImageFrame src={clinicPhotoUrl('clinic-team.jpg')} alt="Un groupe de professionnels de santé réuni dans les locaux de l’établissement partenaire." className="aspect-[3/2] md:aspect-[16/8]" />
+        <figcaption className="px-4 py-3 text-sm text-muted-foreground">L’équipe réunie dans l’établissement partenaire.</figcaption>
       </figure>
       {content.team.length ? <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">{content.team.map((m) => <article key={m.id} className="card-ref overflow-hidden" data-testid={`card-team-${m.id}`}><ImageFrame src={m.imageUrl} alt={`Portrait de ${m.name}`} label="Portrait à ajouter" className="aspect-[4/5]" /><div className="p-6"><p className="eyebrow">{m.role}</p><h2 className="mt-2 font-display text-2xl font-semibold text-[#073e53]">{m.name}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{m.biography}</p></div></article>)}</div> : <EmptyInline title="Faisons connaissance bientôt" text="Les portraits et présentations de l’équipe seront publiés ici." />}
     </section></main></SiteShell>;
@@ -509,10 +507,10 @@ export function GalleryPage({ content }: { content: SiteContent }) {
   const photos = visibleGallery(content.gallery);
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Le cabinet en images" title="Un lieu pensé pour votre confort." text="Retrouvez les visuels officiels du lieu qui accueille le cabinet dentaire." />
     <section className="wrap section-pad">
-      <p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">Cette galerie réunit des photos fournies par la clinique et, pour certains soins, des illustrations générées par IA qui ne représentent pas les locaux ni l’équipe réelle.</p>
+      <p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">Cette galerie réunit des photos fournies par l’établissement partenaire et, pour certains soins, des illustrations générées par IA qui ne représentent pas les locaux ni l’équipe réelle.</p>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
         {clinicGalleryPhotos.map((photo) => <figure key={photo.id} className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-black/5" data-testid={`gallery-image-${photo.id}`}>
-          <ImageFrame src={photo.src} alt={photo.alt} label="Photo de la clinique" className="aspect-[4/3]" />
+          <ImageFrame src={photo.src} alt={photo.alt} label="Photo du cabinet ou de l’établissement partenaire" className="aspect-[4/3]" />
           <figcaption className="px-3 py-2 text-xs font-medium text-[#073e53] md:px-4 md:py-3 md:text-sm">{photo.caption}</figcaption>
         </figure>)}
         {photos.map((photo) => <figure key={photo.id} className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-black/5" data-testid={`gallery-image-${photo.id}`}>

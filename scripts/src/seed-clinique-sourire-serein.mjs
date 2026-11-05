@@ -145,7 +145,7 @@ const officialServices = [
   {
     id: 'maternite-clinique-bienveillance',
     title: 'Maternité · Clinique La Bienveillance',
-    summary: 'Un service de la clinique partenaire qui accueille le cabinet dentaire.',
+    summary: 'Un service de l’établissement partenaire qui accueille le cabinet dentaire.',
     description: 'La maternité relève de la Clinique La Bienveillance et non du cabinet dentaire. Contactez directement l’établissement pour connaître les modalités de ce service.',
     imageUrl: '',
   },
@@ -161,12 +161,12 @@ const officialFaqs = [
   {
     id: 'faq-adresse-officielle',
     question: 'Où se trouve le cabinet ?',
-    answer: 'La Clinique Sourire Serein se trouve au sein de la Clinique La Bienveillance, à l’Ancienne gare routière, Dakar, Douala, Cameroun. Utilisez le lien Google Maps de la page Contact pour l’itinéraire.',
+    answer: 'Le Cabinet Sourire Serein se trouve au sein de la Clinique La Bienveillance, à l’Ancienne gare routière, Dakar, Douala, Cameroun. Utilisez le lien Google Maps de la page Contact pour l’itinéraire.',
   },
   {
     id: 'faq-horaires-officiels',
     question: 'Quels sont les horaires affichés ?',
-    answer: 'Les horaires communiqués pour la clinique sont 24 h/24 et 7 j/7. Appelez avant de vous déplacer afin de confirmer la disponibilité du service dentaire, notamment en dehors des heures habituelles.',
+    answer: 'Les horaires communiqués pour le cabinet sont 24 h/24 et 7 j/7. Appelez avant de vous déplacer afin de confirmer la disponibilité du service dentaire, notamment en dehors des heures habituelles.',
   },
   {
     id: 'faq-soins-officiels',
@@ -176,7 +176,7 @@ const officialFaqs = [
   {
     id: 'faq-maternite-officielle',
     question: 'La maternité fait-elle partie du cabinet dentaire ?',
-    answer: 'Non. La maternité est un service de la Clinique La Bienveillance, l’établissement partenaire qui accueille le cabinet dentaire. Contactez directement la clinique pour ce service.',
+    answer: 'Non. La maternité est un service de la Clinique La Bienveillance, l’établissement partenaire qui accueille le cabinet dentaire. Contactez directement l’établissement partenaire pour ce service.',
   },
 ];
 
@@ -184,13 +184,13 @@ const officialBlogPosts = [
   {
     id: 'urgence-dentaire-douala',
     slug: 'urgence-dentaire-douala-que-faire',
-    title: 'Douleur dentaire : comment contacter la clinique à Douala ?',
+    title: 'Douleur dentaire : comment contacter le cabinet à Douala ?',
     excerpt: 'Les bons réflexes pour demander une évaluation et savoir quand contacter les services d’urgence.',
     date: '2026-11-05',
-    author: 'Équipe de la Clinique Sourire Serein',
+    author: 'Équipe du Cabinet Sourire Serein',
     published: true,
     imageUrl: '',
-    content: `## Contactez la clinique\nEn cas de douleur dentaire importante ou qui s’aggrave, appelez la Clinique Sourire Serein au +237 677 87 34 42 pour expliquer la situation et confirmer la disponibilité du service dentaire. Les horaires affichés sont 24 h/24 et 7 j/7 ; un appel avant le déplacement permet de vérifier la prise en charge.\n\n## En attendant un avis professionnel\nDécrivez vos symptômes et signalez les traitements déjà pris ou les allergies connues. Évitez de poser un médicament directement sur la dent ou la gencive et ne prenez pas de traitement qui ne vous a pas été conseillé par un professionnel.\n\n## Quand demander une aide médicale urgente\nUne difficulté à respirer ou à avaler, un gonflement important du visage, un traumatisme sérieux ou un saignement incontrôlé justifient une aide médicale urgente. Cet article donne des repères généraux et ne remplace pas un examen ni un avis médical.`,
+    content: `## Contactez le cabinet\nEn cas de douleur dentaire importante ou qui s’aggrave, appelez le Cabinet Sourire Serein au +237 677 87 34 42 pour expliquer la situation et confirmer la disponibilité du service dentaire. Les horaires affichés sont 24 h/24 et 7 j/7 ; un appel avant le déplacement permet de vérifier la prise en charge.\n\n## En attendant un avis professionnel\nDécrivez vos symptômes et signalez les traitements déjà pris ou les allergies connues. Évitez de poser un médicament directement sur la dent ou la gencive et ne prenez pas de traitement qui ne vous a pas été conseillé par un professionnel.\n\n## Quand demander une aide médicale urgente\nUne difficulté à respirer ou à avaler, un gonflement important du visage, un traumatisme sérieux ou un saignement incontrôlé justifient une aide médicale urgente. Cet article donne des repères généraux et ne remplace pas un examen ni un avis médical.`,
   },
   {
     id: 'detartrage-et-polissage',
@@ -198,7 +198,7 @@ const officialBlogPosts = [
     title: 'Détartrage et polissage : les questions à poser',
     excerpt: 'À quoi sert un rendez-vous d’hygiène bucco-dentaire et comment en parler avec le praticien ?',
     date: '2026-11-05',
-    author: 'Équipe de la Clinique Sourire Serein',
+    author: 'Équipe du Cabinet Sourire Serein',
     published: true,
     imageUrl: '',
     content: `## Parler de vos habitudes et de vos attentes\nLors d’un rendez-vous, indiquez au professionnel les zones sensibles, les saignements éventuels et les soins déjà reçus. Ces informations aident à adapter l’examen et les conseils à votre situation.\n\n## Un soin décidé après évaluation\nLe professionnel vous explique si un détartrage ou un polissage est indiqué et répond à vos questions sur le déroulement. La fréquence de suivi dépend de l’évaluation individuelle ; elle n’est pas identique pour tout le monde.\n\n## Après le rendez-vous\nDemandez des conseils d’hygiène adaptés à vos dents et à vos gencives. En cas de douleur persistante ou de symptôme inhabituel après un soin, contactez le cabinet pour obtenir un avis.`,
@@ -209,7 +209,7 @@ const officialBlogPosts = [
     title: 'Kinésithérapie maxillo-faciale : quand demander conseil ?',
     excerpt: 'Quelques repères pour préparer un échange avec le professionnel au sujet de la mâchoire et de ses fonctions.',
     date: '2026-11-05',
-    author: 'Équipe de la Clinique Sourire Serein',
+    author: 'Équipe du Cabinet Sourire Serein',
     published: true,
     imageUrl: '',
     content: `## Exposez précisément votre gêne\nSi vous ressentez une gêne au niveau de la mâchoire ou de la face, décrivez quand elle survient, depuis combien de temps et ce qui semble l’accentuer. Mentionnez aussi les soins ou examens déjà réalisés.\n\n## Une indication dépend de l’évaluation\nLa kinésithérapie dentaire ou maxillo-faciale ne convient pas à toutes les situations. Le professionnel évalue votre besoin et vous indique si un accompagnement est adapté ou s’il faut une autre orientation.\n\n## Préparez vos questions\nVous pouvez demander quel est l’objectif proposé, comment se déroule la prise en charge et quel suivi est envisagé. Les réponses dépendent de votre examen et de votre situation personnelle.`,
@@ -220,7 +220,7 @@ const officialBlogPosts = [
     title: 'Grossesse et soins dentaires : en parler au praticien',
     excerpt: 'Pourquoi signaler une grossesse et demander conseil avant tout soin ou médicament.',
     date: '2026-11-05',
-    author: 'Équipe de la Clinique Sourire Serein',
+    author: 'Équipe du Cabinet Sourire Serein',
     published: true,
     imageUrl: '',
     content: `## Signalez votre grossesse dès le premier échange\nSi vous êtes enceinte ou pensez l’être, indiquez-le au professionnel avant un examen, un soin ou la prise d’un médicament. Précisez également le terme si vous le connaissez et les recommandations déjà reçues de votre équipe de suivi.\n\n## Demandez un avis adapté à votre situation\nLe calendrier et les modalités d’un soin dépendent de son urgence, de votre état de santé et de l’évaluation clinique. Le praticien peut échanger avec votre professionnel de suivi si cela est utile.\n\n## Ne retardez pas une question urgente sans conseil\nEn cas de douleur, de gonflement ou d’autre symptôme préoccupant, contactez un professionnel pour savoir quoi faire. Cet article est une information générale et ne remplace pas un avis personnalisé.`,
@@ -228,14 +228,14 @@ const officialBlogPosts = [
 ];
 
 const clinic = {
-  name: 'Clinique Sourire Serein',
+  name: 'Cabinet Sourire Serein',
   city: 'Douala',
   address: 'Ancienne gare routière, Dakar, Douala, Cameroun',
   phone: '+237 677 87 34 42',
   email: 'bienveillanceclinique4@gmail.com',
   openingHours: '24 h/24 · 7 j/7',
   mapUrl: 'https://www.google.com/maps/place/Clinique+La+Bienveillance/@4.0307524,9.7258638,17z/data=!4m6!3m5!1s0x10610d2ffb339343:0xcc207a6138777c30!8m2!3d4.0307524!4d9.7307347!16s%2Fg%2F11fltnv9l8',
-  bookingUrl: 'https://wa.me/237677873442?text=Bonjour%2C%20je%20souhaite%20prendre%20rendez-vous%20%C3%A0%20la%20Clinique%20Sourire%20Serein.',
+  bookingUrl: 'https://wa.me/237677873442?text=Bonjour%2C%20je%20souhaite%20prendre%20rendez-vous%20au%20Cabinet%20Sourire%20Serein.',
 };
 
 async function main() {
@@ -293,7 +293,7 @@ async function main() {
       ...content.hero,
       eyebrow: 'Cabinet dentaire à Douala',
       title: 'Des soins dentaires attentifs, au cœur de Douala.',
-      description: 'La Clinique Sourire Serein vous accueille au sein de la Clinique La Bienveillance pour vos consultations et soins dentaires.',
+      description: 'Le Cabinet Sourire Serein vous accueille au sein de la Clinique La Bienveillance pour vos consultations et soins dentaires.',
       imageUrl: facade.imageUrl,
       primaryAction: 'Prendre rendez-vous',
       secondaryAction: 'Découvrir nos soins',

@@ -151,7 +151,7 @@ export async function handleRequest(request: Request): Promise<Response> {
 
       const accessKey = Deno.env.get('WEB3FORMS_ACCESS_KEY')?.trim();
       if (!accessKey) {
-        throw new HttpError(503, 'Le formulaire est temporairement indisponible. Contactez la clinique par téléphone.');
+        throw new HttpError(503, 'Le formulaire est temporairement indisponible. Contactez le cabinet par téléphone.');
       }
       const name = parsed.data.name.trim();
       const phone = parsed.data.phone.trim();
@@ -164,8 +164,8 @@ export async function handleRequest(request: Request): Promise<Response> {
           headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
           body: JSON.stringify({
             access_key: accessKey,
-            subject: 'Nouvelle demande de rendez-vous — Clinique Sourire Serein',
-            from_name: 'Clinique Sourire Serein',
+            subject: 'Nouvelle demande de rendez-vous — Cabinet Sourire Serein',
+            from_name: 'Cabinet Sourire Serein',
             name,
             phone,
             email: parsed.data.email.trim().toLowerCase(),
@@ -176,11 +176,11 @@ export async function handleRequest(request: Request): Promise<Response> {
           signal: AbortSignal.timeout(10_000),
         });
       } catch {
-        throw new HttpError(502, 'L’envoi a échoué. Réessayez ou contactez la clinique par téléphone.');
+        throw new HttpError(502, 'L’envoi a échoué. Réessayez ou contactez le cabinet par téléphone.');
       }
       const result = await upstream.json().catch(() => null) as { success?: boolean } | null;
       if (!upstream.ok || result?.success !== true) {
-        throw new HttpError(502, 'L’envoi a échoué. Réessayez ou contactez la clinique par téléphone.');
+        throw new HttpError(502, 'L’envoi a échoué. Réessayez ou contactez le cabinet par téléphone.');
       }
       return respond(SubmitContactAppointmentResponse.parse({ accepted: true }));
     }

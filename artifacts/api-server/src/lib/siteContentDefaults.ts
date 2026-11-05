@@ -2,7 +2,7 @@ import { GetSiteContentResponse } from "@workspace/api-zod";
 
 export const defaultSiteContent = GetSiteContentResponse.parse({
   clinic: {
-    name: "Cabinet Naya",
+    name: "Cabinet Sourire Serein",
     city: "Douala",
     address: "Bonanjo, Douala, Cameroun",
     phone: "+237 6 70 00 00 00",
@@ -135,7 +135,7 @@ export const defaultSiteContent = GetSiteContentResponse.parse({
       id: "campagne-demo",
       title: "Informations du cabinet",
       description:
-        "Texte de démonstration à remplacer par une information vérifiée de la clinique.",
+        "Texte de démonstration à remplacer par une information vérifiée du cabinet.",
       mediaType: "image",
       imageUrl: "",
       videoUrl: null,
