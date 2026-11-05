@@ -1,8 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import type {
-  ContactAppointmentAccepted,
-  ContactAppointmentInput,
-} from "@workspace/api-client-react";
+import type { ContactAppointmentInput } from "@workspace/api-client-react";
 import { ArrowRight, CheckCircle2, LoaderCircle } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -27,6 +24,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  appointmentProviderName,
+  submitAppointmentRequest,
+} from "@/lib/appointment-delivery";
 
 type AppointmentFormValues = Omit<ContactAppointmentInput, "service"> & {
   service: ContactAppointmentInput["service"] | "";
@@ -56,45 +57,7 @@ const defaultValues: AppointmentFormValues = {
 export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?: string }) {
   const form = useForm<AppointmentFormValues>({ defaultValues, mode: "onChange" });
   const request = useMutation({
-    mutationFn: async (data: ContactAppointmentInput): Promise<ContactAppointmentAccepted> => {
-      if (data.website?.trim()) return { accepted: true };
-
-      const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY?.trim();
-      if (!accessKey) {
-        throw new Error("Le formulaire en ligne n’est pas configuré. Contactez le cabinet par téléphone.");
-      }
-
-      let response: Response;
-      try {
-        response = await fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            access_key: accessKey,
-            subject: "Nouvelle demande de rendez-vous - Cabinet dentaire",
-            from_name: "Site Web Cabinet Dentaire",
-            name: data.name,
-            phone: data.phone,
-            email: data.email,
-            service: data.service,
-            preferred_date: data.preferredDate,
-            message: data.message,
-          }),
-        });
-      } catch {
-        throw new Error("Le service de demande est temporairement indisponible. Réessayez.");
-      }
-
-      const result = (await response.json().catch(() => null)) as { success?: boolean } | null;
-      if (!response.ok || result?.success !== true) {
-        throw new Error("L’envoi a échoué. Réessayez ou contactez le cabinet par téléphone.");
-      }
-
-      return { accepted: true };
-    },
+    mutationFn: submitAppointmentRequest,
   });
   const [submissionAccepted, setSubmissionAccepted] = useState<boolean | null>(null);
   const phoneValue = form.watch("phone");
@@ -368,8 +331,10 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             )}
           </Button>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
-            Votre demande sera transmise au cabinet via Web3Forms. Elle ne confirme
-            pas encore un rendez-vous.
+            {appointmentProviderName
+              ? `Votre demande sera transmise au cabinet via ${appointmentProviderName}.`
+              : "Le service d’envoi du formulaire reste à configurer."}{" "}
+            Elle ne confirme pas encore un rendez-vous.
           </p>
         </div>
       </form>

@@ -2,4 +2,4 @@
 - [PostgreSQL local isolé](local-postgres-tests.md) — un cluster temporaire nécessite un répertoire socket explicite et utilise par défaut le rôle du compte système.
 - [Médias du cabinet](cms-brand-assets.md) — distinguer logo et bannière, préserver les médias CMS et ne pas publier de visages en contexte de soins sans accord.
 - [Prérendu des routes Vite](seo-prerender-vite.md) — les pages statiques dans des sous-dossiers doivent garder leur barre oblique finale, sinon l’aperçu peut servir l’accueil SPA à la place.
-- [Envoi Web3Forms](web3forms-delivery.md) — garder l’envoi gratuit côté navigateur; un test exécuté depuis Replit peut être refusé comme requête serveur.
+- [Formulaire de rendez-vous](web3forms-delivery.md) — FormBold est le fournisseur cible; conserver Web3Forms côté navigateur jusqu’à la configuration de l’endpoint.
