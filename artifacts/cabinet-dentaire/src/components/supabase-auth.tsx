@@ -52,7 +52,7 @@ function Field({ id, label, ...props }: { id: string; label: string } & React.In
   return <div className="mt-4"><label htmlFor={id} className="mb-2 block text-xs font-medium text-foreground/80">{label}</label><input id={id} className="editor-input" required data-testid={`input-${id}`} {...props} /></div>;
 }
 
-function SignedInNotice() {
+function SignedInNotice({ onLogout }: { onLogout: () => void }) {
   const { session } = useCabinetSession();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,6 +61,7 @@ function SignedInNotice() {
     setBusy(true); setError(null);
     const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) setError(translate(error.message));
+    else onLogout();
     setBusy(false);
   }
   return <div className="mt-5 rounded-xl border border-border bg-secondary/50 p-4 text-sm" data-testid="notice-signed-in">
@@ -79,17 +80,23 @@ function SignIn() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  function clearCredentials() {
+    setEmail('');
+    setPassword('');
+    setError(null);
+  }
   async function submit(e: FormEvent) {
     e.preventDefault(); setBusy(true); setError(null);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) { setError(translate(error.message)); return; }
+      clearCredentials();
       setLocation('/admin');
     } catch (err) { setError(translate(err instanceof Error ? err.message : '')); }
     finally { setBusy(false); }
   }
   return <Frame eyebrow="Connexion" title="Ravi de vous retrouver">
-    <SignedInNotice />
+    <SignedInNotice onLogout={clearCredentials} />
     <form onSubmit={(e) => void submit(e)} noValidate={false}>
       <Field id="email" label="Adresse e-mail" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <Field id="password" label="Mot de passe" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
