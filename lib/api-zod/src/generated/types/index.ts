@@ -8,6 +8,7 @@
 
 export * from './adminAccess';
 export * from './adminReviewInput';
+export * from './appointmentRequest';
 export * from './blogPost';
 export * from './campaign';
 export * from './campaignMediaType';

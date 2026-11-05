@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import type { ContactAppointmentInput } from "@workspace/api-client-react";
 import { ArrowRight, CheckCircle2, LoaderCircle } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,6 +60,8 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
     mutationFn: submitAppointmentRequest,
   });
   const [submissionAccepted, setSubmissionAccepted] = useState<boolean | null>(null);
+  const [notificationSent, setNotificationSent] = useState<boolean | null>(null);
+  const submissionId = useRef<string | null>(null);
   const phoneValue = form.watch("phone");
   const emailValue = form.watch("email");
   const phoneDigits = phoneValue.replace(/\D/g, "");
@@ -70,6 +72,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
   const submit = async (values: AppointmentFormValues) => {
     request.reset();
     setSubmissionAccepted(null);
+    setNotificationSent(null);
     if (!values.service) {
       form.setError("service", {
         type: "required",
@@ -80,6 +83,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
 
     try {
       const result = await request.mutateAsync({
+          submissionId: submissionId.current ?? (submissionId.current = crypto.randomUUID()),
           name: values.name.trim(),
           phone: values.phone.trim(),
           email: values.email.trim(),
@@ -88,8 +92,12 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           message: values.message?.trim() || undefined,
           website: values.website,
       });
+      setNotificationSent(result.notificationSent ?? null);
       setSubmissionAccepted(result.accepted === true);
-      if (result.accepted === true) form.reset(defaultValues);
+      if (result.accepted === true) {
+        form.reset(defaultValues);
+        submissionId.current = null;
+      }
     } catch {
       setSubmissionAccepted(false);
     }
@@ -332,8 +340,8 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           </Button>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
             {appointmentProviderName
-              ? `Votre demande sera transmise au cabinet via ${appointmentProviderName}.`
-              : "Le service d’envoi du formulaire reste à configurer."}{" "}
+              ? `Votre demande sera enregistrée dans Supabase et notifiée via ${appointmentProviderName}.`
+              : "Votre demande sera enregistrée dans l’espace privé du cabinet."}{" "}
             Elle ne confirme pas encore un rendez-vous.
           </p>
         </div>
@@ -351,7 +359,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             <CheckCircle2 size={27} aria-hidden="true" />
           </span>
           <DialogTitle className="font-display text-2xl text-[#073e53]">
-            Demande transmise
+            Demande enregistrée
           </DialogTitle>
           <DialogDescription
             role="status"
@@ -361,6 +369,12 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             Votre demande a bien été reçue. Le cabinet vous recontactera pour
             confirmer le rendez-vous. L’envoi de ce formulaire ne réserve pas
             encore de créneau.
+            {notificationSent === false && (
+              <span className="mt-2 block font-medium">
+                La notification par e-mail n’a pas pu être envoyée. Votre demande reste
+                disponible pour le cabinet dans son espace privé; inutile de la renvoyer.
+              </span>
+            )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-center">

@@ -66,7 +66,7 @@ paths:
     post:
       operationId: submitContactAppointment
       tags: [site]
-      summary: Send a website appointment request by email
+      summary: Persist a website appointment request privately
       requestBody:
         required: true
         content:
@@ -75,15 +75,42 @@ paths:
               $ref: "#/components/schemas/ContactAppointmentInput"
       responses:
         "200":
-          description: Appointment request accepted for delivery
+          description: Appointment request saved
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ContactAppointmentAccepted"
         "400": { description: Invalid request }
         "403": { description: Origin not allowed }
-        "502": { description: Email delivery failed }
-        "503": { description: Email delivery is not configured }
+        "429": { description: Submission rate exceeded }
+        "503": { description: Storage unavailable }
+  /admin/appointments:
+    get:
+      operationId: getAdminAppointments
+      tags: [admin]
+      responses:
+        "200":
+          description: Private appointment requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AppointmentRequest" }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+  /admin/appointments/{id}:
+    delete:
+      operationId: deleteAdminAppointment
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204": { description: Request deleted }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
   /reviews:
     get:
       operationId: getPublicReviews
@@ -287,11 +314,26 @@ components:
         preferredDate: { type: string, format: date }
         message: { type: string, maxLength: 2000 }
         website: { type: string, maxLength: 200 }
+        submissionId: { type: string, format: uuid }
     ContactAppointmentAccepted:
       type: object
       required: [accepted]
       properties:
         accepted: { type: boolean }
+        requestId: { type: string, format: uuid }
+        notificationSent: { type: boolean }
+    AppointmentRequest:
+      type: object
+      required: [id, name, phone, email, service, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        phone: { type: string }
+        email: { type: string }
+        service: { type: string }
+        preferredDate: { type: string, nullable: true }
+        message: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
     Review:
       type: object
       required: [id, name, service, quote, rating, createdAt, source]

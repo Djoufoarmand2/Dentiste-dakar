@@ -27,6 +27,7 @@ import type {
 import type {
   AdminAccess,
   AdminReviewInput,
+  AppointmentRequest,
   ContactAppointmentAccepted,
   ContactAppointmentInput,
   ContentDocument,
@@ -370,7 +371,7 @@ export const getSubmitContactAppointmentUrl = () => {
 }
 
 /**
- * @summary Send a website appointment request by email
+ * @summary Persist a website appointment request privately
  */
 export const submitContactAppointment = async (contactAppointmentInput: ContactAppointmentInput, options?: Parameters<typeof customFetch>[1]): Promise<ContactAppointmentAccepted> => {
 
@@ -436,7 +437,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type SubmitContactAppointmentMutationVariables = {data: BodyType<ContactAppointmentInput>}
 
     /**
- * @summary Send a website appointment request by email
+ * @summary Persist a website appointment request privately
  */
 export const useSubmitContactAppointment = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof submitContactAppointment>>, TError,SubmitContactAppointmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -447,6 +448,169 @@ export const useSubmitContactAppointment = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getSubmitContactAppointmentMutationOptions(options), queryClient);
+    }
+
+export const getGetAdminAppointmentsUrl = () => {
+
+
+
+
+  return `/api/admin/appointments`
+}
+
+export const getAdminAppointments = async ( options?: Parameters<typeof customFetch>[1]): Promise<AppointmentRequest[]> => {
+
+  return customFetch<AppointmentRequest[]>(getGetAdminAppointmentsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminAppointmentsQueryKey = () => {
+    return [
+    `/api/admin/appointments`
+    ] as const;
+    }
+
+
+export const getGetAdminAppointmentsQueryOptions = <TData = Awaited<ReturnType<typeof getAdminAppointments>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminAppointments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminAppointmentsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminAppointments>>> = ({ signal }) => getAdminAppointments({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminAppointments>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetAdminAppointmentsQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminAppointments>>>
+export type GetAdminAppointmentsQueryError = ErrorType<void>
+
+
+export function useGetAdminAppointments<TData = Awaited<ReturnType<typeof getAdminAppointments>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminAppointments>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminAppointments>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminAppointments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminAppointments<TData = Awaited<ReturnType<typeof getAdminAppointments>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminAppointments>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAdminAppointments>>,
+          TError,
+          Awaited<ReturnType<typeof getAdminAppointments>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetAdminAppointments<TData = Awaited<ReturnType<typeof getAdminAppointments>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminAppointments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetAdminAppointments<TData = Awaited<ReturnType<typeof getAdminAppointments>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getAdminAppointments>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetAdminAppointmentsQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDeleteAdminAppointmentUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/appointments/${id}`
+}
+
+export const deleteAdminAppointment = async (id: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteAdminAppointmentUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAdminAppointmentMutationKey = () => ['deleteAdminAppointment'] as const;
+
+export const getDeleteAdminAppointmentMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminAppointment>>, TError,DeleteAdminAppointmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAdminAppointment>>, TError,DeleteAdminAppointmentMutationVariables, TContext> => {
+
+const mutationKey = getDeleteAdminAppointmentMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAdminAppointment>>, DeleteAdminAppointmentMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteAdminAppointment(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAdminAppointmentMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAdminAppointment>>>
+
+    export type DeleteAdminAppointmentMutationError = ErrorType<void>
+    export type DeleteAdminAppointmentMutationVariables = {id: string}
+
+    export const useDeleteAdminAppointment = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAdminAppointment>>, TError,DeleteAdminAppointmentMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAdminAppointment>>,
+        TError,
+        DeleteAdminAppointmentMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteAdminAppointmentMutationOptions(options), queryClient);
     }
 
 export const getGetPublicReviewsUrl = () => {
