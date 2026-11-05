@@ -16,6 +16,8 @@ Express ni Clerk pour les pages, les sessions et l'administration.
   contenu ; le fichier historique `cms/site-content.json` est conservé.
 - **Edge Functions → cabinet-api** : lecture publique filtrée, vérification des
   droits, publication et gestion des médias.
+- **`WEB3FORMS_ACCESS_KEY`** : secret privé de la fonction `cabinet-api`, utilisé
+  uniquement pour transmettre les demandes de rendez-vous vers la boîte du cabinet.
 
 Les tables complètes ne sont pas lisibles par les visiteurs. La réponse publique
 exclut les articles non publiés et les campagnes inactives.
@@ -67,6 +69,11 @@ Les plafonds de stockage, de bande passante et d'envoi d'e-mails du projet
 Supabase s'ajoutent à ces limites applicatives. Le service d'e-mail doit être
 configuré selon les besoins du cabinet ; le retour de l'API d'envoi ne garantit
 pas la réception dans la boîte de destination.
+
+Le formulaire de rendez-vous passe par `POST /contact/appointment` sur la fonction
+`cabinet-api`. Sans le secret Web3Forms, il répond explicitement que l’envoi est
+indisponible ; le déploiement du backend synchronise ce secret depuis l’environnement
+Replit lorsqu’il est configuré.
 
 ## Configuration et domaines
 

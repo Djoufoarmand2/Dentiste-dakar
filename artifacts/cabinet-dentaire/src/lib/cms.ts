@@ -7,7 +7,13 @@ export const publicContentKey = ['cabinet', 'public-content'] as const;
 export const adminContentKey = ['cabinet', 'admin-content'] as const;
 export const adminAccessKey = ['cabinet', 'admin-access'] as const;
 export function usePublicContent() {
-  return useQuery({ queryKey: publicContentKey, queryFn: () => cmsRequest<SiteContent>('/site-content', {}, false), staleTime: 15_000, refetchOnWindowFocus: true });
+  return useQuery({
+    queryKey: publicContentKey,
+    queryFn: () => cmsRequest<SiteContent>('/site-content', {}, false),
+    staleTime: 5_000,
+    refetchInterval: 5_000,
+    refetchOnWindowFocus: true,
+  });
 }
 export function useAdminAccess() {
   const { session, loading } = useCabinetSession();

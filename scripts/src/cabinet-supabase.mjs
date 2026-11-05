@@ -101,6 +101,13 @@ async function setup() {
 }
 
 async function deploy() {
+  const web3FormsAccessKey = process.env.WEB3FORMS_ACCESS_KEY?.trim();
+  if (web3FormsAccessKey) {
+    await management('/secrets', {
+      method: 'POST',
+      body: JSON.stringify([{ name: 'WEB3FORMS_ACCESS_KEY', value: web3FormsAccessKey }]),
+    });
+  }
   const result = await build({
     entryPoints: [resolve(root, 'supabase/functions/cabinet-api/index.ts')], bundle: true, write: false,
     platform: 'neutral', format: 'esm', target: 'es2022', minify: false,

@@ -5,7 +5,7 @@ import { SiteShell } from '@/components/public-site';
 
 export default function NotFound() {
   useEffect(() => {
-    document.title = 'Page introuvable | Cabinet dentaire';
+    document.title = 'Page introuvable | Clinique Sourire Serein';
     let robots = document.head.querySelector<HTMLMetaElement>('meta[name="robots"]');
     if (!robots) {
       robots = document.createElement('meta');

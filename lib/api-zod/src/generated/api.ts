@@ -279,7 +279,7 @@ export const SubmitContactAppointmentBody = zod.object({
   "name": zod.string().min(1).max(submitContactAppointmentBodyNameMax),
   "phone": zod.string().min(1).max(submitContactAppointmentBodyPhoneMax),
   "email": zod.string().email().max(submitContactAppointmentBodyEmailMax),
-  "service": zod.enum(['Consultation générale / Bilan', 'Facettes dentaires en composite', 'Esthétique dentaire', 'Blanchiment dentaire', 'Implants dentaires', 'Orthodontie', 'Chirurgie dentaire', 'Urgence dentaire']),
+  "service": zod.enum(['Consultation dentaire', 'Détartrage et polissage', 'Traitement des caries', 'Plombage / composite', 'Kinésithérapie dentaire / maxillo-faciale', 'Laboratoire prothétique', 'Chirurgie dentaire']),
   "preferredDate": zod.coerce.date().optional(),
   "message": zod.string().max(submitContactAppointmentBodyMessageMax).optional(),
   "website": zod.string().max(submitContactAppointmentBodyWebsiteMax).optional()

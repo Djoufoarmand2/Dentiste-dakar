@@ -1,6 +1,7 @@
-import {
-  useSubmitContactAppointment,
-  type ContactAppointmentInput,
+import { useMutation } from "@tanstack/react-query";
+import type {
+  ContactAppointmentAccepted,
+  ContactAppointmentInput,
 } from "@workspace/api-client-react";
 import { ArrowRight, CheckCircle2, LoaderCircle } from "lucide-react";
 import { useState } from "react";
@@ -17,6 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { cmsRequest } from "@/lib/supabase";
 import {
   Dialog,
   DialogClose,
@@ -33,14 +35,13 @@ type AppointmentFormValues = Omit<ContactAppointmentInput, "service"> & {
 };
 
 const serviceOptions: ContactAppointmentInput["service"][] = [
-  "Consultation générale / Bilan",
-  "Facettes dentaires en composite",
-  "Esthétique dentaire",
-  "Blanchiment dentaire",
-  "Implants dentaires",
-  "Orthodontie",
+  "Consultation dentaire",
+  "Détartrage et polissage",
+  "Traitement des caries",
+  "Plombage / composite",
+  "Kinésithérapie dentaire / maxillo-faciale",
+  "Laboratoire prothétique",
   "Chirurgie dentaire",
-  "Urgence dentaire",
 ];
 
 const defaultValues: AppointmentFormValues = {
@@ -55,7 +56,14 @@ const defaultValues: AppointmentFormValues = {
 
 export function AppointmentRequestForm() {
   const form = useForm<AppointmentFormValues>({ defaultValues, mode: "onChange" });
-  const request = useSubmitContactAppointment();
+  const request = useMutation({
+    mutationFn: (data: ContactAppointmentInput) =>
+      cmsRequest<ContactAppointmentAccepted>(
+        "/contact/appointment",
+        { method: "POST", body: JSON.stringify(data) },
+        false,
+      ),
+  });
   const [submissionAccepted, setSubmissionAccepted] = useState<boolean | null>(null);
   const phoneValue = form.watch("phone");
   const emailValue = form.watch("email");
@@ -76,7 +84,6 @@ export function AppointmentRequestForm() {
 
     try {
       const result = await request.mutateAsync({
-        data: {
           name: values.name.trim(),
           phone: values.phone.trim(),
           email: values.email.trim(),
@@ -84,7 +91,6 @@ export function AppointmentRequestForm() {
           preferredDate: values.preferredDate || undefined,
           message: values.message?.trim() || undefined,
           website: values.website,
-        },
       });
       setSubmissionAccepted(result.accepted === true);
       if (result.accepted === true) form.reset(defaultValues);
