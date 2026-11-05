@@ -8,6 +8,8 @@ import { Link, useLocation } from 'wouter';
 import { AppointmentRequestForm } from './appointment-request-form';
 import { ReviewSubmissionForm } from './review-submission-form';
 import { combinePublicReviews, usePublicReviews } from '@/lib/reviews';
+import heroIllustration from '@/lib/hero-illustration.json';
+import { supabaseUrl } from '@/lib/supabase';
 
 const navItems = [
   ['Soins', '/soins'], ['Notre équipe', '/equipe'], ['Le cabinet', '/galerie'],
@@ -323,10 +325,11 @@ export function HomePage({ content }: { content: SiteContent }) {
   const partnerLogo = content.gallery.find((item) => item.id === partnerLogoId);
   const partnerPhoto = content.gallery.find((item) => item.id === partnerPhotoId);
   const heroImg = hero.imageUrl?.trim();
+  const isIllustrativeHero = heroImg === `${supabaseUrl.replace(/\/+$/, '')}/storage/v1/object/public/cabinet-media/${heroIllustration.storagePath}`;
   return <SiteShell clinic={clinic} overlay>
     <main>
       <section className="relative flex min-h-[92dvh] items-center overflow-hidden bg-[#073e53] text-white md:min-h-[100dvh]" data-testid="section-hero">
-        {heroImg ? <img src={heroImg} alt="Façade de la Clinique La Bienveillance à Douala" className="absolute inset-0 h-full w-full object-cover" data-testid="img-hero" /> : <div aria-hidden className="hero-fallback absolute inset-0" />}
+        {heroImg ? <img src={heroImg} alt={isIllustrativeHero ? heroIllustration.alt : heroImg === partnerPhoto?.imageUrl ? partnerPhoto.alt : 'Vue du cabinet dentaire'} fetchPriority="high" className={`absolute inset-0 h-full w-full object-cover ${isIllustrativeHero ? 'object-[100%_38%] md:object-[center_40%]' : 'object-center'}`} data-testid="img-hero" /> : <div aria-hidden className="hero-fallback absolute inset-0" />}
         <div aria-hidden className={`absolute inset-0 ${heroImg ? 'bg-[#070116]/60' : 'bg-[#070116]/15'}`} />
         <div className="relative z-10 mx-auto w-full max-w-[1240px] px-5 pb-20 pt-32 md:px-8">
           <div className="mx-auto max-w-[620px] reveal">
@@ -339,6 +342,7 @@ export function HomePage({ content }: { content: SiteContent }) {
             </div>
           </div>
         </div>
+        {isIllustrativeHero && <p className="absolute bottom-4 left-5 z-10 max-w-[calc(100%-6rem)] text-[10px] leading-4 text-white/75 md:left-8">Illustration générée par IA — ne représente pas les locaux ni l’équipe réelle.</p>}
       </section>
 
       {[content.services.length, content.team.length, photos.length].some((count) => count > 0) && <section className="border-b border-[#073e53]/10 bg-[#f3f1f5] py-8 md:py-10" aria-label="Le cabinet en quelques repères">
