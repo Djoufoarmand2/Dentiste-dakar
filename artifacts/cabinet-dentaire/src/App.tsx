@@ -58,6 +58,21 @@ const indexableSeoConfigured = import.meta.env.VITE_SITE_INDEXABLE === 'true'
   && !!import.meta.env.VITE_SITE_DESCRIPTION?.trim()
   && isHttpsUrl(import.meta.env.VITE_SITE_OG_IMAGE_URL?.trim());
 
+function metaText(value: string, maximumLength: number) {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maximumLength) return normalized;
+  const shortened = normalized.slice(0, maximumLength - 1).replace(/\s+\S*$/, '').trimEnd();
+  return `${shortened || normalized.slice(0, maximumLength - 1).trimEnd()}…`;
+}
+
+function seoTitle(pageName: string, clinicName: string) {
+  const suffix = ` | ${clinicName}`;
+  const maximumPrefix = Math.max(12, 60 - suffix.length);
+  if (pageName.length <= maximumPrefix) return `${pageName}${suffix}`;
+  const shortened = pageName.slice(0, maximumPrefix - 1).replace(/\s+\S*$/, '').trimEnd();
+  return `${shortened || pageName.slice(0, maximumPrefix - 1).trimEnd()}…${suffix}`;
+}
+
 function PublicRoute({ page }: { page: (content: SiteContent) => ReactNode }) {
   const query = usePublicContent();
   const [location] = useLocation();
@@ -82,18 +97,16 @@ function PublicRoute({ page }: { page: (content: SiteContent) => ReactNode }) {
     '/confidentialite': 'Confidentialité',
   };
   const pageName = article?.title || pageNames[path] || 'Clinique Sourire Serein';
-  const description = article?.excerpt ||
+  const description = metaText(article?.excerpt ||
     (path === '/'
       ? query.data.hero.description
-      : `${pageName} au ${query.data.clinic.name}, à ${query.data.clinic.city}. Informations, conseils et contact.`);
-  const title = path === '/'
-    ? `${query.data.clinic.name} | Cabinet dentaire à ${query.data.clinic.city}`
-    : `${pageName} | ${query.data.clinic.name}`;
-  const imageUrl = query.data.hero.imageUrl?.trim() || query.data.clinic.logoUrl?.trim() || undefined;
-  return <><DocumentMetadata title={title} description={description} imageUrl={imageUrl} />{page(query.data)}</>;
+      : `${pageName} au ${query.data.clinic.name}, à ${query.data.clinic.city}. Informations, conseils et contact.`), 160);
+  const title = seoTitle(path === '/' ? `Cabinet dentaire à ${query.data.clinic.city}` : pageName, query.data.clinic.name);
+  const imageUrl = article?.imageUrl?.trim() || query.data.hero.imageUrl?.trim() || query.data.clinic.logoUrl?.trim() || undefined;
+  return <><DocumentMetadata title={title} description={description} imageUrl={imageUrl} imageAlt={article ? `Illustration de l’article : ${article.title}` : query.data.hero.title} isArticle={!!article} />{page(query.data)}</>;
 }
 
-function DocumentMetadata({ title, description, imageUrl }: { title: string; description: string; imageUrl?: string }) {
+function DocumentMetadata({ title, description, imageUrl, imageAlt, isArticle = false }: { title: string; description: string; imageUrl?: string; imageAlt?: string; isArticle?: boolean }) {
   useEffect(() => {
     document.title = title;
     const setMeta = (selector: string, attribute: string, key: string, content?: string) => {
@@ -133,6 +146,10 @@ function DocumentMetadata({ title, description, imageUrl }: { title: string; des
     setMeta('meta[property="og:description"]', 'property', 'og:description', description);
     setMeta('meta[property="og:url"]', 'property', 'og:url', canonicalUrl);
     setMeta('meta[property="og:image"]', 'property', 'og:image', socialImage);
+    setMeta('meta[property="og:image:alt"]', 'property', 'og:image:alt', socialImage ? imageAlt : undefined);
+    setMeta('meta[property="og:type"]', 'property', 'og:type', isArticle ? 'article' : 'website');
+    setMeta('meta[property="og:site_name"]', 'property', 'og:site_name', title.split(' | ').at(-1));
+    setMeta('meta[property="og:locale"]', 'property', 'og:locale', 'fr_CM');
     setMeta('meta[name="twitter:title"]', 'name', 'twitter:title', title);
     setMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description);
     setMeta('meta[name="twitter:image"]', 'name', 'twitter:image', socialImage);
@@ -150,7 +167,7 @@ function DocumentMetadata({ title, description, imageUrl }: { title: string; des
       }
       canonical.href = canonicalUrl;
     }
-  }, [description, imageUrl, title]);
+  }, [description, imageAlt, imageUrl, isArticle, title]);
 
   return null;
 }

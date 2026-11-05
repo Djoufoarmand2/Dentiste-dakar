@@ -207,9 +207,9 @@ function PageIntro({ eyebrow, title, text }: { eyebrow: string; title: string; t
   </section>;
 }
 
-export function ImageFrame({ src, alt, className = '', label = 'Photographie à ajouter' }: { src?: string; alt: string; className?: string; label?: string }) {
+export function ImageFrame({ src, alt, className = '', label = 'Photographie à ajouter', priority = false }: { src?: string; alt: string; className?: string; label?: string; priority?: boolean }) {
   return <div className={`image-empty relative overflow-hidden ${className}`}>
-    {src?.trim() ? <img src={src} alt={alt} loading="lazy" className="h-full w-full object-cover" /> : <div className="absolute inset-0 grid place-items-center p-6 text-center">
+    {src?.trim() ? <img src={src} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} decoding="async" className="h-full w-full object-cover" /> : <div className="absolute inset-0 grid place-items-center p-6 text-center">
       <div className="flex flex-col items-center text-[#070116]"><ImageIcon size={24} strokeWidth={1.3} /><span className="mt-3 max-w-[180px] text-[9px] uppercase tracking-[.2em]">{label}</span></div>
     </div>}
   </div>;
@@ -491,8 +491,16 @@ export function FAQPage({ content }: { content: SiteContent }) {
     </section></main></SiteShell>;
 }
 
+const blogImageAlt: Record<string, string> = {
+  'urgence-dentaire-douala': 'Illustration d’un examen dentaire lié à une douleur dentaire.',
+  'detartrage-et-polissage': 'Illustration d’un soin d’hygiène dentaire et de détartrage.',
+  'kinesitherapie-maxillo-faciale': 'Illustration d’un exercice de mobilité maxillo-faciale.',
+  'grossesse-et-sante-bucco-dentaire': 'Illustration d’une consultation en maternité au sujet de la santé bucco-dentaire.',
+};
+const articleImageAlt = (post: BlogPost) => blogImageAlt[post.id] || `Illustration dentaire liée à l’article : ${post.title}`;
+
 function BlogCard({ post }: { post: BlogPost }) {
-  return <article className="card-ref overflow-hidden" data-testid={`card-blog-${post.id}`}><Link href={`/blog/${post.slug}`} className="block" data-testid={`link-blog-${post.slug}`}><ImageFrame src={post.imageUrl} alt={post.title} label="Illustration de l’article à ajouter" className="h-52" /><div className="p-6"><p className="text-[10px] uppercase tracking-[.16em] text-accent">{post.date} · {post.author}</p><h2 className="mt-3 font-display text-xl font-semibold leading-snug text-[#073e53]">{post.title}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{post.excerpt}</p><span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.12em] text-accent">Lire l’article <ArrowRight size={14} /></span></div></Link></article>;
+  return <article className="card-ref overflow-hidden" data-testid={`card-blog-${post.id}`}><Link href={`/blog/${post.slug}`} className="block" data-testid={`link-blog-${post.slug}`}><ImageFrame src={post.imageUrl} alt={articleImageAlt(post)} label="Illustration de l’article" className="h-52" /><div className="p-6"><p className="text-[10px] uppercase tracking-[.16em] text-accent">{post.date} · {post.author}</p><h2 className="mt-3 font-display text-xl font-semibold leading-snug text-[#073e53]">{post.title}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{post.excerpt}</p><span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.12em] text-accent">Lire l’article <ArrowRight size={14} /></span></div></Link></article>;
 }
 
 export function BlogPage({ content }: { content: SiteContent }) {
@@ -505,7 +513,7 @@ export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?
   const post = content.blogPosts.find((c) => c.slug === slug && c.published);
   if (!post) return <SiteShell clinic={content.clinic}><main className="mx-auto max-w-3xl px-5 py-24 text-center"><p className="eyebrow">Article introuvable</p><h1 className="mt-4 font-display text-4xl font-semibold text-[#073e53]">Ce carnet n’a pas encore cette page.</h1><div className="mt-7"><ActionLink href="/blog" testId="link-article-back">Retour au carnet</ActionLink></div></main></SiteShell>;
   const blocks = post.content.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
-  return <SiteShell clinic={content.clinic}><main><article className="mx-auto max-w-4xl px-5 pb-24 pt-12 md:px-8 md:pt-16"><Link href="/blog" className="inline-flex items-center gap-2 text-xs font-semibold text-accent" data-testid="link-back-blog"><ArrowLeft size={14} /> Tous les articles</Link><p className="mt-10 text-[10px] uppercase tracking-[.2em] text-accent">{post.date} · {post.author}</p><h1 className="mt-4 font-display text-4xl font-semibold leading-tight text-[#073e53] md:text-5xl">{post.title}</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">{post.excerpt}</p><ImageFrame src={post.imageUrl} alt={post.title} label="Illustration de l’article à ajouter" className="mt-10 h-[280px] rounded-md md:h-[440px]" /><div className="prose prose-lg mt-10 max-w-none font-sans leading-8 text-foreground/80">{blocks.map((block, index) => block.startsWith('## ') ? <h2 key={index}>{block.slice(3)}</h2> : <p key={index}>{block}</p>)}</div></article></main></SiteShell>;
+  return <SiteShell clinic={content.clinic}><main><article className="mx-auto max-w-4xl px-5 pb-24 pt-12 md:px-8 md:pt-16"><Link href="/blog" className="inline-flex items-center gap-2 text-xs font-semibold text-accent" data-testid="link-back-blog"><ArrowLeft size={14} /> Tous les articles</Link><p className="mt-10 text-[10px] uppercase tracking-[.2em] text-accent">{post.date} · {post.author}</p><h1 className="mt-4 font-display text-4xl font-semibold leading-tight text-[#073e53] md:text-5xl">{post.title}</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">{post.excerpt}</p><ImageFrame src={post.imageUrl} alt={articleImageAlt(post)} label="Illustration de l’article" className="mt-10 h-[280px] rounded-md md:h-[440px]" priority /><div className="prose prose-lg mt-10 max-w-none font-sans leading-8 text-foreground/80">{blocks.map((block, index) => block.startsWith('## ') ? <h2 key={index}>{block.slice(3)}</h2> : <p key={index}>{block}</p>)}</div></article></main></SiteShell>;
 }
 
 function CampaignGrid({ campaigns }: { campaigns: Campaign[] }) {
