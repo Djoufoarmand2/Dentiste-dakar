@@ -212,7 +212,7 @@ const serviceAnchor = (s: ServiceItem) => `soin-${s.slug || s.id}`;
 
 function ServiceCard({ item, href }: { item: ServiceItem; href: string }) {
   return <article id={serviceAnchor(item)} className="card-ref group flex scroll-mt-24 flex-col overflow-hidden" data-testid={`card-service-${item.id}`}>
-    <ImageFrame src={item.imageUrl} alt={item.title} label="Visuel du soin à ajouter" className="h-52" />
+    <ImageFrame src={item.imageUrl} alt={`Illustration générée par IA : ${item.title}`} label="Illustration du soin" className="h-52" />
     <div className="flex flex-1 flex-col p-6"><h3 className="font-display text-xl font-semibold text-[#073e53]">{item.title}</h3><p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">{item.summary || item.description}</p>
       <Link href={href} className="mt-5 inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[.12em] text-accent transition-colors hover:text-[#073e53]" data-testid={`link-service-${item.id}`}>En savoir plus <ArrowRight size={14} /></Link></div>
   </article>;
@@ -357,6 +357,7 @@ export function HomePage({ content }: { content: SiteContent }) {
       <section id="soins" className="section-pad bg-background">
         <div className="wrap">
           <SectionHead eyebrow="Nos soins" title="Prendre soin, avec justesse." text="Des soins pensés pour préserver votre santé et vous aider à vous sentir bien, tout simplement." />
+          <p className="mt-4 max-w-3xl text-xs leading-5 text-muted-foreground">Les visuels des soins sont des illustrations générées par IA. Ils ne représentent ni les locaux ni l’équipe réelle.</p>
           {content.services.length ? <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{content.services.slice(0, 6).map((s) => <ServiceCard key={s.id} item={s} href={`/soins#${serviceAnchor(s)}`} />)}</div>
             : <EmptyInline title="Nos soins seront bientôt présentés ici" text="Les informations du cabinet seront mises à jour prochainement." />}
           <div className="mt-10 text-center"><ActionLink href="/soins" variant="navy" testId="link-home-all-services">Tous les soins</ActionLink></div>
@@ -429,6 +430,7 @@ export function ServicesPage({ content }: { content: SiteContent }) {
   }, [location]);
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Des soins à votre mesure" title="La santé d’abord. Le confort, toujours." text="Nous prenons soin de votre sourire avec une approche préventive, des gestes précis et des explications qui vous ressemblent." />
     <section className="wrap section-pad">
+      <p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">Les visuels des soins sont des illustrations générées par IA. Ils ne représentent ni les locaux ni l’équipe réelle de la Clinique Sourire Serein.</p>
       {content.services.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{content.services.map((s) => <ServiceCard key={s.id} item={s} href="/contact" />)}</div> : <EmptyInline title="La carte des soins se prépare" text="Revenez bientôt pour découvrir les soins proposés par le cabinet." />}
       <div className="mt-16 flex flex-col gap-6 rounded-md bg-[#073e53] p-8 text-white md:flex-row md:items-center md:justify-between md:p-10"><div><h2 className="font-display text-2xl font-semibold md:text-3xl">Une question avant de venir ?</h2><p className="mt-2 text-sm text-white/70">Nous sommes là pour vous orienter, sans engagement.</p></div><ActionLink href="/contact" testId="link-services-contact">Échanger avec nous</ActionLink></div>
     </section></main></SiteShell>;
@@ -443,7 +445,7 @@ export function TeamPage({ content }: { content: SiteContent }) {
 export function GalleryPage({ content }: { content: SiteContent }) {
   const photos = visibleGallery(content.gallery);
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Le cabinet en images" title="Un lieu pensé pour votre confort." text="Retrouvez les visuels officiels du lieu qui accueille le cabinet dentaire." />
-    <section className="wrap section-pad">{photos.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.map((p) => <figure key={p.id} className="overflow-hidden rounded-md" data-testid={`gallery-image-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Photo du cabinet à ajouter" className="aspect-[4/3]" /><figcaption className="sr-only">{p.alt}</figcaption></figure>)}</div> : <EmptyInline title="L’espace se dévoilera bientôt" text="La galerie du cabinet est en préparation." />}</section></main></SiteShell>;
+    <section className="wrap section-pad"><p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">La façade et le logo sont les visuels officiels transmis. Les autres images d’activités sont des illustrations générées par IA; elles ne représentent pas les locaux ni l’équipe réelle.</p>{photos.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.map((p) => <figure key={p.id} className="overflow-hidden rounded-md" data-testid={`gallery-image-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Illustration de l’activité" className="aspect-[4/3]" /><figcaption className="sr-only">{p.alt}</figcaption></figure>)}</div> : <EmptyInline title="L’espace se dévoilera bientôt" text="La galerie du cabinet est en préparation." />}</section></main></SiteShell>;
 }
 
 export function ReviewsPage({ content }: { content: SiteContent }) {
