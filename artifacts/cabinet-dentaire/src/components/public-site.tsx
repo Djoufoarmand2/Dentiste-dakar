@@ -25,6 +25,20 @@ export const safeCity = (city?: string) => city?.trim() || 'Douala';
 const brandMarkUrl = `${import.meta.env.BASE_URL}brand/logo-mark.webp`;
 const brandLockupUrl = `${import.meta.env.BASE_URL}brand/logo-lockup.webp`;
 const visibleGallery = (gallery: SiteContent['gallery']) => gallery.filter((item) => item.id !== partnerLogoId);
+const galleryCaption = (item: SiteContent['gallery'][number]) => {
+  const captions: Record<string, string> = {
+    'photo-clinique-la-bienveillance': 'Façade de la Clinique La Bienveillance',
+    'illustration-consultation-dentaire': 'Consultation dentaire',
+    'illustration-detartrage-polissage': 'Détartrage et polissage',
+    'illustration-traitement-caries': 'Traitement des caries',
+    'illustration-plombage-composite': 'Plombage et composite',
+    'illustration-kinesitherapie-maxillo-faciale': 'Kinésithérapie maxillo-faciale',
+    'illustration-laboratoire-prothetique': 'Laboratoire prothétique',
+    'illustration-chirurgie-dentaire': 'Chirurgie dentaire',
+    'illustration-maternite-clinique-bienveillance': 'Maternité · Clinique La Bienveillance',
+  };
+  return captions[item.id] ?? item.alt;
+};
 
 const bookHref = (clinic: SiteContent['clinic']) => clinic.bookingUrl || `tel:${clinic.phone || ''}`;
 
@@ -445,7 +459,7 @@ export function TeamPage({ content }: { content: SiteContent }) {
 export function GalleryPage({ content }: { content: SiteContent }) {
   const photos = visibleGallery(content.gallery);
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Le cabinet en images" title="Un lieu pensé pour votre confort." text="Retrouvez les visuels officiels du lieu qui accueille le cabinet dentaire." />
-    <section className="wrap section-pad"><p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">La façade et le logo sont les visuels officiels transmis. Les autres images d’activités sont des illustrations générées par IA; elles ne représentent pas les locaux ni l’équipe réelle.</p>{photos.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.map((p) => <figure key={p.id} className="overflow-hidden rounded-md" data-testid={`gallery-image-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Illustration de l’activité" className="aspect-[4/3]" /><figcaption className="sr-only">{p.alt}</figcaption></figure>)}</div> : <EmptyInline title="L’espace se dévoilera bientôt" text="La galerie du cabinet est en préparation." />}</section></main></SiteShell>;
+    <section className="wrap section-pad"><p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">La façade et le logo sont les visuels officiels transmis. Les autres images d’activités sont des illustrations générées par IA; elles ne représentent pas les locaux ni l’équipe réelle.</p>{photos.length ? <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.map((p) => <figure key={p.id} className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-black/5" data-testid={`gallery-image-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Illustration de l’activité" className="aspect-[4/3]" /><figcaption className="px-3 py-2 text-xs font-medium text-[#073e53] md:px-4 md:py-3 md:text-sm">{galleryCaption(p)}</figcaption></figure>)}</div> : <EmptyInline title="L’espace se dévoilera bientôt" text="La galerie du cabinet est en préparation." />}</section></main></SiteShell>;
 }
 
 export function ReviewsPage({ content }: { content: SiteContent }) {
