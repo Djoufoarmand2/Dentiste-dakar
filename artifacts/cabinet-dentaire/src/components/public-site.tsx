@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   ArrowLeft, ArrowRight, ChevronDown, Clock3, Image as ImageIcon, MapPin, Menu,
-  MessageCircle, Phone, Quote, X,
+  MessageCircle, Phone, Quote, Sparkles, X,
 } from 'lucide-react';
 import type { BlogPost, Campaign, ServiceItem, SiteContent, Testimonial } from '@workspace/api-client-react';
 import { Link, useLocation } from 'wouter';
@@ -245,9 +245,33 @@ function PageIntro({ eyebrow, title, text }: { eyebrow: string; title: string; t
   </section>;
 }
 
-export function ImageFrame({ src, alt, className = '', label = 'Photographie à ajouter', priority = false }: { src?: string; alt: string; className?: string; label?: string; priority?: boolean }) {
-  return <div className={`image-empty relative overflow-hidden ${className}`}>
-    {src?.trim() ? <img src={src} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} decoding="async" className="h-full w-full object-cover" /> : <div className="absolute inset-0 grid place-items-center p-6 text-center">
+export function ImageFrame({ src, alt, className = '', label = 'Photographie à ajouter', indicator, details, priority = false }: { src?: string; alt: string; className?: string; label?: string; indicator?: string; details?: string; priority?: boolean }) {
+  const [isActive, setIsActive] = useState(false);
+  const hasImage = !!src?.trim();
+  const indicatorText = indicator?.trim() || label;
+  const detailText = details?.trim() || alt;
+
+  return <div
+    className={`image-empty image-frame-interactive relative overflow-hidden ${className}`}
+    role="group"
+    aria-label={`Visuel : ${indicatorText}`}
+    tabIndex={0}
+    data-image-active={isActive}
+    onPointerEnter={(event) => { if (event.pointerType !== 'touch') setIsActive(true); }}
+    onPointerLeave={() => setIsActive(false)}
+    onFocusCapture={() => setIsActive(true)}
+    onBlurCapture={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsActive(false);
+    }}
+  >
+    {hasImage ? <>
+      <img src={src} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} decoding="async" className="h-full w-full object-cover" />
+      <span className="image-indicator" aria-hidden="true"><Sparkles size={12} strokeWidth={2.2} /><span className="image-indicator-label">{indicatorText}</span></span>
+      <div className={`image-context ${isActive ? 'is-active' : ''}`} aria-hidden={!isActive}>
+        <span className="image-context-kicker">À découvrir</span>
+        <p>{detailText}</p>
+      </div>
+    </> : <div className="absolute inset-0 grid place-items-center p-6 text-center">
       <div className="flex flex-col items-center text-[#070116]"><ImageIcon size={24} strokeWidth={1.3} /><span className="mt-3 max-w-[180px] text-[9px] uppercase tracking-[.2em]">{label}</span></div>
     </div>}
   </div>;
@@ -266,7 +290,7 @@ const serviceAnchor = (s: ServiceItem) => `soin-${s.slug || s.id}`;
 
 function ServiceCard({ item, href }: { item: ServiceItem; href: string }) {
   return <article id={serviceAnchor(item)} className="card-ref group flex scroll-mt-24 flex-col overflow-hidden" data-testid={`card-service-${item.id}`}>
-    <ImageFrame src={item.imageUrl} alt={`Illustration générée par IA : ${item.title}`} label="Illustration du soin" className="h-52" />
+    <ImageFrame src={item.imageUrl} alt={`Illustration générée par IA : ${item.title}`} label="Illustration du soin" indicator={item.title} details={item.summary || item.description} className="h-52" />
     <div className="flex flex-1 flex-col p-6"><h3 className="font-display text-xl font-semibold text-[#073e53]">{item.title}</h3><p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">{item.summary || item.description}</p>
       <Link href={href} className="mt-5 inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[.12em] text-accent transition-colors hover:text-[#073e53]" data-testid={`link-service-${item.id}`}>En savoir plus <ArrowRight size={14} /></Link></div>
   </article>;
@@ -395,7 +419,7 @@ export function HomePage({ content }: { content: SiteContent }) {
         <section id="clinique-partenaire" className="section-pad bg-[#e6e3eb]" aria-labelledby="partner-heading">
           <div className="wrap grid items-center gap-8 md:grid-cols-[1fr_1.05fr] md:gap-12">
             <div className="overflow-hidden rounded-2xl">
-              <ImageFrame src={partnerPhoto?.imageUrl || heroImg} alt="Façade de la Clinique La Bienveillance à Douala" label="Photo de l’établissement partenaire" className="aspect-[4/3] w-full" />
+              <ImageFrame src={partnerPhoto?.imageUrl || heroImg} alt="Façade de la Clinique La Bienveillance à Douala" label="Photo de l’établissement partenaire" indicator="Établissement partenaire" details="La façade du lieu qui accueille le cabinet à Douala." className="aspect-[4/3] w-full" />
             </div>
             <div className="rounded-2xl border border-[#073e53]/10 bg-white p-7 shadow-[0_18px_55px_rgba(7,1,22,.08)] md:p-10">
               {partnerLogo?.imageUrl && <img src={partnerLogo.imageUrl} alt={partnerLogo.alt || 'Logo de la Clinique La Bienveillance'} width="96" height="96" loading="lazy" className="mb-5 h-20 w-20 rounded-full bg-white object-contain ring-1 ring-[#073e53]/10" />}
@@ -424,7 +448,7 @@ export function HomePage({ content }: { content: SiteContent }) {
         <section id="galerie" className="section-pad bg-[#e6e3eb]">
           <div className="wrap">
             <SectionHead eyebrow="Le cabinet" title="Un lieu pensé pour votre confort." text="Un aperçu de l’atmosphère qui vous attend." />
-            {photos.length ? <div className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.slice(0, 6).map((p) => <figure key={p.id} className="overflow-hidden rounded-md" data-testid={`home-gallery-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Photo du cabinet à ajouter" className="aspect-[4/3] transition-transform duration-500 hover:scale-[1.03]" /><figcaption className="sr-only">{p.alt}</figcaption></figure>)}</div>
+            {photos.length ? <div className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.slice(0, 6).map((p) => <figure key={p.id} className="overflow-hidden rounded-md" data-testid={`home-gallery-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Photo du cabinet à ajouter" indicator={galleryCaption(p)} details={p.alt} className="aspect-[4/3] transition-transform duration-500 hover:scale-[1.03]" /><figcaption className="sr-only">{p.alt}</figcaption></figure>)}</div>
               : <EmptyInline title="L’espace se dévoilera bientôt" text="La galerie du cabinet est en préparation." />}
             <div className="mt-10 text-center"><ActionLink href="/galerie" variant="navy" testId="link-home-gallery">Voir la galerie</ActionLink></div>
           </div>
@@ -432,7 +456,7 @@ export function HomePage({ content }: { content: SiteContent }) {
 
         {lead && <section id="praticien" className="section-pad bg-background">
           <div className="wrap grid items-center gap-10 md:grid-cols-2 md:gap-16">
-            <ImageFrame src={lead?.imageUrl} alt={lead ? `Portrait de ${lead.name}` : 'Présentation de l’équipe'} label="Portrait à ajouter" className="aspect-[4/5] w-full rounded-md md:max-h-[560px]" />
+            <ImageFrame src={lead?.imageUrl} alt={lead ? `Portrait de ${lead.name}` : 'Présentation de l’équipe'} label="Portrait à ajouter" indicator={lead?.name || 'Équipe du cabinet'} details={lead?.role || 'Présentation de l’équipe du cabinet.'} className="aspect-[4/5] w-full rounded-md md:max-h-[560px]" />
             <div>
               <SectionHead center={false} eyebrow={lead?.role || 'Votre praticien'} title={lead?.name || 'Une équipe, avant tout humaine.'} />
               <p className="mt-6 text-[15px] leading-7 text-muted-foreground">{lead?.biography || 'Nous sommes là pour vous accueillir tels que vous êtes et construire avec vous un parcours de soin qui a du sens.'}</p>
@@ -498,10 +522,10 @@ export function TeamPage({ content }: { content: SiteContent }) {
   return <SiteShell clinic={content.clinic}><main><PageIntro eyebrow="Derrière chaque sourire" title="Une équipe, avant tout humaine." text="Nous sommes là pour vous accueillir tels que vous êtes et construire avec vous un parcours de soin qui a du sens." />
     <section className="wrap section-pad">
       <figure className="mb-10 overflow-hidden rounded-2xl border border-[#073e53]/10 bg-white shadow-sm" data-testid="photo-clinic-team">
-        <ImageFrame src={clinicPhotoUrl('clinic-team.jpg')} alt="Un groupe de professionnels de santé réuni dans les locaux de l’établissement partenaire." className="aspect-[3/2] md:aspect-[16/8]" />
+        <ImageFrame src={clinicPhotoUrl('clinic-team.jpg')} alt="Un groupe de professionnels de santé réuni dans les locaux de l’établissement partenaire." indicator="Équipe de santé" details="Un aperçu de l’équipe réunie dans l’établissement partenaire." className="aspect-[3/2] md:aspect-[16/8]" />
         <figcaption className="px-4 py-3 text-sm text-muted-foreground">L’équipe réunie dans l’établissement partenaire.</figcaption>
       </figure>
-      {content.team.length ? <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">{content.team.map((m) => <article key={m.id} className="card-ref overflow-hidden" data-testid={`card-team-${m.id}`}><ImageFrame src={m.imageUrl} alt={`Portrait de ${m.name}`} label="Portrait à ajouter" className="aspect-[4/5]" /><div className="p-6"><p className="eyebrow">{m.role}</p><h2 className="mt-2 font-display text-2xl font-semibold text-[#073e53]">{m.name}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{m.biography}</p></div></article>)}</div> : <EmptyInline title="Faisons connaissance bientôt" text="Les portraits et présentations de l’équipe seront publiés ici." />}
+      {content.team.length ? <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">{content.team.map((m) => <article key={m.id} className="card-ref overflow-hidden" data-testid={`card-team-${m.id}`}><ImageFrame src={m.imageUrl} alt={`Portrait de ${m.name}`} label="Portrait à ajouter" indicator={m.name} details={m.role} className="aspect-[4/5]" /><div className="p-6"><p className="eyebrow">{m.role}</p><h2 className="mt-2 font-display text-2xl font-semibold text-[#073e53]">{m.name}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{m.biography}</p></div></article>)}</div> : <EmptyInline title="Faisons connaissance bientôt" text="Les portraits et présentations de l’équipe seront publiés ici." />}
     </section></main></SiteShell>;
 }
 
@@ -512,11 +536,11 @@ export function GalleryPage({ content }: { content: SiteContent }) {
       <p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">Cette galerie réunit des photos fournies par l’établissement partenaire et, pour certains soins, des illustrations générées par IA qui ne représentent pas les locaux ni l’équipe réelle.</p>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
         {clinicGalleryPhotos.map((photo) => <figure key={photo.id} className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-black/5" data-testid={`gallery-image-${photo.id}`}>
-          <ImageFrame src={photo.src} alt={photo.alt} label="Photo du cabinet ou de l’établissement partenaire" className="aspect-[4/3]" />
+          <ImageFrame src={photo.src} alt={photo.alt} label="Photo du cabinet ou de l’établissement partenaire" indicator={photo.caption} details={photo.alt} className="aspect-[4/3]" />
           <figcaption className="px-3 py-2 text-xs font-medium text-[#073e53] md:px-4 md:py-3 md:text-sm">{photo.caption}</figcaption>
         </figure>)}
         {photos.map((photo) => <figure key={photo.id} className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-black/5" data-testid={`gallery-image-${photo.id}`}>
-          <ImageFrame src={photo.imageUrl} alt={photo.alt} label="Illustration de l’activité" className="aspect-[4/3]" />
+          <ImageFrame src={photo.imageUrl} alt={photo.alt} label="Illustration de l’activité" indicator={galleryCaption(photo)} details={photo.alt} className="aspect-[4/3]" />
           <figcaption className="px-3 py-2 text-xs font-medium text-[#073e53] md:px-4 md:py-3 md:text-sm">{galleryCaption(photo)}</figcaption>
         </figure>)}
       </div>
@@ -557,7 +581,7 @@ const blogImageAlt: Record<string, string> = {
 const articleImageAlt = (post: BlogPost) => blogImageAlt[post.id] || `Illustration dentaire liée à l’article : ${post.title}`;
 
 function BlogCard({ post }: { post: BlogPost }) {
-  return <article className="card-ref overflow-hidden" data-testid={`card-blog-${post.id}`}><Link href={`/blog/${post.slug}/`} className="block" data-testid={`link-blog-${post.slug}`}><ImageFrame src={post.imageUrl} alt={articleImageAlt(post)} label="Illustration de l’article" className="h-52" /><div className="p-6"><p className="text-[10px] uppercase tracking-[.16em] text-accent">{post.date} · {post.author}</p><h2 className="mt-3 font-display text-xl font-semibold leading-snug text-[#073e53]">{post.title}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{post.excerpt}</p><span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.12em] text-accent">Lire l’article <ArrowRight size={14} /></span></div></Link></article>;
+  return <article className="card-ref overflow-hidden" data-testid={`card-blog-${post.id}`}><Link href={`/blog/${post.slug}/`} className="block" data-testid={`link-blog-${post.slug}`}><ImageFrame src={post.imageUrl} alt={articleImageAlt(post)} label="Illustration de l’article" indicator={post.title} details={post.excerpt} className="h-52" /><div className="p-6"><p className="text-[10px] uppercase tracking-[.16em] text-accent">{post.date} · {post.author}</p><h2 className="mt-3 font-display text-xl font-semibold leading-snug text-[#073e53]">{post.title}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{post.excerpt}</p><span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.12em] text-accent">Lire l’article <ArrowRight size={14} /></span></div></Link></article>;
 }
 
 export function BlogPage({ content }: { content: SiteContent }) {
@@ -570,7 +594,7 @@ export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?
   const post = content.blogPosts.find((c) => c.slug === slug && c.published);
   if (!post) return <SiteShell clinic={content.clinic}><main className="mx-auto max-w-3xl px-5 py-24 text-center"><p className="eyebrow">Article introuvable</p><h1 className="mt-4 font-display text-4xl font-semibold text-[#073e53]">Ce carnet n’a pas encore cette page.</h1><div className="mt-7"><ActionLink href="/blog" testId="link-article-back">Retour au carnet</ActionLink></div></main></SiteShell>;
   const blocks = post.content.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
-  return <SiteShell clinic={content.clinic}><main><article className="mx-auto max-w-4xl px-5 pb-24 pt-12 md:px-8 md:pt-16"><Link href="/blog/" className="inline-flex items-center gap-2 text-xs font-semibold text-accent" data-testid="link-back-blog"><ArrowLeft size={14} /> Tous les articles</Link><p className="mt-10 text-[10px] uppercase tracking-[.2em] text-accent">{post.date} · {post.author}</p><h1 className="mt-4 font-display text-4xl font-semibold leading-tight text-[#073e53] md:text-5xl">{post.title}</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">{post.excerpt}</p><ImageFrame src={post.imageUrl} alt={articleImageAlt(post)} label="Illustration de l’article" className="mt-10 h-[280px] rounded-md md:h-[440px]" priority /><div className="prose prose-lg mt-10 max-w-none font-sans leading-8 text-foreground/80">{blocks.map((block, index) => block.startsWith('## ') ? <h2 key={index}>{block.slice(3)}</h2> : <p key={index}>{block}</p>)}</div></article></main></SiteShell>;
+  return <SiteShell clinic={content.clinic}><main><article className="mx-auto max-w-4xl px-5 pb-24 pt-12 md:px-8 md:pt-16"><Link href="/blog/" className="inline-flex items-center gap-2 text-xs font-semibold text-accent" data-testid="link-back-blog"><ArrowLeft size={14} /> Tous les articles</Link><p className="mt-10 text-[10px] uppercase tracking-[.2em] text-accent">{post.date} · {post.author}</p><h1 className="mt-4 font-display text-4xl font-semibold leading-tight text-[#073e53] md:text-5xl">{post.title}</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">{post.excerpt}</p><ImageFrame src={post.imageUrl} alt={articleImageAlt(post)} label="Illustration de l’article" indicator="Conseil dentaire" details={post.title} className="mt-10 h-[280px] rounded-md md:h-[440px]" priority /><div className="prose prose-lg mt-10 max-w-none font-sans leading-8 text-foreground/80">{blocks.map((block, index) => block.startsWith('## ') ? <h2 key={index}>{block.slice(3)}</h2> : <p key={index}>{block}</p>)}</div></article></main></SiteShell>;
 }
 
 function CampaignGrid({ campaigns }: { campaigns: Campaign[] }) {
@@ -587,7 +611,7 @@ function CampaignGrid({ campaigns }: { campaigns: Campaign[] }) {
             className="h-60"
             testId={`video-campaign-${c.id}`}
           />
-          : <ImageFrame src={c.imageUrl} alt={c.title} label={c.mediaType === 'video' ? 'Miniature vidéo à ajouter' : 'Visuel à ajouter'} className="h-60" />}
+          : <ImageFrame src={c.imageUrl} alt={c.title} label={c.mediaType === 'video' ? 'Miniature vidéo à ajouter' : 'Visuel à ajouter'} indicator={c.title} details={c.description} className="h-60" />}
       </div>
       <div className="p-6">
         <h2 className="font-display text-xl font-semibold text-[#073e53]">{c.title}</h2>
