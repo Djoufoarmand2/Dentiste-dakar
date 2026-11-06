@@ -14,3 +14,9 @@ Quand l’historique des checkpoints locaux et celui du dépôt exporté sont in
 **Why:** Un export racine rend les historiques divergents même lorsque les fichiers correspondent presque exactement; fusionner tous les checkpoints locaux n’est pas nécessaire pour publier les corrections.
 
 **How to apply:** Utiliser un index Git temporaire initialisé depuis le `main` distant, y préparer l’arborescence courante, examiner le diff et pousser uniquement le nouveau commit enfant. Préserver la branche locale de checkpoints.
+
+Après une rebase automatique du projet sur `main-repl/main`, les refs locales et GitHub peuvent diverger à nouveau alors que leurs arbres sont identiques. Comparer le contenu et la ref distante avant toute nouvelle poussée; ne pas créer un commit de fusion sans changement de fichiers si une poussée peut déclencher une publication.
+
+**Why:** La rebase de fin de tâche a réécrit la filiation locale sans modifier l’arborescence déjà publiée; une poussée de rapprochement aurait ajouté un commit sans changement de contenu et pouvait relancer la publication.
+
+**How to apply:** Après la rebase, comparer `HEAD` à `origin/main` avec `git diff --quiet` et vérifier `git ls-remote`. Si l’arbre distant correspond déjà à la version approuvée, conserver le pointeur distant vérifié plutôt que pousser uniquement pour aligner l’historique.
