@@ -7,8 +7,8 @@ export const defaultSiteContent = GetSiteContentResponse.parse({
     address: "Bonanjo, Douala, Cameroun",
     phone: "+237 6 70 00 00 00",
     email: "contact@cabinet-naya.example",
-    openingHours: "Lundi au vendredi · 8h–17h",
-    openingHoursEn: "",
+    openingHours: "Lundi au vendredi · 16h–19h (sur rendez-vous)\nSamedi · 10h–14h (sur rendez-vous)",
+    openingHoursEn: "Monday to Friday · 4:00–7:00 pm (by appointment)\nSaturday · 10:00 am–2:00 pm (by appointment)",
     bookingUrl: "mailto:contact@cabinet-naya.example",
     mapUrl: "",
     logoUrl: "",
@@ -96,10 +96,10 @@ export const defaultSiteContent = GetSiteContentResponse.parse({
       {
         id: "appointment-requests",
         title: "Demandes de rendez-vous",
-        body: "Le formulaire demande un nom, un numéro de téléphone, une adresse e-mail et un soin souhaité ; la date et le message sont facultatifs. Les demandes sont envoyées par le prestataire de formulaire configuré. Évitez d’indiquer des informations médicales sensibles. La réception doit être vérifiée sur le site publié avant de collecter de vraies demandes.",
+        body: "Le formulaire demande un nom, un numéro de téléphone, une adresse e-mail et un soin souhaité ; la date, la plage horaire souhaitée et le message sont facultatifs. La plage sélectionnée exprime une préférence et ne réserve pas un rendez-vous. Les demandes sont conservées dans Supabase et une notification peut être envoyée par le prestataire configuré. Évitez d’indiquer des informations médicales sensibles.",
         titleEn: "Appointment requests",
         bodyEn:
-          "The form asks for your name, phone number, email address and the service you are interested in; the preferred date and message are optional. Requests are sent through the configured form provider. Please avoid sensitive medical details. Live delivery should be verified before accepting real requests.",
+          "The form asks for your name, phone number, email address and the service you are interested in; the preferred date, opening period and message are optional. The selected period is a preference and does not reserve an appointment. Requests are stored in Supabase and a notification may be sent through the configured provider. Please avoid sensitive medical details.",
         required: true,
       },
       {

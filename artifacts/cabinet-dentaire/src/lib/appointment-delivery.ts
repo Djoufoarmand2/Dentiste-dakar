@@ -10,6 +10,14 @@ const formBoldEndpoint = import.meta.env.VITE_FORMBOLD_ENDPOINT?.trim() ?? "";
 const web3FormsAccessKey =
   import.meta.env.VITE_WEB3FORMS_ACCESS_KEY?.trim() ?? "";
 
+const preferredWindowLabel = (
+  window: ContactAppointmentInput["preferredWindow"],
+) => {
+  if (window === "weekdays") return "Lundi-vendredi · 16 h–19 h (sur rendez-vous)";
+  if (window === "saturday") return "Samedi · 10 h–14 h (sur rendez-vous)";
+  return "";
+};
+
 export const appointmentProviderName = formBoldEndpoint
   ? "FormBold"
   : web3FormsAccessKey
@@ -59,6 +67,7 @@ async function submitToFormBold(
   formData.set("email", data.email);
   formData.set("service", data.service);
   if (data.preferredDate) formData.set("preferred_date", data.preferredDate);
+  if (data.preferredWindow) formData.set("preferred_window", preferredWindowLabel(data.preferredWindow));
   if (data.message) formData.set("message", data.message);
 
   let response: Response;
@@ -114,6 +123,7 @@ async function submitToWeb3Forms(
         email: data.email,
         service: data.service,
         preferred_date: data.preferredDate,
+        preferred_window: preferredWindowLabel(data.preferredWindow),
         message: data.message,
       }),
       signal: AbortSignal.timeout(15_000),

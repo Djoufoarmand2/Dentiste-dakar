@@ -18,6 +18,14 @@ export const ContactAppointmentInputService = {
   Chirurgie_dentaire: 'Chirurgie dentaire',
 } as const;
 
+export type ContactAppointmentInputPreferredWindow = typeof ContactAppointmentInputPreferredWindow[keyof typeof ContactAppointmentInputPreferredWindow];
+
+
+export const ContactAppointmentInputPreferredWindow = {
+  weekdays: 'weekdays',
+  saturday: 'saturday',
+} as const;
+
 export interface ContactAppointmentInput {
   /**
      * @minLength 1
@@ -33,6 +41,7 @@ export interface ContactAppointmentInput {
   email: string;
   service: ContactAppointmentInputService;
   preferredDate?: string;
+  preferredWindow?: ContactAppointmentInputPreferredWindow;
   /** @maxLength 2000 */
   message?: string;
   /** @maxLength 200 */
@@ -46,6 +55,17 @@ export interface ContactAppointmentAccepted {
   notificationSent?: boolean;
 }
 
+/**
+ * @nullable
+ */
+export type AppointmentRequestPreferredWindow = typeof AppointmentRequestPreferredWindow[keyof typeof AppointmentRequestPreferredWindow] | null;
+
+
+export const AppointmentRequestPreferredWindow = {
+  weekdays: 'weekdays',
+  saturday: 'saturday',
+} as const;
+
 export interface AppointmentRequest {
   id: string;
   name: string;
@@ -54,6 +74,8 @@ export interface AppointmentRequest {
   service: string;
   /** @nullable */
   preferredDate?: string | null;
+  /** @nullable */
+  preferredWindow?: AppointmentRequestPreferredWindow;
   /** @nullable */
   message?: string | null;
   createdAt: string;

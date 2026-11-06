@@ -312,6 +312,9 @@ components:
             - Laboratoire prothétique
             - Chirurgie dentaire
         preferredDate: { type: string, format: date }
+        preferredWindow:
+          type: string
+          enum: [weekdays, saturday]
         message: { type: string, maxLength: 2000 }
         website: { type: string, maxLength: 200 }
         submissionId: { type: string, format: uuid }
@@ -332,6 +335,9 @@ components:
         email: { type: string }
         service: { type: string }
         preferredDate: { type: string, nullable: true }
+        preferredWindow:
+          type: ["string", "null"]
+          enum: [weekdays, saturday, null]
         message: { type: string, nullable: true }
         createdAt: { type: string, format: date-time }
     Review:

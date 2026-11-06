@@ -58,6 +58,11 @@ router.post("/contact/appointment", async (req, res): Promise<void> => {
         email,
         service: parsed.data.service,
         preferred_date: parsed.data.preferredDate,
+        preferred_window: parsed.data.preferredWindow === "weekdays"
+          ? "Lundi-vendredi · 16 h–19 h (sur rendez-vous)"
+          : parsed.data.preferredWindow === "saturday"
+            ? "Samedi · 10 h–14 h (sur rendez-vous)"
+            : "",
         message: parsed.data.message?.trim(),
       }),
       signal: AbortSignal.timeout(10_000),

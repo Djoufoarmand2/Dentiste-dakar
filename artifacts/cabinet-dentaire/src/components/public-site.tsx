@@ -12,6 +12,7 @@ import { VideoPlayer } from './video-player';
 import { getYouTubeThumbnailUrl } from '@/lib/video-url';
 import { ServiceDetailContent as ServiceDetailBody, WhyChooseContent as WhyChooseBody } from './patient-content-pages';
 import { combinePublicReviews, usePublicReviews } from '@/lib/reviews';
+import { summarizePublishedReviews } from '@/lib/review-summary';
 import heroIllustration from '@/lib/hero-illustration.json';
 import { supabaseUrl } from '@/lib/supabase';
 import { localizedPath, useSiteLocale } from '@/lib/site-locale';
@@ -29,6 +30,10 @@ const uiText = (locale: 'fr' | 'en', fr: string, en: string) => locale === 'en' 
 const cmsText = (locale: 'fr' | 'en', fr?: string, en?: string) =>
   locale === 'fr' ? fr?.trim() || '' : en?.trim() || 'English translation not yet available.';
 const routeFor = (href: string, locale: 'fr' | 'en', content?: SiteContent) => localizedPath(href, locale, content);
+const confirmedHoursFr = 'Du lundi au vendredi · 16h00–19h00 (sur rendez-vous)\nSamedi · 10h00–14h00 (sur rendez-vous)';
+const confirmedHoursEn = 'Monday to Friday · 4:00–7:00 pm (by appointment)\nSaturday · 10:00 am–2:00 pm (by appointment)';
+const isLegacyHours = (value: string) =>
+  /8\s*h\s*[–-]\s*17\s*h|24\s*h.*24.*7\s*j.*7|24\s*hours?.*7\s*days?/i.test(value);
 
 const partnerLogoId = 'partner-clinique-la-bienveillance-logo';
 const partnerPhotoId = 'photo-clinique-la-bienveillance';
@@ -109,14 +114,16 @@ const galleryCaption = (item: SiteContent['gallery'][number], locale: 'fr' | 'en
 
 const bookHref = (clinic: SiteContent['clinic']) => clinic.bookingUrl || `tel:${clinic.phone || ''}`;
 const hoursLabel = (clinic: SiteContent['clinic'], locale: 'fr' | 'en') => {
+  const frenchHours = clinic.openingHours?.trim() || '';
+  const englishHours = clinic.openingHoursEn?.trim() || '';
+  const legacyFrench = isLegacyHours(frenchHours);
+  const legacyEnglish = isLegacyHours(englishHours);
   if (locale === 'en') {
-    if (clinic.openingHoursEn?.trim()) return clinic.openingHoursEn.trim();
-    if (!clinic.openingHours?.trim()) return 'Practice hours to be added';
-    const hours = clinic.openingHours.trim();
-    if (/24\s*h\s*\/\s*24/i.test(hours) && /7\s*j\s*\/\s*7/i.test(hours)) return '24 hours a day · 7 days a week';
-    return `Practice hours (provided in French): ${hours}`;
+    if (englishHours && !legacyEnglish) return englishHours;
+    if (!frenchHours || legacyFrench || legacyEnglish) return confirmedHoursEn;
+    return `Practice hours (provided in French): ${frenchHours}`;
   }
-  return clinic.openingHours || 'Horaires à renseigner';
+  return frenchHours && !legacyFrench ? frenchHours : confirmedHoursFr;
 };
 
 export function LogoWordmark({ clinic, inverse = false }: { clinic?: SiteContent['clinic']; inverse?: boolean }) {
@@ -199,7 +206,7 @@ export function Footer({ clinic, content }: { clinic?: SiteContent['clinic']; co
 
 function AnnouncementBar({ clinic }: { clinic?: SiteContent['clinic'] }) {
   const locale = useSiteLocale();
-  const hasHours = Boolean((locale === 'en' ? clinic?.openingHoursEn?.trim() || clinic?.openingHours?.trim() : clinic?.openingHours?.trim()));
+  const hasHours = Boolean(clinic);
   const hours = clinic ? hoursLabel(clinic, locale).replace(/\s*\n\s*/g, ' · ') : '';
   const message = hasHours
     ? `${uiText(locale, 'Horaires du cabinet', 'Practice hours')}: ${hours}`
@@ -480,6 +487,11 @@ export function HomePage({ content }: { content: SiteContent }) {
   const testimonials = combinePublicReviews(publicReviews.data ?? [], content.testimonials);
   const lead = visibleTeamMembers(content.team)[0];
   const photos = visibleGallery(content.gallery);
+  const reviewCount = summarizePublishedReviews(testimonials).count;
+  const faqCount = content.faqs.length;
+  const publishedPostCount = content.blogPosts.filter((post) => post.published).length;
+  const activeInformationCount = content.campaigns.filter((campaign) => campaign.active).length;
+  const whyChooseCount = content.whyChoose?.values.length ?? 0;
   const partnerLogo = content.gallery.find((item) => item.id === partnerLogoId);
   const partnerPhoto = content.gallery.find((item) => item.id === partnerPhotoId);
   const heroImg = hero.imageUrl?.trim();
@@ -507,11 +519,16 @@ export function HomePage({ content }: { content: SiteContent }) {
           {isIllustrativeHero && <p className="absolute bottom-4 left-5 z-10 max-w-[calc(100%-6rem)] text-[10px] leading-4 text-white/75 md:left-8">{uiText(locale, 'Illustration générée par IA — ne représente pas les locaux ni l’équipe réelle.', 'AI-generated illustration — it does not depict the actual premises or team.')}</p>}
         </section>
 
-        {[content.services.length, visibleTeamMembers(content.team).length, photos.length].some((count) => count > 0) && <section className="border-b border-[#073e53]/10 bg-[#f3f1f5] py-8 md:py-10" aria-label={uiText(locale, 'Le cabinet en quelques repères', 'The practice at a glance')}>
+        {[content.services.length, visibleTeamMembers(content.team).length, photos.length, reviewCount, faqCount, publishedPostCount, activeInformationCount, whyChooseCount].some((count) => count > 0) && <section className="border-b border-[#073e53]/10 bg-[#f3f1f5] py-8 md:py-10" aria-label={uiText(locale, 'Le cabinet en quelques repères', 'The practice at a glance')}>
           <div className="wrap flex flex-wrap items-center justify-center gap-x-10 gap-y-6 sm:justify-start">
             {content.services.length > 0 && <MetricCounter value={content.services.length} label={uiText(locale, 'Soins présentés', 'Services listed')} href={routeFor('/soins/', locale, content)} />}
             {visibleTeamMembers(content.team).length > 0 && <MetricCounter value={visibleTeamMembers(content.team).length} label={uiText(locale, 'Membres de l’équipe', 'Team members')} href={routeFor('/equipe/', locale, content)} />}
             {photos.length > 0 && <MetricCounter value={photos.length} label={uiText(locale, 'Images en galerie', 'Gallery images')} href={routeFor('/galerie/', locale, content)} />}
+            {whyChooseCount > 0 && <MetricCounter value={whyChooseCount} label={uiText(locale, 'Raisons de nous choisir', 'Reasons to choose us')} href={routeFor('/pourquoi-nous-choisir', locale, content)} />}
+            {reviewCount > 0 && <MetricCounter value={reviewCount} label={uiText(locale, 'Avis publiés', 'Published reviews')} href={routeFor('/avis', locale, content)} />}
+            {faqCount > 0 && <MetricCounter value={faqCount} label={uiText(locale, 'Questions fréquentes', 'Frequently asked questions')} href={routeFor('/faq', locale, content)} />}
+            {publishedPostCount > 0 && <MetricCounter value={publishedPostCount} label={uiText(locale, 'Articles publiés', 'Published articles')} href={routeFor('/blog/', locale, content)} />}
+            {activeInformationCount > 0 && <MetricCounter value={activeInformationCount} label={uiText(locale, 'Informations actives', 'Active updates')} href={routeFor('/informations', locale, content)} />}
           </div>
         </section>}
 
@@ -849,7 +866,7 @@ export function ContactPage({ content }: { content: SiteContent }) {
         <a href={`tel:${clinic.phone}`} className="flex items-start gap-4" data-testid="link-contact-phone">{row(<Phone size={17} />, uiText(locale, 'Téléphone', 'Phone'), clinic.phone || uiText(locale, 'À renseigner', 'To be added'))}</a>
         <a href={`mailto:${clinic.email}`} className="flex items-start gap-4" data-testid="link-contact-email">{row(<MessageCircle size={17} />, uiText(locale, 'Courriel', 'Email'), clinic.email || uiText(locale, 'À renseigner', 'To be added'))}</a>
         <div className="flex items-start gap-4" data-testid="text-contact-address">{row(<MapPin size={17} />, uiText(locale, 'Adresse', 'Address'), clinic.address ? (locale === 'en' ? `Address supplied by the practice (not translated): ${clinic.address}` : clinic.address) : uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon'))}</div>
-        <div className="flex items-start gap-4" data-testid="text-contact-hours">{row(<Clock3 size={17} />, uiText(locale, 'Horaires', 'Hours'), hoursLabel(clinic, locale))}</div>
+        <div className="flex items-start gap-4 whitespace-pre-line" data-testid="text-contact-hours">{row(<Clock3 size={17} />, uiText(locale, 'Horaires', 'Hours'), hoursLabel(clinic, locale))}</div>
       </div><div className="mt-9"><BookButton clinic={clinic} testId="button-contact-book">{uiText(locale, 'Demander un rendez-vous', 'Request an appointment')}</BookButton></div></div>
       <div className="card-ref p-6 md:p-9">
         <p className="eyebrow">{uiText(locale, 'À votre rythme', 'At your pace')}</p>

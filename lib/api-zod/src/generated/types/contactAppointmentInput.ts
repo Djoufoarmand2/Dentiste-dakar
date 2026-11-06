@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ContactAppointmentInputPreferredWindow } from './contactAppointmentInputPreferredWindow';
 import type { ContactAppointmentInputService } from './contactAppointmentInputService';
 
 export interface ContactAppointmentInput {
@@ -22,6 +23,7 @@ export interface ContactAppointmentInput {
   email: string;
   service: ContactAppointmentInputService;
   preferredDate?: Date;
+  preferredWindow?: ContactAppointmentInputPreferredWindow;
   /** @maxLength 2000 */
   message?: string;
   /** @maxLength 200 */

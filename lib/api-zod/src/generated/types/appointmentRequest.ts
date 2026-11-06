@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { AppointmentRequestPreferredWindow } from './appointmentRequestPreferredWindow';
 
 export interface AppointmentRequest {
   id: string;
@@ -14,6 +15,8 @@ export interface AppointmentRequest {
   service: string;
   /** @nullable */
   preferredDate?: string | null;
+  /** @nullable */
+  preferredWindow?: AppointmentRequestPreferredWindow;
   /** @nullable */
   message?: string | null;
   createdAt: Date;

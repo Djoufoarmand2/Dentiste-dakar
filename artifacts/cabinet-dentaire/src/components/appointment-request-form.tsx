@@ -30,8 +30,11 @@ import {
 } from "@/lib/appointment-delivery";
 import { useSiteLocale } from "@/lib/site-locale";
 
-type AppointmentFormValues = Omit<ContactAppointmentInput, "service"> & {
+type AppointmentWindow = NonNullable<ContactAppointmentInput["preferredWindow"]>;
+
+type AppointmentFormValues = Omit<ContactAppointmentInput, "service" | "preferredWindow"> & {
   service: ContactAppointmentInput["service"] | "";
+  preferredWindow: AppointmentWindow | "";
   website: string;
 };
 
@@ -51,6 +54,7 @@ const defaultValues: AppointmentFormValues = {
   email: "",
   service: "",
   preferredDate: "",
+  preferredWindow: "",
   message: "",
   website: "",
 };
@@ -92,6 +96,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           email: values.email.trim(),
           service: values.service,
           preferredDate: values.preferredDate || undefined,
+          preferredWindow: values.preferredWindow || undefined,
           message: values.message?.trim() || undefined,
           website: values.website,
       });
@@ -245,6 +250,69 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
               <FormDescription className="sr-only">
                 {en ? "Select the service you are interested in." : "Sélectionnez le soin souhaité."}
               </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="preferredWindow"
+          render={({ field }) => (
+            <FormItem>
+              <fieldset className="w-full">
+                <legend className="text-sm font-medium">
+                  {en ? "Preferred opening hours" : "Plage d’ouverture souhaitée"}{" "}
+                  <span className="font-normal text-muted-foreground">
+                    ({en ? "optional" : "facultatif"})
+                  </span>
+                </legend>
+                <FormDescription id="appointment-window-description">
+                  {en
+                    ? "Choose a preferred period. The practice will contact you to confirm; this does not reserve an appointment."
+                    : "Choisissez une plage de préférence. Le cabinet vous recontactera pour confirmer ; ce choix ne réserve pas un rendez-vous."}
+                </FormDescription>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {([
+                    {
+                      value: "weekdays",
+                      title: en ? "Monday–Friday" : "Lundi–vendredi",
+                      hours: en ? "4:00–7:00 pm" : "16 h–19 h",
+                    },
+                    {
+                      value: "saturday",
+                      title: en ? "Saturday" : "Samedi",
+                      hours: en ? "10:00 am–2:00 pm" : "10 h–14 h",
+                    },
+                  ] as const).map((option) => (
+                    <label key={option.value} className="group relative block cursor-pointer">
+                      <input
+                        ref={field.ref}
+                        type="radio"
+                        name={field.name}
+                        value={option.value}
+                        checked={field.value === option.value}
+                        onChange={() => field.onChange(option.value)}
+                        onBlur={field.onBlur}
+                        aria-describedby="appointment-window-description"
+                        className="peer sr-only"
+                        data-testid={`radio-appointment-window-${option.value}`}
+                      />
+                      <span className={`flex min-h-[76px] flex-col justify-center rounded-xl border px-4 py-3 transition-[border-color,background-color,box-shadow,transform] duration-200 group-hover:-translate-y-0.5 ${
+                        field.value === option.value
+                          ? "border-[#315c9a] bg-[#edf2ff] text-[#18365f] shadow-[0_8px_22px_rgba(49,92,154,.14)]"
+                          : "border-[#18365f]/20 bg-white text-[#20213e] hover:border-[#315c9a]/55"
+                      } peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#7778bd]`}>
+                        <span className="text-sm font-semibold">{option.title}</span>
+                        <span className="mt-1 text-sm">{option.hours}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {en ? "By appointment" : "Sur rendez-vous"}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
               <FormMessage />
             </FormItem>
           )}
