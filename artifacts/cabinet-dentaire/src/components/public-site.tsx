@@ -7,6 +7,7 @@ import type { BlogPost, Campaign, ServiceItem, SiteContent, Testimonial } from '
 import { Link, useLocation } from 'wouter';
 import { AppointmentRequestForm } from './appointment-request-form';
 import { ReviewSubmissionForm } from './review-submission-form';
+import { RelatedPages, ReviewTrustPanel } from './review-trust';
 import { VideoPlayer } from './video-player';
 import { getYouTubeThumbnailUrl } from '@/lib/video-url';
 import { ServiceDetailContent as ServiceDetailBody, WhyChooseContent as WhyChooseBody } from './patient-content-pages';
@@ -424,7 +425,7 @@ function FaqList({ faqs }: { faqs: SiteContent['faqs'] }) {
   </article>)}</div>;
 }
 
-function MetricCounter({ value, label }: { value: number; label: string }) {
+function MetricCounter({ value, label, href }: { value: number; label: string; href?: string }) {
   const [display, setDisplay] = useState(0);
   const [started, setStarted] = useState(false);
   useEffect(() => {
@@ -457,7 +458,8 @@ function MetricCounter({ value, label }: { value: number; label: string }) {
     return () => cancelAnimationFrame(frame);
   }, [started, value]);
   const nodeId = `metric-${label.replace(/\W/g, '')}`;
-  return <div id={nodeId} className="border-l border-[#073e53]/15 pl-5 first:border-0 first:pl-0" aria-label={`${value} ${label}`}><p className="font-display text-3xl font-semibold tabular-nums text-[#073e53] md:text-4xl">{display}</p><p className="mt-1 text-[10px] uppercase tracking-[.14em] text-muted-foreground sm:text-[11px]">{label}</p></div>;
+  const body = <><p className="font-display text-3xl font-semibold tabular-nums text-[#073e53] md:text-4xl">{display}</p><p className="mt-1 text-[10px] uppercase tracking-[.14em] text-muted-foreground sm:text-[11px]">{label}</p></>;
+  return <div id={nodeId} className="border-l border-[#073e53]/15 pl-5 first:border-0 first:pl-0">{href ? <Link href={href} aria-label={`${value} ${label}`} className="block rounded-md px-2 py-1 transition-transform hover:-translate-y-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary">{body}</Link> : body}</div>;
 }
 
 function BookButton({ clinic, children, testId, outline = false }: { clinic: SiteContent['clinic']; children: ReactNode; testId: string; outline?: boolean }) {
@@ -507,9 +509,9 @@ export function HomePage({ content }: { content: SiteContent }) {
 
         {[content.services.length, visibleTeamMembers(content.team).length, photos.length].some((count) => count > 0) && <section className="border-b border-[#073e53]/10 bg-[#f3f1f5] py-8 md:py-10" aria-label={uiText(locale, 'Le cabinet en quelques repères', 'The practice at a glance')}>
           <div className="wrap flex flex-wrap items-center justify-center gap-x-10 gap-y-6 sm:justify-start">
-            {content.services.length > 0 && <MetricCounter value={content.services.length} label={uiText(locale, 'Soins présentés', 'Services listed')} />}
-            {visibleTeamMembers(content.team).length > 0 && <MetricCounter value={visibleTeamMembers(content.team).length} label={uiText(locale, 'Membres de l’équipe', 'Team members')} />}
-            {photos.length > 0 && <MetricCounter value={photos.length} label={uiText(locale, 'Images en galerie', 'Gallery images')} />}
+            {content.services.length > 0 && <MetricCounter value={content.services.length} label={uiText(locale, 'Soins présentés', 'Services listed')} href={routeFor('/soins/', locale, content)} />}
+            {visibleTeamMembers(content.team).length > 0 && <MetricCounter value={visibleTeamMembers(content.team).length} label={uiText(locale, 'Membres de l’équipe', 'Team members')} href={routeFor('/equipe/', locale, content)} />}
+            {photos.length > 0 && <MetricCounter value={photos.length} label={uiText(locale, 'Images en galerie', 'Gallery images')} href={routeFor('/galerie/', locale, content)} />}
           </div>
         </section>}
 
@@ -572,6 +574,7 @@ export function HomePage({ content }: { content: SiteContent }) {
         <section id="avis" className="section-pad bg-[#e6e3eb]">
           <div className="wrap">
             <SectionHead eyebrow={uiText(locale, 'Témoignages', 'Reviews')} title={uiText(locale, 'La confiance se construit ensemble.', 'Trust is built together.')} />
+            <ReviewTrustPanel variant="home" testimonials={content.testimonials} ctaHref={routeFor('/avis', locale, content)} ctaLabel={uiText(locale, 'Lire tous les avis', 'Read all reviews')} />
             <ReviewCarousel reviews={testimonials.slice(0, 3)} id="home-reviews" />
             <div className="mt-10 text-center"><ActionLink href="/avis" variant="navy" testId="link-home-reviews">{uiText(locale, 'Tous les témoignages', 'All reviews')}</ActionLink></div>
           </div>
@@ -596,6 +599,7 @@ export function HomePage({ content }: { content: SiteContent }) {
             </ul>
           </div>
         </section>
+        <RelatedPages content={content} />
       </main>
     </SiteShell>
   );
@@ -613,7 +617,7 @@ export function ServicesPage({ content }: { content: SiteContent }) {
       <p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">{uiText(locale, 'Les visuels des soins sont des illustrations générées par IA. Ils ne représentent ni les locaux ni l’équipe réelle du Cabinet Sourire Serein.', 'Service visuals are AI-generated illustrations. They do not depict the actual premises or the Cabinet Sourire Serein team.')}</p>
       {content.services.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{content.services.map((s) => <ServiceCard key={s.id} item={s} href={`/soins/${s.slug || s.id}`} />)}</div> : <EmptyInline title={uiText(locale, 'La carte des soins se prépare', 'Service information is being prepared')} text={uiText(locale, 'Revenez bientôt pour découvrir les soins proposés par le cabinet.', 'Please check back for information about the services offered by the practice.')} />}
       <div className="mt-16 flex flex-col gap-6 rounded-md bg-[#073e53] p-8 text-white md:flex-row md:items-center md:justify-between md:p-10"><div><h2 className="font-display text-2xl font-semibold md:text-3xl">{uiText(locale, 'Une question avant de venir ?', 'Questions before your visit?')}</h2><p className="mt-2 text-sm text-white/70">{uiText(locale, 'Nous sommes là pour vous orienter, sans engagement.', 'Contact us for information, with no obligation.')}</p></div><ActionLink href="/contact" testId="link-services-contact">{uiText(locale, 'Échanger avec nous', 'Talk with us')}</ActionLink></div>
-    </section></main></SiteShell>;
+    </section><RelatedPages content={content} current="soins" /></main></SiteShell>;
 }
 
 export function WhyChoosePage({ content }: { content: SiteContent }) {
@@ -704,7 +708,7 @@ export function GalleryPage({ content }: { content: SiteContent }) {
           <figcaption className="px-3 py-2 text-xs font-medium text-[#073e53] md:px-4 md:py-3 md:text-sm">{galleryCaption(photo, locale)}</figcaption>
         </figure>)}
       </div>
-    </section></main></SiteShell>;
+    </section><RelatedPages content={content} current="galerie" /></main></SiteShell>;
 }
 
 export function ReviewsPage({ content }: { content: SiteContent }) {
@@ -713,17 +717,18 @@ export function ReviewsPage({ content }: { content: SiteContent }) {
   const testimonials = combinePublicReviews(publicReviews.data ?? [], content.testimonials);
   return <SiteShell clinic={content.clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Vos mots comptent', 'Your experience matters')} title={uiText(locale, 'La confiance se construit ensemble.', 'Trust is built together.')} text={uiText(locale, 'Découvrez les expériences partagées par les visiteurs du cabinet. Votre retour nous aide à mieux vous accueillir.', 'Read experiences shared by visitors to the practice. Your feedback helps us understand how we can welcome you.')} />
     <section className="wrap section-pad">
+      <div className="mb-12"><ReviewTrustPanel testimonials={content.testimonials} ctaHref="#laisser-un-avis" ctaLabel={uiText(locale, 'Laisser un avis', 'Leave a review')} /></div>
       {publicReviews.isError && <div className="mx-auto mb-8 max-w-3xl rounded-2xl border border-destructive/25 bg-destructive/5 p-4 text-sm" role="alert" data-testid="status-public-reviews-error">
         <p>{uiText(locale, 'Les avis visiteurs ne sont pas disponibles pour le moment. Les témoignages du cabinet restent affichés.', 'Visitor reviews are temporarily unavailable. Existing practice testimonials remain visible.')}</p>
         <button type="button" onClick={() => void publicReviews.refetch()} className="mt-2 font-semibold text-destructive underline" data-testid="button-retry-public-reviews">{uiText(locale, 'Réessayer', 'Try again')}</button>
       </div>}
       {publicReviews.isLoading && <p className="mb-6 text-center text-sm text-muted-foreground" role="status" data-testid="status-public-reviews-loading">{uiText(locale, 'Chargement des avis…', 'Loading reviews…')}</p>}
       <ReviewCarousel reviews={testimonials} id="reviews-page" />
-      <div className="mx-auto mt-14 max-w-3xl border-t border-border pt-12">
+      <div id="laisser-un-avis" className="mx-auto mt-14 max-w-3xl scroll-mt-32 border-t border-border pt-12">
         <ReviewSubmissionForm />
       </div>
       <div className="mt-12 text-center"><ActionLink href="/contact" testId="link-reviews-contact">{uiText(locale, 'Nous contacter', 'Contact us')}</ActionLink></div>
-    </section></main></SiteShell>;
+    </section><RelatedPages content={content} current="avis" /></main></SiteShell>;
 }
 
 export function FAQPage({ content }: { content: SiteContent }) {
@@ -764,7 +769,7 @@ export function BlogPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
   const posts = content.blogPosts.filter((p) => p.published);
   return <SiteShell clinic={content.clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Conseils dentaires à Douala', 'Dental information in Douala')} title={uiText(locale, 'Quelques repères pour votre sourire.', 'A few notes for your smile.')} text={uiText(locale, 'Des informations générales sur les soins dentaires et la santé bucco-dentaire, à compléter par les conseils de votre praticien.', 'General information about dental care and oral health. It is not a substitute for advice from your practitioner.')} />
-    <section className="wrap section-pad">{posts.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{posts.map((p) => <BlogCard key={p.id} post={p} />)}</div> : <EmptyInline title={uiText(locale, 'Le carnet prend forme', 'The journal is taking shape')} text={uiText(locale, 'Nos premiers conseils et articles seront publiés prochainement.', 'The first articles and information will be published here soon.')} />}</section></main></SiteShell>;
+    <section className="wrap section-pad">{posts.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{posts.map((p) => <BlogCard key={p.id} post={p} />)}</div> : <EmptyInline title={uiText(locale, 'Le carnet prend forme', 'The journal is taking shape')} text={uiText(locale, 'Nos premiers conseils et articles seront publiés prochainement.', 'The first articles and information will be published here soon.')} />}</section><RelatedPages content={content} current="blog" /></main></SiteShell>;
 }
 
 export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?: string }) {
@@ -830,6 +835,7 @@ export function InformationPage({ content }: { content: SiteContent }) {
     <section className="wrap section-pad" aria-label={uiText(locale, 'Actualités, campagnes et vidéos', 'News, campaigns and videos')} data-testid="information-content">
       {campaigns.length ? <CampaignGrid campaigns={campaigns} /> : <EmptyInline title={uiText(locale, 'Rien de nouveau pour le moment', 'Nothing new just yet')} text={uiText(locale, 'Les actualités et vidéos du cabinet seront publiées ici dès qu’elles seront disponibles.', 'Practice news and videos will appear here when available.')} />}
     </section>
+    <RelatedPages content={content} current="informations" />
   </main></SiteShell>;
 }
 
