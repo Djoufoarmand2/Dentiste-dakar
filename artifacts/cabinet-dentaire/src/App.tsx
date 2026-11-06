@@ -132,7 +132,15 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
       '/privacy': 'Privacy policy',
     },
   };
+  const isWhyChooseRoute = localizedRoute === '/pourquoi-nous-choisir' || localizedRoute === '/why-choose-us';
+  const isPrivacyRoute = localizedRoute === '/confidentialite' || localizedRoute === '/privacy';
+  const cmsPageTitle = isWhyChooseRoute
+    ? (locale === 'en' ? query.data.whyChoose?.titleEn?.trim() : query.data.whyChoose?.title?.trim())
+    : isPrivacyRoute
+      ? (locale === 'en' ? query.data.privacyPolicy?.titleEn?.trim() : query.data.privacyPolicy?.title?.trim())
+      : '';
   const pageName = (locale === 'en' ? (article ? englishBlogPost(article).title : service ? englishService(service).title : '') : article?.title || service?.title)
+    || cmsPageTitle
     || pageNames[locale][localizedRoute]
     || (locale === 'en' ? 'Cabinet Sourire Serein' : 'Cabinet Sourire Serein');
   const clinicName = query.data.clinic.name;
@@ -163,7 +171,14 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
       '/privacy': `Information about how this website collects, uses and protects personal data.`,
     },
   };
-  const contentDescription = locale === 'en' ? (article ? englishBlogPost(article).excerpt : service ? englishService(service).summary : '') : article?.excerpt || service?.summary;
+  const cmsPageDescription = isWhyChooseRoute
+    ? (locale === 'en' ? query.data.whyChoose?.introEn?.trim() : query.data.whyChoose?.intro?.trim())
+    : isPrivacyRoute
+      ? (locale === 'en' ? query.data.privacyPolicy?.descriptionEn?.trim() : query.data.privacyPolicy?.description?.trim())
+      : '';
+  const contentDescription = locale === 'en'
+    ? (article ? englishBlogPost(article).excerpt : service ? englishService(service).summary : cmsPageDescription)
+    : article?.excerpt || service?.summary || cmsPageDescription;
   const description = metaText(contentDescription || (localizedRoute === '/'
     ? (locale === 'en' ? query.data.hero.descriptionEn?.trim() || query.data.hero.description : query.data.hero.description)
     : routeDescriptions[locale][localizedRoute] || (locale === 'en'

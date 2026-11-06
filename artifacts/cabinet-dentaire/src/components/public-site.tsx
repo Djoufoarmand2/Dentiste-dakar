@@ -600,6 +600,7 @@ export function WhyChoosePage({ content }: { content: SiteContent }) {
     <WhyChooseBody
       locale={locale}
       clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: 'bienveillanceclinique4@gmail.com' }}
+      content={content.whyChoose}
     />
   </SiteShell>;
 }
@@ -617,6 +618,9 @@ export function ServiceDetailPage({ content, slug }: { content: SiteContent; slu
   const translated = englishService(service);
   const splitSteps = (value?: string) => value?.split(/\n+/).map((step) => step.trim()).filter(Boolean);
   return <SiteShell clinic={content.clinic} content={content}>
+    <div className="mx-auto max-w-7xl px-5 pt-6 md:px-8">
+      <ActionLink href="/soins" variant="text" testId="link-service-detail-back">{uiText(locale, 'Tous les soins', 'All services')}</ActionLink>
+    </div>
     <ServiceDetailBody
       locale={locale}
       clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: 'bienveillanceclinique4@gmail.com' }}
