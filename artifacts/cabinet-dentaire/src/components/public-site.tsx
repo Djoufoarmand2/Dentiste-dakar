@@ -378,16 +378,26 @@ function ReviewCarousel({ reviews, id = 'reviews' }: { reviews: Testimonial[]; i
   const locale = useSiteLocale();
   const [active, setActive] = useState(0);
   if (!reviews.length) return <EmptyInline title={uiText(locale, 'Votre expérience compte', 'Your experience matters')} text={uiText(locale, 'Les avis seront affichés ici lorsqu’ils seront disponibles.', 'Reviews will appear here when they are available.')} />;
+  const activeIndex = active % reviews.length;
   const move = (step: number) => setActive((current) => (current + step + reviews.length) % reviews.length);
-  return <div className="mx-auto max-w-3xl" data-testid={`${id}-carousel`}>
+  const onCarouselKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      move(-1);
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      move(1);
+    }
+  };
+  return <div className="mx-auto max-w-3xl" role="region" aria-roledescription={uiText(locale, 'carrousel', 'carousel')} aria-label={uiText(locale, 'Avis des visiteurs', 'Visitor reviews')} onKeyDown={onCarouselKeyDown} data-testid={`${id}-carousel`}>
     <div className="overflow-hidden px-1 py-2" aria-live="polite" aria-atomic="true">
-      <ReviewCard key={reviews[active].id} review={reviews[active]} />
+      <ReviewCard key={reviews[activeIndex].id} review={reviews[activeIndex]} />
     </div>
     <div className="mt-5 flex items-center justify-between">
-      <p className="text-xs font-medium tabular-nums text-muted-foreground" aria-label={uiText(locale, `Témoignage ${active + 1} sur ${reviews.length}`, `Review ${active + 1} of ${reviews.length}`)}>{String(active + 1).padStart(2, '0')} <span className="mx-1 text-accent">/</span> {String(reviews.length).padStart(2, '0')}</p>
+      <p className="text-sm font-semibold tabular-nums text-[#073e53]" aria-live="polite" aria-label={uiText(locale, `Témoignage ${activeIndex + 1} sur ${reviews.length}`, `Review ${activeIndex + 1} of ${reviews.length}`)}>{String(activeIndex + 1).padStart(2, '0')} <span className="mx-1 text-accent">/</span> {String(reviews.length).padStart(2, '0')}</p>
       <div className="flex gap-2">
-        <button type="button" onClick={() => move(-1)} aria-label={uiText(locale, 'Témoignage précédent', 'Previous review')} className="grid h-10 w-10 place-items-center rounded-full border border-[#073e53]/20 text-[#073e53] transition-colors hover:bg-[#073e53] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b94f5b]" data-testid={`${id}-previous`}><ArrowLeft size={17} /></button>
-        <button type="button" onClick={() => move(1)} aria-label={uiText(locale, 'Témoignage suivant', 'Next review')} className="grid h-10 w-10 place-items-center rounded-full border border-[#073e53]/20 text-[#073e53] transition-colors hover:bg-[#073e53] hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b94f5b]" data-testid={`${id}-next`}><ArrowRight size={17} /></button>
+        <button type="button" onClick={() => move(-1)} disabled={reviews.length < 2} aria-label={uiText(locale, 'Avis précédent', 'Previous review')} title={reviews.length < 2 ? uiText(locale, 'La navigation sera active dès qu’un autre avis sera publié.', 'Navigation will be available when another review is published.') : uiText(locale, 'Avis précédent', 'Previous review')} className="grid h-12 w-12 place-items-center rounded-full border-2 border-[#073e53] bg-[#073e53] text-white shadow-md transition duration-200 hover:-translate-y-0.5 hover:border-[#b94f5b] hover:bg-[#b94f5b] hover:shadow-lg active:translate-y-0 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#8c6f0b] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:border-[#073e53] disabled:hover:bg-[#073e53] disabled:hover:shadow-md" data-testid={`${id}-previous`}><ArrowLeft size={20} strokeWidth={2.5} /></button>
+        <button type="button" onClick={() => move(1)} disabled={reviews.length < 2} aria-label={uiText(locale, 'Avis suivant', 'Next review')} title={reviews.length < 2 ? uiText(locale, 'La navigation sera active dès qu’un autre avis sera publié.', 'Navigation will be available when another review is published.') : uiText(locale, 'Avis suivant', 'Next review')} className="grid h-12 w-12 place-items-center rounded-full border-2 border-[#073e53] bg-[#073e53] text-white shadow-md transition duration-200 hover:-translate-y-0.5 hover:border-[#b94f5b] hover:bg-[#b94f5b] hover:shadow-lg active:translate-y-0 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-[#8c6f0b] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:border-[#073e53] disabled:hover:bg-[#073e53] disabled:hover:shadow-md" data-testid={`${id}-next`}><ArrowRight size={20} strokeWidth={2.5} /></button>
       </div>
     </div>
   </div>;
