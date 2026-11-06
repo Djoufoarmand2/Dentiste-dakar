@@ -204,6 +204,7 @@ export default function AdminPage() {
   const [version, setVersion] = useState<number | null>(null);
   const [section, setSection] = useState<AdminSection>('clinic');
   const [saved, setSaved] = useState(false);
+  const [seoRefreshStatus, setSeoRefreshStatus] = useState<'idle' | 'preview' | 'triggering' | 'started' | 'failed'>('idle');
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
 
   useEffect(() => {
@@ -234,6 +235,20 @@ export default function AdminPage() {
   const translationGaps = draft ? missingEnglishContent(draft) : [];
   const busy = update.isPending;
   const protectedUrls = collectMediaUrls(draft);
+  const seoRefreshMessage = seoRefreshStatus === 'preview'
+    ? 'Contenu publié. Le sitemap sera régénéré au prochain build.'
+    : seoRefreshStatus === 'triggering'
+      ? 'Contenu publié. Demande de régénération Cloudflare en cours…'
+      : seoRefreshStatus === 'started'
+        ? 'Régénération Cloudflare lancée. Google explorera les nouvelles pages lors de son prochain passage.'
+        : seoRefreshStatus === 'failed'
+          ? 'Contenu publié et visible, mais la régénération SEO n’a pas démarré. Vérifiez la configuration du hook Cloudflare.'
+          : null;
+
+  function markDraftChanged() {
+    setSaved(false);
+    setSeoRefreshStatus('idle');
+  }
 
   useEffect(() => {
     if (!focusTarget) return;
@@ -251,7 +266,7 @@ export default function AdminPage() {
     const value = (currentFields as unknown as Record<string, unknown>)[key];
     const nextValue = typeof value === 'number' ? Number(raw) : raw;
     setDraft({ ...draft, [section]: { ...currentFields, [key]: nextValue } } as SiteContent);
-    setSaved(false);
+    markDraftChanged();
   }
 
   function setArrayField(index: number, key: string, raw: string) {
@@ -275,7 +290,7 @@ export default function AdminPage() {
     } else {
       setDraft({ ...draft, [section]: current } as SiteContent);
     }
-    setSaved(false);
+    markDraftChanged();
   }
 
   function addItem() {
@@ -291,7 +306,7 @@ export default function AdminPage() {
       const item = { ...newItem[section], id };
       setDraft({ ...draft, [section]: [...(draft[section] as unknown as Record<string, unknown>[]), item] } as SiteContent);
     }
-    setSaved(false);
+    markDraftChanged();
   }
 
   function removeItem(index: number) {
@@ -315,19 +330,39 @@ export default function AdminPage() {
     } else {
       setDraft({ ...draft, [section]: next } as SiteContent);
     }
-    setSaved(false);
+    markDraftChanged();
   }
 
   function publish() {
     if (!draft || version === null) return;
     update.mutate({ content: draft, expectedVersion: version }, {
-      onSuccess: (document) => {
+      onSuccess: async (document) => {
         client.setQueryData([...adminContentKey, session?.user.id], document);
         void client.invalidateQueries({ queryKey: publicContentKey });
         void client.invalidateQueries({ queryKey: adminAccessKey });
         setDraft(ensureTranslationFields(JSON.parse(JSON.stringify(document.content)) as SiteContent));
         setVersion(document.version);
         setSaved(true);
+        if (!import.meta.env.PROD) {
+          setSeoRefreshStatus('preview');
+          return;
+        }
+        if (!session?.access_token) {
+          setSeoRefreshStatus('failed');
+          return;
+        }
+        setSeoRefreshStatus('triggering');
+        try {
+          const response = await fetch('/api/seo-rebuild', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${session.access_token}` },
+          });
+          const result = await response.json().catch(() => null) as { ok?: boolean } | null;
+          if (!response.ok || result?.ok !== true) throw new Error('Cloudflare rebuild was not confirmed.');
+          setSeoRefreshStatus('started');
+        } catch {
+          setSeoRefreshStatus('failed');
+        }
       },
     });
   }
@@ -338,7 +373,7 @@ export default function AdminPage() {
     if (result.data) {
       setDraft(ensureTranslationFields(structuredClone(result.data.content)));
       setVersion(result.data.version);
-      setSaved(false);
+      markDraftChanged();
       update.reset();
     }
   }
@@ -389,7 +424,7 @@ export default function AdminPage() {
           {!entries.length && <div className="rounded-[22px] border border-dashed border-border bg-card/60 p-10 text-center" data-testid={`empty-admin-${section}`}><ImageIcon className="mx-auto text-primary/70" size={24} /><h3 className="mt-4 font-display text-xl">Aucun élément pour le moment</h3><p className="mt-2 text-sm text-muted-foreground">Ajoutez un premier élément. Les URL d’images sont facultatives.</p></div>}
           <button onClick={addItem} className="inline-flex items-center gap-2 rounded-full border border-primary/30 px-5 py-3 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground" data-testid={`button-add-${section}`}><Plus size={15} /> Ajouter {sectionLabels[section].toLowerCase()}</button>
         </div>}
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-[#e6e3eb] p-4 md:px-6"><div><p className="text-xs font-semibold">Publication immédiate</p><p role={update.isError ? 'alert' : 'status'} className="mt-1 text-[11px] text-muted-foreground">{update.isError ? update.error.message : saved ? 'Le site public affiche les changements.' : 'Publiez pour rendre vos modifications visibles sur le site.'}</p>{update.error instanceof CmsError && update.error.status === 409 && <button className="mt-3 text-xs font-semibold text-primary underline" onClick={() => void reloadDraft()} data-testid="button-reload-conflict">Recharger la dernière publication</button>}</div><button onClick={publish} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-bold uppercase tracking-[.13em] text-primary-foreground disabled:opacity-60" data-testid="button-publish-bottom">{busy ? 'Publication…' : 'Publier maintenant'} <ArrowUpRight size={14} /></button></div>
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-[#e6e3eb] p-4 md:px-6"><div><p className="text-xs font-semibold">Publication immédiate</p><p role={update.isError || seoRefreshStatus === 'failed' ? 'alert' : 'status'} className="mt-1 text-[11px] text-muted-foreground">{update.isError ? update.error.message : seoRefreshMessage || (saved ? 'Le site public affiche les changements.' : 'Publiez pour rendre vos modifications visibles sur le site.')}</p>{update.error instanceof CmsError && update.error.status === 409 && <button className="mt-3 text-xs font-semibold text-primary underline" onClick={() => void reloadDraft()} data-testid="button-reload-conflict">Recharger la dernière publication</button>}</div><button onClick={publish} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-bold uppercase tracking-[.13em] text-primary-foreground disabled:opacity-60" data-testid="button-publish-bottom">{busy ? 'Publication…' : 'Publier maintenant'} <ArrowUpRight size={14} /></button></div>
       </main>
     </div>
   </div>;
