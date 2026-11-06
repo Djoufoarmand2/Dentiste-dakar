@@ -1,8 +1,24 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { loadEnv } from 'vite';
 
 const viteEnv = loadEnv('production', process.cwd(), 'VITE_');
 const viteSetting = (name) => process.env[name]?.trim() || viteEnv[name]?.trim();
+const cmsTranslations = JSON.parse(await readFile(new URL('../src/lib/cms-translations.json', import.meta.url), 'utf8'));
+const englishService = (service) => {
+  const fallback = cmsTranslations.services[service.slug] || cmsTranslations.services[service.id] || {};
+  return {
+    slug: service.slugEn?.trim() || fallback.slugEn || service.slug,
+    title: service.titleEn?.trim() || fallback.title || 'Dental service',
+  };
+};
+const englishBlogPost = (post) => {
+  const fallback = cmsTranslations.blogPosts[post.slug] || cmsTranslations.blogPosts[post.id] || {};
+  return {
+    slug: post.slugEn?.trim() || fallback.slugEn || post.slug,
+    title: post.titleEn?.trim() || fallback.title || 'Dental health article',
+  };
+};
 const rawBaseUrl = process.env.CABINET_BASE_URL;
 assert.ok(rawBaseUrl, 'Set CABINET_BASE_URL to the running Cabinet Sourire Serein preview.');
 const baseUrl = new URL(rawBaseUrl.endsWith('/') ? rawBaseUrl : `${rawBaseUrl}/`);
@@ -52,12 +68,23 @@ function isHttpsUrl(value) {
     return false;
   }
 }
+function isProvisionalCopy(...values) {
+  return values.some((value) => /démonstration|fictif|fictive|exemple de contenu|à remplacer|à valider|à renseigner|à confirmer/i.test(String(value ?? '')));
+}
 const productionOrigin = canonicalOrigin(viteSetting('VITE_SITE_URL'));
 const sharingImage = viteSetting('VITE_SITE_OG_IMAGE_URL') || publicContent.hero.imageUrl;
 const indexingEnabled = viteSetting('VITE_SITE_INDEXABLE') === 'true'
   && !!productionOrigin
   && !!publicContent.clinic.name?.trim()
+  && !!publicContent.clinic.address?.trim()
+  && !!publicContent.clinic.phone?.trim()
+  && !!publicContent.clinic.email?.trim()
+  && !/\.example$/i.test(publicContent.clinic.email)
+  && publicContent.clinic.phone.replace(/\D/g, '') !== '237670000000'
+  && publicContent.clinic.address.trim().toLowerCase() !== 'bonanjo, douala, cameroun'
+  && publicContent.clinic.openingHours?.trim() !== 'Lundi au vendredi · 8h–17h'
   && !!publicContent.hero.description?.trim()
+  && !isProvisionalCopy(publicContent.clinic.name, publicContent.clinic.address, publicContent.clinic.phone, publicContent.clinic.email, publicContent.hero.title, publicContent.hero.description)
   && isHttpsUrl(sharingImage);
 const faviconResources = [
   {
@@ -83,10 +110,16 @@ const iconResources = [...faviconResources, {
   contentType: /image\/png/i,
 }];
 const routes = [
-  '/', '/soins', '/equipe', '/galerie', '/avis', '/faq', '/blog/',
-  '/informations', '/contact', '/confidentialite', '/arm', '/admin', '/sign-in',
+  '/', '/soins/', '/pourquoi-nous-choisir/', '/equipe/', '/galerie/', '/avis/', '/faq/', '/blog/',
+  '/informations/', '/contact/', '/confidentialite/',
+  '/en/', '/en/services/', '/en/why-choose-us/', '/en/team/', '/en/gallery/', '/en/reviews/',
+  '/en/faq/', '/en/blog/', '/en/information/', '/en/contact/', '/en/privacy/',
+  '/arm', '/admin', '/sign-in',
   '/sign-up', '/forgot-password', '/auth/callback',
   ...publicContent.blogPosts.filter((post) => post.published && /^[a-z0-9-]+$/.test(post.slug || '')).map((post) => `/blog/${post.slug}/`),
+  ...publicContent.blogPosts.filter((post) => post.published && /^[a-z0-9-]+$/.test(englishBlogPost(post).slug || '')).map((post) => `/en/blog/${englishBlogPost(post).slug}/`),
+  ...publicContent.services.filter((service) => /^[a-z0-9-]+$/.test(service.slug || '') && service.title && service.summary && !isProvisionalCopy(service.title, service.summary)).map((service) => `/soins/${service.slug}/`),
+  ...publicContent.services.filter((service) => /^[a-z0-9-]+$/.test(englishService(service).slug || '') && service.title && service.summary && !isProvisionalCopy(service.title, service.summary)).map((service) => `/en/services/${englishService(service).slug}/`),
 ];
 
 for (const route of routes) {
@@ -107,18 +140,37 @@ for (const route of routes) {
     assert.match(html, /<script type="application\/ld\+json">/i, `${route} should include business structured data`);
   }
   assert.doesNotMatch(html, /property="og:url"[^>]+replit\.dev/i, `${route} must not advertise the preview URL as canonical`);
-  if (route.startsWith('/blog/') && route !== '/blog/') {
-    const post = publicContent.blogPosts.find((candidate) => route.replace(/\/+$/, '') === `/blog/${candidate.slug}`);
+  const articleMatch = route.match(/^\/(?:en\/)?blog\/([^/]+)\/?$/);
+  if (articleMatch) {
+    const englishArticle = route.startsWith('/en/');
+    const post = publicContent.blogPosts.find((candidate) => englishArticle
+      ? englishBlogPost(candidate).slug === articleMatch[1] || candidate.slug === articleMatch[1]
+      : candidate.slug === articleMatch[1]);
     assert.ok(post?.imageUrl, `${route} should have a published illustration`);
-    assert.match(html, /data-seo-prerender="\/blog\/[a-z0-9-]+\/"/, `${route} should include a static article snapshot`);
+    assert.match(html, /data-seo-prerender="\/(?:en\/)?blog\/[a-z0-9-]+\/"/, `${route} should include a static article snapshot`);
     assert.ok(html.includes(post.imageUrl), `${route} should expose its article image before JavaScript runs`);
     assert.match(html, /property="og:image"[^>]+content="https:\/\//i, `${route} should expose a hosted social-sharing image`);
     assert.match(html, /<h1>[^<]+<\/h1>/i, `${route} should expose its heading before JavaScript runs`);
+    assert.match(html, /<img\b[^>]*\balt="[^"]+"/i, `${route} should expose descriptive image alt text`);
   }
-  if (route === '/blog/') {
-    assert.match(html, /data-seo-prerender="\/blog\/"/, 'Blog listing should include a static snapshot');
+  if (route === '/blog/' || route === '/en/blog/') {
+    assert.match(html, /data-seo-prerender="\/(?:en\/)?blog\/"/, 'Blog listing should include a static snapshot');
     for (const post of publicContent.blogPosts.filter((candidate) => candidate.published)) {
-      assert.ok(html.includes(post.slug), `Blog listing should link to ${post.slug}`);
+      const expectedSlug = route === '/en/blog/' ? englishBlogPost(post).slug : post.slug;
+      assert.ok(html.includes(expectedSlug), `Blog listing should link to ${expectedSlug}`);
+    }
+  }
+  const serviceMatch = route.match(/^\/(?:en\/)?(?:soins|services)\/([^/]+)\/?$/);
+  if (serviceMatch) {
+    const isEnglishService = route.startsWith('/en/');
+    const service = publicContent.services.find((candidate) => isEnglishService
+      ? englishService(candidate).slug === serviceMatch[1] || candidate.slug === serviceMatch[1]
+      : candidate.slug === serviceMatch[1]);
+    assert.ok(service, `${route} should correspond to a CMS service`);
+    assert.match(html, /<h1>[^<]+<\/h1>/i, `${route} should expose a service heading`);
+    if (html.includes('data-seo-prerender=')) {
+      assert.ok(html.includes('bienveillanceclinique4@gmail.com'), `${route} should expose the clinic email in its static snapshot`);
+      assert.ok(html.includes('677873442'), `${route} should expose the WhatsApp contact in its static snapshot`);
     }
   }
 }
@@ -143,6 +195,17 @@ if (/^Sitemap:/im.test(robots)) {
   assert.match(sitemap, /^<\?xml\b/i, 'Sitemap should be XML rather than the SPA fallback');
   for (const post of publicContent.blogPosts.filter((candidate) => candidate.published)) {
     assert.ok(sitemap.includes(`/blog/${post.slug}`), `Sitemap should include ${post.slug}`);
+      const translated = englishBlogPost(post);
+      assert.ok(sitemap.includes(`/en/blog/${translated.slug}`), `Sitemap should include English article ${translated.slug}`);
+  }
+  for (const service of publicContent.services.filter((item) => item.slug && item.title && item.summary && !isProvisionalCopy(item.title, item.summary))) {
+    assert.ok(sitemap.includes(`/soins/${service.slug}`), `Sitemap should include service ${service.slug}`);
+      const translated = englishService(service);
+      assert.ok(sitemap.includes(`/en/services/${translated.slug}`), `Sitemap should include English service ${translated.slug}`);
+  }
+  if (indexingEnabled) {
+    assert.match(sitemap, /hreflang="fr-CM"/, 'Indexable sitemap should include French language alternates');
+    assert.match(sitemap, /hreflang="en-CM"/, 'Indexable sitemap should include English language alternates');
   }
 } else {
   assert.equal(indexingEnabled, false, 'An indexable production build should publish its sitemap.');

@@ -13,6 +13,40 @@ const basePath = `/${rawBasePath.split('/').filter(Boolean).join('/')}${rawBaseP
 const appPath = (route) => `${basePath}${String(route).replace(/^\/+/, '')}`;
 const viteEnv = loadEnv('production', process.cwd(), 'VITE_');
 const viteSetting = (name) => process.env[name]?.trim() || viteEnv[name]?.trim();
+const cmsTranslations = JSON.parse(await readFile(new URL('../src/lib/cms-translations.json', import.meta.url), 'utf8'));
+
+function englishService(service) {
+  const fallback = cmsTranslations.services[service.slug] || cmsTranslations.services[service.id] || {};
+  return {
+    title: service.titleEn?.trim() || fallback.title || 'Dental service',
+    slug: service.slugEn?.trim() || fallback.slugEn || service.slug,
+    summary: service.summaryEn?.trim() || fallback.summary || 'An English translation of this service information is being prepared.',
+    description: service.descriptionEn?.trim() || fallback.description || 'Please contact the practice for service information in English.',
+    purpose: service.purposeEn?.trim() || fallback.purpose || '',
+    procedureSteps: service.procedureStepsEn?.trim() || fallback.procedureSteps || '',
+    imageAlt: service.imageAltEn?.trim() || fallback.imageAlt || 'Dental care illustration.',
+  };
+}
+
+function englishBlogPost(post) {
+  const fallback = cmsTranslations.blogPosts[post.slug] || cmsTranslations.blogPosts[post.id] || {};
+  return {
+    title: post.titleEn?.trim() || fallback.title || 'Dental health article',
+    slug: post.slugEn?.trim() || fallback.slugEn || post.slug,
+    excerpt: post.excerptEn?.trim() || fallback.excerpt || 'An English translation of this article is being prepared.',
+    content: post.contentEn?.trim() || fallback.content || 'An English translation of this article is being prepared.',
+    author: post.authorEn?.trim() || fallback.author || 'Practice team',
+    imageAlt: post.imageAltEn?.trim() || fallback.imageAlt || 'Dental health article illustration.',
+  };
+}
+
+function englishFaq(faq) {
+  const fallback = cmsTranslations.faqs[faq.question] || {};
+  return {
+    question: faq.questionEn?.trim() || fallback.question || 'An English translation is being prepared.',
+    answer: faq.answerEn?.trim() || fallback.answer || 'Please contact the practice for this information in English.',
+  };
+}
 
 function canonicalOrigin(value) {
   if (!value) return null;
@@ -53,8 +87,10 @@ const origin = canonicalOrigin(viteSetting('VITE_SITE_URL'));
 const indexable = viteSetting('VITE_SITE_INDEXABLE') === 'true';
 
 const fixedRoutes = [
-  '/', '/soins', '/equipe', '/galerie', '/avis', '/faq', '/blog/',
-  '/informations', '/contact', '/confidentialite',
+  '/', '/soins/', '/pourquoi-nous-choisir/', '/equipe/', '/galerie/', '/avis/', '/faq/', '/blog/',
+  '/informations/', '/contact/', '/confidentialite/',
+  '/en/', '/en/services/', '/en/why-choose-us/', '/en/team/', '/en/gallery/', '/en/reviews/',
+  '/en/faq/', '/en/blog/', '/en/information/', '/en/contact/', '/en/privacy/',
 ];
 const routes = new Set(fixedRoutes);
 const privateRoutes = ['/arm', '/admin', '/sign-in', '/sign-up', '/forgot-password', '/auth/callback'];
@@ -72,6 +108,17 @@ if (supabaseUrl && publishableKey) {
       for (const post of publicContent.blogPosts ?? []) {
         if (post?.published === true && typeof post.slug === 'string' && /^[a-z0-9-]+$/.test(post.slug)) {
           routes.add(`/blog/${post.slug}/`);
+          const englishSlug = englishBlogPost(post).slug;
+          routes.add(`/en/blog/${englishSlug}/`);
+        }
+      }
+      for (const service of publicContent.services ?? []) {
+        if (typeof service.slug === 'string' && /^[a-z0-9-]+$/.test(service.slug)
+          && service.title && service.summary
+          && !isProvisionalCopy(service.title, service.summary)) {
+          routes.add(`/soins/${service.slug}/`);
+          const englishSlug = englishService(service).slug;
+          routes.add(`/en/services/${englishSlug}/`);
         }
       }
     } else {
@@ -101,7 +148,90 @@ const siteDescription = truncateMeta(
   160,
 );
 const configuredImageUrl = httpsImageUrl(viteSetting('VITE_SITE_OG_IMAGE_URL')) || httpsImageUrl(publicContent?.hero?.imageUrl);
-const canIndex = indexable && Boolean(origin && siteTitle && siteDescription && configuredImageUrl && publicContent?.clinic);
+const canIndex = indexable && Boolean(
+  origin
+  && siteTitle
+  && siteDescription
+  && configuredImageUrl
+  && publicContent?.clinic?.name
+  && publicContent?.clinic?.phone
+  && publicContent?.clinic?.email
+  && publicContent?.clinic?.address
+  && !/\.example$/i.test(publicContent.clinic.email)
+  && publicContent.clinic.phone.replace(/\D/g, '') !== '237670000000'
+  && publicContent.clinic.address.trim().toLowerCase() !== 'bonanjo, douala, cameroun'
+  && publicContent.clinic.openingHours?.trim() !== 'Lundi au vendredi · 8h–17h'
+  && publicContent?.hero?.title
+  && publicContent?.hero?.description
+  && !isProvisionalCopy(
+    publicContent?.clinic?.name,
+    publicContent?.clinic?.phone,
+    publicContent?.clinic?.email,
+    publicContent?.clinic?.address,
+    publicContent?.hero?.title,
+    publicContent?.hero?.description,
+  ),
+);
+
+const frToEnRoutes = new Map([
+  ['/', '/en/'],
+  ['/soins/', '/en/services/'],
+  ['/pourquoi-nous-choisir/', '/en/why-choose-us/'],
+  ['/equipe/', '/en/team/'],
+  ['/galerie/', '/en/gallery/'],
+  ['/avis/', '/en/reviews/'],
+  ['/faq/', '/en/faq/'],
+  ['/blog/', '/en/blog/'],
+  ['/informations/', '/en/information/'],
+  ['/contact/', '/en/contact/'],
+  ['/confidentialite/', '/en/privacy/'],
+]);
+
+function normalizedPublicRoute(route) {
+  const trimmed = String(route || '/').replace(/\/+$/, '');
+  return trimmed ? `${trimmed}/` : '/';
+}
+
+function localizedPublicRoute(route, targetLocale) {
+  const current = normalizedPublicRoute(route);
+  const isEnglish = current.startsWith('/en/');
+  const localPath = isEnglish ? current.replace(/^\/en/, '') || '/' : current;
+  if (targetLocale === 'en' && !isEnglish) {
+    const serviceMatch = localPath.match(/^\/soins\/([^/]+)\/$/);
+    if (serviceMatch) {
+      const service = publicContent?.services?.find((item) => item.slug === serviceMatch[1]);
+      return `/en/services/${service ? englishService(service).slug : serviceMatch[1]}/`;
+    }
+    const postMatch = localPath.match(/^\/blog\/([^/]+)\/$/);
+    if (postMatch) {
+      const post = publicContent?.blogPosts?.find((item) => item.slug === postMatch[1]);
+      return `/en/blog/${post ? englishBlogPost(post).slug : postMatch[1]}/`;
+    }
+    return frToEnRoutes.get(localPath) || null;
+  }
+  if (targetLocale === 'fr' && isEnglish) {
+    const serviceMatch = current.match(/^\/en\/services\/([^/]+)\/$/);
+    if (serviceMatch) {
+      const service = publicContent?.services?.find((item) => item.slugEn === serviceMatch[1] || item.slug === serviceMatch[1] || englishService(item).slug === serviceMatch[1]);
+      return `/soins/${service?.slug || serviceMatch[1]}/`;
+    }
+    const postMatch = current.match(/^\/en\/blog\/([^/]+)\/$/);
+    if (postMatch) {
+      const post = publicContent?.blogPosts?.find((item) => item.slugEn === postMatch[1] || item.slug === postMatch[1] || englishBlogPost(item).slug === postMatch[1]);
+      return `/blog/${post?.slug || postMatch[1]}/`;
+    }
+    const pair = [...frToEnRoutes.entries()].find(([, enRoute]) => enRoute === current);
+    return pair?.[0] || null;
+  }
+  return current;
+}
+
+function routeAlternates(route) {
+  const fr = localizedPublicRoute(route, 'fr');
+  const en = localizedPublicRoute(route, 'en');
+  if (!fr || !en || !routes.has(fr) || !routes.has(en)) return null;
+  return { fr, en };
+}
 
 const indexPath = path.join(outputDirectory, 'index.html');
 await mkdir(outputDirectory, { recursive: true });
@@ -109,11 +239,17 @@ if (!canIndex) {
   await disableIndexing();
   console.log('Cabinet site kept noindex: set a public HTTPS URL and VITE_SITE_INDEXABLE=true after confirming the business information.');
 } else {
-  const urls = [...routes].map((route) => `${origin}${route === '/' ? '/' : route}`);
+  const urls = [...routes].map((route) => `${origin}${route === '/' ? '/' : route.endsWith('/') ? route : `${route}/`}`);
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...urls.map((url) => `  <url><loc>${escapeXml(url)}</loc></url>`),
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
+    ...[...routes].map((route, index) => {
+      const alternates = routeAlternates(route);
+      const links = alternates
+        ? `\n    <xhtml:link rel="alternate" hreflang="fr-CM" href="${escapeXml(`${origin}${alternates.fr}`)}" />\n    <xhtml:link rel="alternate" hreflang="en-CM" href="${escapeXml(`${origin}${alternates.en}`)}" />\n    <xhtml:link rel="alternate" hreflang="x-default" href="${escapeXml(`${origin}${alternates.fr}`)}" />`
+        : '';
+      return `  <url><loc>${escapeXml(urls[index])}</loc>${links}\n  </url>`;
+    }),
     '</urlset>',
     '',
   ].join('\n');
@@ -182,25 +318,60 @@ function pageMetadata(route) {
   const clinic = publicContent?.clinic ?? {};
   const name = clinic.name || 'Cabinet Sourire Serein';
   const city = clinic.city || 'Douala';
-  const normalizedRoute = route.replace(/\/+$/, '') || '/';
-  const article = normalizedRoute.startsWith('/blog/')
-    ? (publicContent?.blogPosts ?? []).find((post) => post.published && normalizedRoute === `/blog/${post.slug}`)
+  const canonicalRoute = normalizedPublicRoute(route);
+  const english = canonicalRoute.startsWith('/en/');
+  const locale = english ? 'en' : 'fr';
+  const normalizedRoute = (english ? canonicalRoute.replace(/^\/en/, '') || '/' : canonicalRoute).replace(/\/+$/, '') || '/';
+  const articleSlug = normalizedRoute.match(/^\/blog\/([^/]+)$/)?.[1];
+  const serviceSlug = normalizedRoute.match(/^\/(?:soins|services)\/([^/]+)$/)?.[1];
+  const article = articleSlug
+    ? (publicContent?.blogPosts ?? []).find((post) => post.published && (post.slug === articleSlug || post.slugEn === articleSlug || englishBlogPost(post).slug === articleSlug))
     : undefined;
-  const titles = {
+  const service = serviceSlug
+    ? (publicContent?.services ?? []).find((item) => item.slug === serviceSlug || item.slugEn === serviceSlug || englishService(item).slug === serviceSlug)
+    : undefined;
+  const translatedArticle = article ? englishBlogPost(article) : undefined;
+  const translatedService = service ? englishService(service) : undefined;
+  const pageNames = english ? {
+    '/services': `Dental services in ${city}`,
+    '/why-choose-us': 'Why choose our practice',
+    '/team': `Dental team in ${city}`,
+    '/gallery': `Practice photos in ${city}`,
+    '/reviews': `Reviews of the dental practice in ${city}`,
+    '/faq': 'Dental care frequently asked questions',
+    '/blog': `Dental health articles in ${city}`,
+    '/information': 'Practice information',
+    '/contact': `Contact and appointments in ${city}`,
+    '/privacy': 'Privacy policy',
+  } : {
     '/soins': `Soins dentaires à ${city}`,
+    '/pourquoi-nous-choisir': 'Pourquoi choisir notre cabinet',
     '/equipe': `Équipe du cabinet dentaire à ${city}`,
     '/galerie': `Photos du cabinet dentaire à ${city}`,
     '/avis': `Avis sur le cabinet dentaire à ${city}`,
-    '/faq': `Questions fréquentes sur les soins dentaires`,
+    '/faq': 'Questions fréquentes sur les soins dentaires',
     '/blog': `Conseils dentaires à ${city}`,
-    '/informations': `Informations pratiques sur le cabinet`,
+    '/informations': 'Informations pratiques sur le cabinet',
     '/contact': `Contact et rendez-vous à ${city}`,
     '/confidentialite': 'Politique de confidentialité',
   };
-  const pageName = article?.title || (normalizedRoute === '/' ? `Cabinet dentaire à ${city}` : titles[normalizedRoute] || 'Cabinet dentaire');
+  const pageName = (english ? translatedArticle?.title || translatedService?.title : article?.title || service?.title)
+    || (normalizedRoute === '/' ? (english ? `Dentist in ${city}` : `Cabinet dentaire à ${city}`) : pageNames[normalizedRoute] || (english ? (article ? 'Dental health article' : service ? 'Dental service' : 'Dental practice') : 'Cabinet dentaire'));
   const title = seoTitle(pageName, name);
-  const descriptions = {
+  const descriptions = english ? {
+    '/services': `Explore dental services presented by ${name} in ${city}. Contact the practice to request a consultation.`,
+    '/why-choose-us': `Learn how ${name}, a dental practice in ${city}, approaches patient care and communication.`,
+    '/team': `Meet the team and learn about ${name}, a dental practice in ${city}.`,
+    '/gallery': `View photos and visual information about ${name} in ${city}.`,
+    '/reviews': `Read visitor reviews shared about ${name}, a dental practice in ${city}.`,
+    '/faq': `Answers to common questions about dental care, appointments and first visits in ${city}.`,
+    '/blog': `General information about oral health and dental care in ${city}.`,
+    '/information': `Find practical information shared by ${name} in ${city}.`,
+    '/contact': `Contact ${name}, a dental practice in ${city}, to ask a question or request an appointment.`,
+    '/privacy': 'Information about how this website collects, uses and protects personal data.',
+  } : {
     '/soins': `Découvrez les soins dentaires présentés par ${name} à ${city}. Contactez le cabinet pour organiser une consultation.`,
+    '/pourquoi-nous-choisir': `Découvrez la façon dont ${name}, cabinet dentaire à ${city}, vous accompagne et répond à vos questions.`,
     '/equipe': `Découvrez l’équipe et les informations présentées par ${name}, cabinet dentaire à ${city}.`,
     '/galerie': `Découvrez en images les espaces et la vie du cabinet dentaire ${name} à ${city}.`,
     '/avis': `Lisez les avis publiés sur ${name}, cabinet dentaire à ${city}, et partagez votre expérience.`,
@@ -211,36 +382,45 @@ function pageMetadata(route) {
     '/confidentialite': 'Informations sur la collecte, l’utilisation et la protection de vos données personnelles sur le site.',
   };
   const description = truncateMeta(
-    article?.excerpt
-      || (normalizedRoute === '/' ? publicContent?.hero?.description : undefined)
+    (english ? translatedArticle?.excerpt || translatedService?.summary : article?.excerpt || service?.summary)
+      || (normalizedRoute === '/' ? (english ? publicContent?.hero?.descriptionEn?.trim() || publicContent?.hero?.description : publicContent?.hero?.description) : undefined)
       || descriptions[normalizedRoute]
-      || `${pageName} au ${name}, à ${city}. Informations et contact.`,
+      || (english ? `${pageName} at ${name} in ${city}. Contact the practice for information.` : `${pageName} au ${name}, à ${city}. Informations et contact.`),
     160,
   );
-  const socialImage = httpsImageUrl(article?.imageUrl) || httpsImageUrl(publicContent?.hero?.imageUrl) || configuredImageUrl;
-  const canonicalRoute = normalizedRoute === '/blog' || normalizedRoute.startsWith('/blog/') ? `${normalizedRoute}/` : normalizedRoute;
+  const socialImage = httpsImageUrl(article?.imageUrl) || httpsImageUrl(service?.imageUrl) || httpsImageUrl(publicContent?.hero?.imageUrl) || configuredImageUrl;
   const canonical = canIndex && origin ? `${origin}${canonicalRoute === '/' ? '/' : canonicalRoute}` : undefined;
-  return { title, description, socialImage, canonical, type: article ? 'article' : 'website', article, clinicName: name };
+  const imageAlt = article
+    ? (english ? translatedArticle?.imageAlt || 'Dental health article illustration.' : article.imageAlt?.trim() || `Illustration de l’article : ${pageName}`)
+    : service
+      ? (english ? translatedService?.imageAlt || 'Dental care illustration.' : service.imageAlt?.trim() || `Illustration du soin : ${pageName}`)
+    : publicContent?.hero?.title;
+  return { title, description, socialImage, canonical, canonicalRoute, type: article ? 'article' : 'website', article, service, clinicName: name, locale, imageAlt };
 }
 
 function withPageMetadata(template, route) {
   const meta = pageMetadata(route);
   let html = template.replace(/<title>[^<]*<\/title>/i, `<title>${escapeAttribute(meta.title)}</title>`);
+  html = html.replace(/<html\b([^>]*)\blang="[^"]*"/i, `<html$1lang="${meta.locale}"`);
   html = replaceMeta(html, 'name', 'description', meta.description);
   html = replaceMeta(html, 'name', 'robots', canIndex ? 'index, follow' : 'noindex, nofollow');
   html = replaceMeta(html, 'property', 'og:title', meta.title);
   html = replaceMeta(html, 'property', 'og:description', meta.description);
   html = replaceMeta(html, 'property', 'og:type', meta.type);
   html = replaceMeta(html, 'property', 'og:site_name', meta.clinicName);
-  html = replaceMeta(html, 'property', 'og:locale', 'fr_CM');
+  html = replaceMeta(html, 'property', 'og:locale', meta.locale === 'en' ? 'en_CM' : 'fr_CM');
   html = replaceMeta(html, 'property', 'og:url', meta.canonical);
   html = replaceMeta(html, 'property', 'og:image', meta.socialImage);
-  html = replaceMeta(html, 'property', 'og:image:alt', meta.socialImage ? (meta.article ? `Illustration de l’article : ${meta.article.title}` : meta.title) : undefined);
+  html = replaceMeta(html, 'property', 'og:image:alt', meta.socialImage ? meta.imageAlt || meta.title : undefined);
   html = replaceMeta(html, 'name', 'twitter:title', meta.title);
   html = replaceMeta(html, 'name', 'twitter:description', meta.description);
   html = replaceMeta(html, 'name', 'twitter:image', meta.socialImage);
   html = replaceMeta(html, 'name', 'twitter:card', meta.socialImage ? 'summary_large_image' : 'summary');
-  html = html.replace(/<\/head>/i, `${structuredDataTags(meta)}\n  </head>`);
+  const alternate = routeAlternates(route);
+  const hreflang = canIndex && alternate
+    ? `<link rel="alternate" hreflang="fr-CM" href="${escapeAttribute(`${origin}${alternate.fr}`)}" />\n    <link rel="alternate" hreflang="en-CM" href="${escapeAttribute(`${origin}${alternate.en}`)}" />\n    <link rel="alternate" hreflang="x-default" href="${escapeAttribute(`${origin}${alternate.fr}`)}" />`
+    : '';
+  html = html.replace(/<\/head>/i, `${structuredDataTags(meta)}\n    ${hreflang}\n  </head>`);
   return replaceCanonical(html, meta.canonical);
 }
 
@@ -268,9 +448,28 @@ function structuredDataTags(meta) {
     '@id': `${origin}/#website`,
     name: clinic.name || clinicName,
     url: origin,
-    inLanguage: 'fr-CM',
+    inLanguage: meta.locale === 'en' ? 'en-CM' : 'fr-CM',
   };
-  const json = JSON.stringify({ '@context': 'https://schema.org', '@graph': [website, dentist] })
+  const graph = [website, dentist];
+  if (meta.article && meta.canonical) {
+    const translated = englishBlogPost(meta.article);
+    graph.push({
+      '@type': 'BlogPosting',
+      '@id': `${meta.canonical}#article`,
+      headline: meta.locale === 'en' ? translated.title : meta.article.title,
+      description: meta.locale === 'en' ? translated.excerpt : meta.article.excerpt,
+      image: httpsImageUrl(meta.article.imageUrl) || undefined,
+      datePublished: meta.article.date || undefined,
+      author: {
+        '@type': 'Organization',
+        name: meta.locale === 'en' ? translated.author : meta.article.author || clinicName,
+      },
+      publisher: { '@type': 'Organization', name: clinicName },
+      mainEntityOfPage: meta.canonical,
+      inLanguage: meta.locale === 'en' ? 'en-CM' : 'fr-CM',
+    });
+  }
+  const json = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })
     .replace(/</g, '\\u003c');
   return `<script type="application/ld+json">${json}</script>`;
 }
@@ -287,97 +486,152 @@ function withPrivateNoindex(template, route) {
   return replaceCanonical(html, undefined);
 }
 
-function blogImageAlt(post) {
-  const alts = {
-    'urgence-dentaire-douala': 'Illustration d’un examen dentaire lié à une douleur dentaire.',
-    'detartrage-et-polissage': 'Illustration d’un soin d’hygiène dentaire et de détartrage.',
-    'kinesitherapie-maxillo-faciale': 'Illustration d’un exercice de mobilité maxillo-faciale.',
-    'grossesse-et-sante-bucco-dentaire': 'Illustration d’une consultation en maternité au sujet de la santé bucco-dentaire.',
-  };
-  return alts[post.id] || `Illustration dentaire liée à l’article : ${post.title}`;
+function blogImageAlt(post, locale = 'fr') {
+  const english = locale === 'en';
+  return english
+    ? englishBlogPost(post).imageAlt
+    : post.imageAlt || `Illustration dentaire liée à l’article : ${post.title}`;
+}
+
+function contentText(value) {
+  const source = String(value ?? '');
+  return source.split(/(https:\/\/[^\s<>"']+)/g).map((part) => {
+    if (!part.startsWith('https://')) return escapeXml(part).replaceAll('\n', '<br />');
+    return `<a href="${escapeAttribute(part)}" rel="noopener noreferrer">${escapeXml(part)}</a>`;
+  }).join('');
 }
 
 function renderArticleContent(content) {
   return String(content ?? '').split(/\n{2,}/).map((block) => block.trim()).filter(Boolean).map((block) => {
     const heading = block.match(/^##\s+(.+)$/);
-    return heading ? `<h2>${escapeXml(heading[1])}</h2>` : `<p>${escapeXml(block).replaceAll('\n', '<br />')}</p>`;
+    return heading ? `<h2>${escapeXml(heading[1])}</h2>` : `<p>${contentText(block)}</p>`;
   }).join('\n');
 }
 
 function renderBlogMarkup(route) {
-  const normalizedRoute = route.replace(/\/+$/, '') || '/';
+  const canonicalRoute = normalizedPublicRoute(route);
+  const english = canonicalRoute.startsWith('/en/');
+  const localRoute = (english ? canonicalRoute.replace(/^\/en/, '') || '/' : canonicalRoute).replace(/\/+$/, '') || '/';
   const posts = (publicContent?.blogPosts ?? []).filter((post) => post.published && /^[a-z0-9-]+$/.test(post.slug || ''));
-  if (normalizedRoute === '/blog') {
-    const cards = posts.map((post) => `<article><a href="${escapeAttribute(appPath(`/blog/${post.slug}/`))}">${post.imageUrl ? `<img src="${escapeAttribute(post.imageUrl)}" alt="${escapeAttribute(blogImageAlt(post))}" loading="lazy" decoding="async" />` : ''}<h2>${escapeXml(post.title)}</h2><p>${escapeXml(post.excerpt)}</p><span>Lire l’article</span></a></article>`).join('\n');
-    return `<main><h1>Conseils dentaires à ${escapeXml(publicContent?.clinic?.city || 'Douala')}</h1><p>Des informations générales sur les soins dentaires et la santé bucco-dentaire, à compléter par les conseils de votre praticien.</p>${cards || '<p>Les articles seront publiés prochainement.</p>'}</main>`;
+  if (localRoute === '/blog') {
+    const cards = posts.map((post) => {
+      const translated = englishBlogPost(post);
+      const slug = english ? translated.slug : post.slug;
+      const title = english ? translated.title : post.title;
+      const excerpt = english ? translated.excerpt : post.excerpt;
+      const image = httpsImageUrl(post.imageUrl);
+      return `<article><a href="${escapeAttribute(appPath(`${english ? '/en/blog' : '/blog'}/${slug}/`))}">${image ? `<img src="${escapeAttribute(image)}" alt="${escapeAttribute(blogImageAlt(post, english ? 'en' : 'fr'))}" loading="lazy" decoding="async" />` : ''}<h2>${escapeXml(title)}</h2><p>${escapeXml(excerpt)}</p><span>${english ? 'Read article' : 'Lire l’article'}</span></a></article>`;
+    }).join('\n');
+    return `<main><h1>${english ? `Dental health articles in ${escapeXml(publicContent?.clinic?.city || 'Douala')}` : `Conseils dentaires à ${escapeXml(publicContent?.clinic?.city || 'Douala')}`}</h1><p>${english ? 'General information about oral health and dental care. Discuss personal questions with a dental professional.' : 'Des informations générales sur les soins dentaires et la santé bucco-dentaire, à compléter par les conseils de votre praticien.'}</p>${cards || `<p>${english ? 'Articles will be published soon.' : 'Les articles seront publiés prochainement.'}</p>`}</main>`;
   }
-  const post = posts.find((entry) => route.replace(/\/+$/, '') === `/blog/${entry.slug}`);
+  const slug = localRoute.match(/^\/blog\/([^/]+)$/)?.[1];
+  const post = posts.find((entry) => english
+    ? englishBlogPost(entry).slug === slug || entry.slug === slug
+    : entry.slug === slug);
   if (!post) return '';
-  const image = post.imageUrl
-    ? `<img src="${escapeAttribute(post.imageUrl)}" alt="${escapeAttribute(blogImageAlt(post))}" fetchpriority="high" decoding="async" />`
+  const translated = englishBlogPost(post);
+  const title = english ? translated.title : post.title;
+  const excerpt = english ? translated.excerpt : post.excerpt;
+  const content = english ? translated.content : post.content;
+  const author = english ? translated.author : post.author;
+  const image = httpsImageUrl(post.imageUrl)
+    ? `<img src="${escapeAttribute(httpsImageUrl(post.imageUrl))}" alt="${escapeAttribute(blogImageAlt(post, english ? 'en' : 'fr'))}" fetchpriority="high" decoding="async" />`
     : '';
-  return `<main><a href="${escapeAttribute(appPath('/blog/'))}">Tous les articles</a><article><time datetime="${escapeAttribute(post.date)}">${escapeXml(post.date)} · ${escapeXml(post.author)}</time><h1>${escapeXml(post.title)}</h1><p>${escapeXml(post.excerpt)}</p>${image}<div>${renderArticleContent(post.content)}</div></article></main>`;
+  return `<main><a href="${escapeAttribute(appPath(english ? '/en/blog/' : '/blog/'))}">${english ? 'All articles' : 'Tous les articles'}</a><article><time datetime="${escapeAttribute(post.date)}">${escapeXml(post.date)} · ${escapeXml(author)}</time><h1>${escapeXml(title)}</h1><p>${escapeXml(excerpt)}</p>${image}<div>${renderArticleContent(content)}</div></article></main>`;
 }
 
 function isProvisionalCopy(...values) {
   return values.some((value) => /démonstration|fictif|fictive|exemple de contenu|à remplacer|à valider|à renseigner|à confirmer/i.test(String(value ?? '')));
 }
 
-function renderServiceMarkup() {
+function renderServiceMarkup(english = false) {
   const services = (publicContent?.services ?? []).filter((service) =>
     service.title && service.summary && !isProvisionalCopy(service.title, service.summary));
-  if (!services.length) return '<p>Les informations sur les soins seront publiées prochainement.</p>';
-  return `<ul>${services.map((service) => `<li><article><h2>${escapeXml(service.title)}</h2><p>${escapeXml(service.summary)}</p></article></li>`).join('')}</ul>`;
+  if (!services.length) return `<p>${english ? 'Service information will be published soon.' : 'Les informations sur les soins seront publiées prochainement.'}</p>`;
+  return `<ul>${services.map((service) => {
+    const translated = englishService(service);
+    const slug = english ? translated.slug : service.slug;
+    const title = english ? translated.title : service.title;
+    const summary = english ? translated.summary : service.summary;
+    return `<li><article><h2><a href="${escapeAttribute(appPath(`${english ? '/en/services' : '/soins'}/${slug}/`))}">${escapeXml(title)}</a></h2><p>${escapeXml(summary)}</p><a href="${escapeAttribute(appPath(`${english ? '/en/services' : '/soins'}/${slug}/`))}">${english ? 'Read more' : 'En savoir plus'}</a></article></li>`;
+  }).join('')}</ul>`;
 }
 
 function renderPublicMarkup(route, meta) {
   const clinic = publicContent?.clinic ?? {};
   const hero = publicContent?.hero ?? {};
   const cityName = clinic.city || city;
+  const english = meta.locale === 'en';
+  const canonicalRoute = normalizedPublicRoute(route);
+  const normalizedRoute = (english ? canonicalRoute.replace(/^\/en/, '') || '/' : canonicalRoute).replace(/\/+$/, '') || '/';
   const heading = `<h1>${escapeXml(meta.title.split(' | ')[0])}</h1>`;
   const intro = `<p>${escapeXml(meta.description)}</p>`;
   if (!publicContent) return `<main>${heading}${intro}</main>`;
 
-  const normalizedRoute = route.replace(/\/+$/, '') || '/';
   if (normalizedRoute === '/') {
     const heroImage = httpsImageUrl(hero.imageUrl);
-    return `<main><section>${hero.eyebrow ? `<p>${escapeXml(hero.eyebrow)}</p>` : ''}<h1>${escapeXml(hero.title || meta.title)}</h1><p>${escapeXml(hero.description || meta.description)}</p>${heroImage ? `<img src="${escapeAttribute(heroImage)}" alt="${escapeAttribute(hero.title || 'Cabinet dentaire à ' + cityName)}" fetchpriority="high" decoding="async" />` : ''}<p><a href="${escapeAttribute(appPath('/contact'))}">${escapeXml(hero.primaryAction || 'Contacter le cabinet')}</a></p></section><section><h2>Soins dentaires</h2>${renderServiceMarkup()}</section></main>`;
+    const eyebrow = english ? hero.eyebrowEn || `Dental practice in ${cityName}` : hero.eyebrow;
+    const heroTitle = english ? hero.titleEn || `Attentive dental care in ${cityName}.` : hero.title;
+    const heroDescription = english ? hero.descriptionEn || `Cabinet Sourire Serein welcomes patients at Clinique La Bienveillance in ${cityName} for dental consultations and care.` : hero.description;
+    const action = english ? hero.primaryActionEn || 'Contact the practice' : hero.primaryAction || 'Contacter le cabinet';
+    return `<main><section>${eyebrow ? `<p>${escapeXml(eyebrow)}</p>` : ''}<h1>${escapeXml(heroTitle || meta.title)}</h1><p>${escapeXml(heroDescription || meta.description)}</p>${heroImage ? `<img src="${escapeAttribute(heroImage)}" alt="${escapeAttribute(heroTitle || 'Dental practice in ' + cityName)}" fetchpriority="high" decoding="async" />` : ''}<p><a href="${escapeAttribute(appPath(english ? '/en/contact' : '/contact'))}">${escapeXml(action)}</a></p></section><section><h2>${english ? 'Dental services' : 'Soins dentaires'}</h2>${renderServiceMarkup(english)}</section><section><h2>${english ? 'Why choose our practice?' : 'Pourquoi choisir notre cabinet ?'}</h2><p>${english ? 'Clear information, time to ask questions and a conversation shaped around your needs.' : 'Des informations claires, du temps pour poser vos questions et un échange adapté à vos besoins.'}</p><a href="${escapeAttribute(appPath(english ? '/en/why-choose-us' : '/pourquoi-nous-choisir'))}">${english ? 'Learn more' : 'En savoir plus'}</a></section></main>`;
   }
-  if (normalizedRoute === '/soins') {
-    return `<main>${heading}${intro}${renderServiceMarkup()}</main>`;
+  if (normalizedRoute === '/soins' || normalizedRoute === '/services') {
+    return `<main>${heading}${intro}${renderServiceMarkup(english)}</main>`;
   }
-  if (normalizedRoute === '/equipe') {
+  const serviceMatch = normalizedRoute.match(/^\/(?:soins|services)\/([^/]+)$/);
+  if (serviceMatch) {
+    const service = (publicContent.services ?? []).find((item) => item.slug === serviceMatch[1] || item.slugEn === serviceMatch[1] || englishService(item).slug === serviceMatch[1]);
+    if (!service) return `<main>${heading}<p>${english ? 'This service page could not be found.' : 'Cette fiche de soin est introuvable.'}</p></main>`;
+    const translated = englishService(service);
+    const title = english ? translated.title : service.title;
+    const summary = english ? translated.summary : service.summary;
+    const description = english ? translated.description : service.description;
+    const purpose = english ? translated.purpose : service.purpose;
+    const steps = (english ? translated.procedureSteps : service.procedureSteps)?.split(/\r?\n/).filter(Boolean) || [];
+    const image = httpsImageUrl(service.imageUrl);
+    const whatsapp = 'https://wa.me/237677873442';
+    return `<main><a href="${escapeAttribute(appPath(english ? '/en/services/' : '/soins/'))}">${english ? 'All services' : 'Tous les soins'}</a><article><h1>${escapeXml(title)}</h1><p>${escapeXml(summary)}</p>${image ? `<img src="${escapeAttribute(image)}" alt="${escapeAttribute(english ? translated.imageAlt : service.imageAlt || title)}" fetchpriority="high" decoding="async" />` : ''}<h2>${english ? 'About this care' : 'À propos de ce soin'}</h2><p>${escapeXml(description)}</p>${purpose ? `<h2>${english ? 'What is this care for?' : 'À quoi sert ce soin ?'}</h2><p>${escapeXml(purpose)}</p>` : ''}<h2>${english ? 'Your visit, step by step' : 'Votre parcours, étape par étape'}</h2>${steps.length ? `<ol>${steps.map((step) => `<li>${escapeXml(step)}</li>`).join('')}</ol>` : `<p>${english ? 'The practice will explain the general steps and options based on your situation.' : 'Le cabinet vous expliquera les étapes générales et les options selon votre situation.'}</p>`}<h2>${english ? 'Questions about this service?' : 'Une question sur ce soin ?'}</h2><p>${english ? 'Contact the practice for information and to discuss your request.' : 'Contactez le cabinet pour obtenir des renseignements et échanger sur votre demande.'}</p><p><a href="${escapeAttribute(whatsapp)}" rel="noopener noreferrer" target="_blank">WhatsApp +237 677 873 442</a> · <a href="mailto:bienveillanceclinique4@gmail.com">bienveillanceclinique4@gmail.com</a></p></article></main>`;
+  }
+  if (normalizedRoute === '/pourquoi-nous-choisir' || normalizedRoute === '/why-choose-us') {
+    return `<main><h1>${english ? 'Your smile, our attention at every step.' : 'Votre sourire, notre attention à chaque étape.'}</h1><p>${english ? 'Choosing a dental practice also means choosing how you are welcomed. We aim for clear conversations, attentive listening and respect for your pace.' : 'Choisir un cabinet, c’est aussi choisir la façon dont on vous accueille. Nous privilégions les échanges clairs, l’écoute attentive et le respect de votre rythme.'}</p><h2>${english ? 'A chance to be heard' : 'Être écouté'}</h2><p>${english ? 'Your questions, expectations and concerns belong in the conversation.' : 'Vos questions, vos attentes et vos préoccupations ont leur place dans la conversation.'}</p><h2>${english ? 'Clear information' : 'Comprendre les soins'}</h2><p>${english ? 'Information is shared in plain language so you can ask the questions that matter to you.' : 'Les informations vous sont présentées clairement afin que vous puissiez poser vos questions.'}</p><h2>${english ? 'At your own pace' : 'Avancer à votre rythme'}</h2><p>${english ? 'You can take time to understand the options discussed before deciding what to do next.' : 'Vous pouvez prendre le temps de comprendre les options proposées avant de décider de la suite.'}</p><p>${english ? 'The practice welcomes patients in Douala within the setting of Clinique La Bienveillance.' : 'Le Cabinet Sourire Serein vous accueille à Douala dans l’environnement de la Clinique La Bienveillance.'}</p></main>`;
+  }
+  if (normalizedRoute === '/equipe' || normalizedRoute === '/team') {
     const members = (publicContent.team ?? []).filter((member) =>
       member.name && member.role && !isProvisionalCopy(member.name, member.role, member.biography));
-    const items = members.map((member) => `<article><h2>${escapeXml(member.name)}</h2><p>${escapeXml(member.role)}</p>${member.biography ? `<p>${escapeXml(member.biography)}</p>` : ''}${httpsImageUrl(member.imageUrl) ? `<img src="${escapeAttribute(httpsImageUrl(member.imageUrl))}" alt="${escapeAttribute(`Portrait de ${member.name}`)}" loading="lazy" decoding="async" />` : ''}</article>`).join('');
-    return `<main>${heading}${intro}${items || '<p>Les informations de l’équipe seront publiées prochainement.</p>'}</main>`;
+    const items = members.map((member) => `<article><h2>${escapeXml(member.name)}</h2><p>${escapeXml(english ? member.roleEn || 'Dental care professional' : member.role)}</p>${(english ? member.biographyEn : member.biography) ? `<p>${escapeXml(english ? member.biographyEn : member.biography)}</p>` : ''}${httpsImageUrl(member.imageUrl) ? `<img src="${escapeAttribute(httpsImageUrl(member.imageUrl))}" alt="${escapeAttribute(english ? `Portrait of ${member.name}` : `Portrait de ${member.name}`)}" loading="lazy" decoding="async" />` : ''}</article>`).join('');
+    return `<main>${heading}${intro}${items || `<p>${english ? 'Team information will be published soon.' : 'Les informations de l’équipe seront publiées prochainement.'}</p>`}</main>`;
   }
-  if (normalizedRoute === '/galerie') {
+  if (normalizedRoute === '/galerie' || normalizedRoute === '/gallery') {
     const images = (publicContent.gallery ?? []).filter((image) => httpsImageUrl(image.imageUrl) && image.alt && !isProvisionalCopy(image.alt));
-    const items = images.map((image) => `<figure><img src="${escapeAttribute(httpsImageUrl(image.imageUrl))}" alt="${escapeAttribute(image.alt)}" loading="lazy" decoding="async" /><figcaption>${escapeXml(image.alt)}</figcaption></figure>`).join('');
-    return `<main>${heading}${intro}${items || '<p>Les photos du cabinet seront publiées prochainement.</p>'}</main>`;
+    const items = images.map((image) => `<figure><img src="${escapeAttribute(httpsImageUrl(image.imageUrl))}" alt="${escapeAttribute(english ? image.altEn || 'Photo of the dental practice.' : image.alt)}" loading="lazy" decoding="async" /><figcaption>${escapeXml(english ? image.altEn || 'Photo of the dental practice.' : image.alt)}</figcaption></figure>`).join('');
+    return `<main>${heading}${intro}${items || `<p>${english ? 'Practice photos will be published soon.' : 'Les photos du cabinet seront publiées prochainement.'}</p>`}</main>`;
   }
-  if (normalizedRoute === '/avis') {
+  if (normalizedRoute === '/avis' || normalizedRoute === '/reviews') {
     const reviews = (publicContent.testimonials ?? []).filter((review) =>
       review.quote && !isProvisionalCopy(review.name, review.quote, review.service));
-    const items = reviews.map((review) => `<article><h2>${escapeXml(review.name || 'Avis de patient')}</h2>${review.service ? `<p>${escapeXml(review.service)}</p>` : ''}<blockquote>${escapeXml(review.quote)}</blockquote></article>`).join('');
-    return `<main>${heading}${intro}${items || '<p>Les avis seront affichés après leur validation.</p>'}</main>`;
+    const items = reviews.map((review) => `<article><h2>${escapeXml(review.name || (english ? 'Visitor review' : 'Avis de visiteur'))}</h2>${review.service ? `<p>${escapeXml(english ? review.serviceEn || 'Dental care' : review.service)}</p>` : ''}<blockquote>${escapeXml(review.quote)}</blockquote>${english && !review.quoteEn ? '<p><small>Review originally submitted in French.</small></p>' : ''}</article>`).join('');
+    return `<main>${heading}${intro}${items || `<p>${english ? 'Reviews will appear after they have been approved.' : 'Les avis seront affichés après leur validation.'}</p>`}</main>`;
   }
   if (normalizedRoute === '/faq') {
     const faqs = (publicContent.faqs ?? []).filter((faq) =>
       faq.question && faq.answer && !isProvisionalCopy(faq.question, faq.answer));
-    const items = faqs.map((faq) => `<details><summary>${escapeXml(faq.question)}</summary><p>${escapeXml(faq.answer)}</p></details>`).join('');
-    return `<main>${heading}${intro}${items || '<p>Les réponses aux questions fréquentes seront publiées prochainement.</p>'}</main>`;
+    const items = faqs.map((faq) => {
+      const translated = englishFaq(faq);
+      return `<details><summary>${escapeXml(english ? translated.question : faq.question)}</summary><p>${escapeXml(english ? translated.answer : faq.answer)}</p></details>`;
+    }).join('');
+    return `<main>${heading}${intro}${items || `<p>${english ? 'Answers to common questions will be published soon.' : 'Les réponses aux questions fréquentes seront publiées prochainement.'}</p>`}</main>`;
   }
-  if (normalizedRoute === '/informations' || normalizedRoute === '/contact') {
+  if (normalizedRoute === '/informations' || normalizedRoute === '/contact' || normalizedRoute === '/information') {
     const rows = [
-      clinic.address ? `<p><strong>Adresse :</strong> ${escapeXml(clinic.address)}</p>` : '',
-      clinic.phone ? `<p><strong>Téléphone :</strong> <a href="tel:${escapeAttribute(clinic.phone)}">${escapeXml(clinic.phone)}</a></p>` : '',
-      clinic.email ? `<p><strong>Courriel :</strong> <a href="mailto:${escapeAttribute(clinic.email)}">${escapeXml(clinic.email)}</a></p>` : '',
-      clinic.openingHours ? `<p><strong>Horaires :</strong> ${escapeXml(clinic.openingHours)}</p>` : '',
+      clinic.address ? `<p><strong>${english ? 'Address' : 'Adresse'}:</strong> ${escapeXml(clinic.address)}</p>` : '',
+      clinic.phone ? `<p><strong>${english ? 'Phone' : 'Téléphone'}:</strong> <a href="tel:${escapeAttribute(clinic.phone)}">${escapeXml(clinic.phone)}</a></p>` : '',
+      clinic.email ? `<p><strong>Email:</strong> <a href="mailto:${escapeAttribute(clinic.email)}">${escapeXml(clinic.email)}</a></p>` : '',
+      clinic.openingHours ? `<p><strong>${english ? 'Opening hours' : 'Horaires'}:</strong> ${escapeXml(clinic.openingHours)}</p>` : '',
     ].filter(Boolean).join('');
-    return `<main>${heading}${intro}${rows || `<p>Contactez le cabinet dentaire à ${escapeXml(cityName)} pour obtenir ses coordonnées et horaires.</p>`}</main>`;
+    return `<main>${heading}${intro}${rows || `<p>${english ? `Contact the dental practice in ${escapeXml(cityName)} for its address and opening hours.` : `Contactez le cabinet dentaire à ${escapeXml(cityName)} pour obtenir ses coordonnées et horaires.`}</p>`}</main>`;
   }
+  if (normalizedRoute === '/confidentialite' || normalizedRoute === '/privacy') return `<main>${heading}${intro}<p>${english ? 'Contact the practice to ask questions about personal data or exercise your rights.' : 'Contactez le cabinet pour poser vos questions sur les données personnelles ou exercer vos droits.'}</p></main>`;
   return `<main>${heading}${intro}</main>`;
 }
 
@@ -385,7 +639,8 @@ const baseTemplate = await readFile(indexPath, 'utf8');
 const routesToRender = [...routes];
 for (const route of routesToRender) {
   const metadata = pageMetadata(route);
-  const body = route.replace(/\/+$/, '') === '/blog' || route.startsWith('/blog/')
+  const localRoute = route.replace(/^\/en(?=\/|$)/, '') || '/';
+  const body = localRoute.replace(/\/+$/, '') === '/blog' || localRoute.startsWith('/blog/')
     ? renderBlogMarkup(route)
     : renderPublicMarkup(route, metadata);
   const prerendered = withPageMetadata(baseTemplate, route).replace(

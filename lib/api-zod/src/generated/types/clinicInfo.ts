@@ -13,6 +13,7 @@ export interface ClinicInfo {
   phone: string;
   email: string;
   openingHours: string;
+  openingHoursEn?: string;
   bookingUrl: string;
   mapUrl: string;
   logoUrl: string;

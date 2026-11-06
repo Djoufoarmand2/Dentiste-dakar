@@ -10,4 +10,5 @@ export interface GalleryImage {
   id: string;
   alt: string;
   imageUrl: string;
+  altEn?: string;
 }

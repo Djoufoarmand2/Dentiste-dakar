@@ -13,4 +13,14 @@ export interface ServiceItem {
   summary: string;
   description: string;
   imageUrl: string;
+  titleEn?: string;
+  slugEn?: string;
+  summaryEn?: string;
+  descriptionEn?: string;
+  purpose?: string;
+  purposeEn?: string;
+  procedureSteps?: string;
+  procedureStepsEn?: string;
+  imageAlt?: string;
+  imageAltEn?: string;
 }

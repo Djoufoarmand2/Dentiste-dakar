@@ -1,0 +1,132 @@
+{
+  "services": {
+    "chirurgie-dentaire": {
+      "slugEn": "dental-surgery",
+      "title": "Dental surgery",
+      "summary": "Assessment and care based on clinical indication.",
+      "description": "The type of procedure, precautions and follow-up are explained by the professional before care is provided.",
+      "purpose": "To discuss an oral health concern that may require a procedure and understand the options after an individual assessment.",
+      "procedureSteps": "Contact the practice and explain your request.\nDiscuss relevant health information, questions and concerns.\nThe practitioner assesses your situation and explains any proposed examination.\nPossible options, precautions and follow-up are discussed before a decision.\nYou can ask questions and agree on next steps with the practitioner.",
+      "imageAlt": "Illustration of a dental consultation about possible surgical care."
+    },
+    "consultation-dentaire": {
+      "slugEn": "dental-consultation",
+      "title": "Dental consultation",
+      "summary": "An assessment and conversation to review your oral health.",
+      "description": "A consultation gives you time to explain your needs and discuss with the professional which examinations or care may be appropriate for your situation.",
+      "purpose": "To explain your concern, ask questions and discuss possible next steps with a dental professional.",
+      "procedureSteps": "Contact the practice and describe the reason for your visit.\nShare your questions and relevant health information.\nThe practitioner discusses your request and may examine your mouth with your agreement.\nThe practitioner explains observations and any options that may be suitable.\nYou discuss possible next steps together.",
+      "imageAlt": "Illustration of a patient speaking with a dental professional."
+    },
+    "detartrage-polissage": {
+      "slugEn": "scaling-and-polishing",
+      "title": "Scaling and polishing",
+      "summary": "A dental hygiene service provided at the practice.",
+      "description": "The professional assesses your needs and explains whether scaling or polishing is appropriate, along with any oral care advice for your situation.",
+      "purpose": "To discuss your oral hygiene needs and whether a professional cleaning may be appropriate after an assessment.",
+      "procedureSteps": "Tell the practice what you would like help with and mention any sensitivity or concerns.\nThe practitioner asks about your oral health and any relevant care you have received.\nAn examination is carried out if appropriate and with your agreement.\nThe practitioner explains whether scaling or polishing is suitable and answers your questions.\nYou can discuss after-care advice and any follow-up that may be useful.",
+      "imageAlt": "Illustration of a dental hygiene appointment."
+    },
+    "kinesitherapie-maxillo-faciale": {
+      "slugEn": "maxillofacial-physiotherapy",
+      "title": "Dental and maxillofacial physiotherapy",
+      "summary": "Functional support after an assessment of your needs.",
+      "description": "The indications and arrangements are discussed with the professional based on your symptoms, an examination and, if needed, an appropriate referral.",
+      "purpose": "To discuss jaw or facial discomfort and whether functional support or another referral may be appropriate.",
+      "procedureSteps": "Describe the discomfort, when it started and what seems to affect it.\nShare relevant health information and details of any previous assessment or care.\nThe professional evaluates your request and explains whether this service may be suitable.\nIf appropriate, the goals and proposed approach are discussed before any care begins.\nFollow-up or referral options are discussed according to your situation.",
+      "imageAlt": "Illustration of a conversation about jaw and facial function."
+    },
+    "laboratoire-prothetique": {
+      "slugEn": "prosthetic-dental-laboratory",
+      "title": "Dental prosthetics laboratory",
+      "summary": "A prosthetics laboratory associated with the practice's care.",
+      "description": "Prosthetic options are determined with the practitioner after an assessment and an explanation of choices that may suit your situation.",
+      "purpose": "To discuss dental prosthetic options with the practitioner after an individual assessment.",
+      "procedureSteps": "Explain your request and any concerns about the tooth or prosthesis.\nThe practitioner assesses your situation and discusses possible options.\nThe purpose, limitations and expected stages are explained before a decision.\nIf a prosthesis is considered appropriate, the practitioner explains the planning and follow-up.\nYou can ask questions at each stage and discuss next steps together.",
+      "imageAlt": "Illustration of dental prosthetic planning."
+    },
+    "maternite-clinique-bienveillance": {
+      "slugEn": "maternity-at-clinique-la-bienveillance",
+      "title": "Maternity services at Clinique La Bienveillance",
+      "summary": "A service of the partner clinic that hosts the dental practice.",
+      "description": "Maternity services belong to Clinique La Bienveillance, not to the dental practice. Contact the clinic directly to confirm its services and arrangements.",
+      "purpose": "To help distinguish the partner clinic's maternity services from the dental practice's dental care.",
+      "procedureSteps": "Contact Clinique La Bienveillance directly to ask about its maternity services.\nConfirm the clinic's current arrangements, availability and contact details with its team.\nFor dental questions, contact Cabinet Sourire Serein separately.",
+      "imageAlt": "Illustration identifying Clinique La Bienveillance as the partner clinic."
+    },
+    "plombage-composite": {
+      "slugEn": "composite-filling",
+      "title": "Dental filling and composite restoration",
+      "summary": "Dental restorations offered based on an individual assessment.",
+      "description": "The choice of material and technique is discussed with the practitioner based on the tooth involved and your situation.",
+      "purpose": "To discuss a damaged or affected tooth and understand which restoration options may be suitable.",
+      "procedureSteps": "Explain what is bothering you and mention any sensitivity or pain.\nThe practitioner examines the tooth if appropriate and discusses relevant findings.\nPossible restoration options, materials and limitations are explained.\nYou can ask questions before agreeing on the next step.\nAny follow-up advice is discussed with the practitioner.",
+      "imageAlt": "Illustration of a dental consultation about a tooth restoration."
+    },
+    "traitement-caries": {
+      "slugEn": "tooth-decay-treatment",
+      "title": "Tooth decay treatment",
+      "summary": "Care following an examination by a dental professional.",
+      "description": "Care depends on the clinical examination and the extent of the affected area. The practitioner explains the options before any procedure.",
+      "purpose": "To assess a possible cavity and discuss treatment options with a dental professional.",
+      "procedureSteps": "Describe your symptoms and when they started.\nThe practitioner asks about relevant health information and examines the tooth if appropriate.\nThe findings and possible options are explained in terms you can understand.\nYou can ask questions about the proposed care before deciding how to proceed.\nThe practitioner discusses any follow-up that may be needed.",
+      "imageAlt": "Illustration of a dental examination for possible tooth decay."
+    }
+  },
+  "blogPosts": {
+    "detartrage-polissage-questions": {
+      "slugEn": "scaling-and-polishing-questions",
+      "title": "Scaling and polishing: questions to ask",
+      "excerpt": "What is a dental hygiene appointment for, and how can you discuss it with your practitioner?",
+      "author": "Cabinet Sourire Serein team",
+      "imageAlt": "Illustration of a dental hygiene appointment.",
+      "content": "## Talk about your habits and expectations\nDuring your appointment, tell the dental professional about sensitive areas, any bleeding and care you have already received. This information helps the professional tailor the examination and advice to your situation.\n\n## Care is considered after an assessment\nThe professional explains whether scaling or polishing is appropriate and answers your questions about what the visit may involve. Follow-up frequency depends on an individual assessment and is not the same for everyone.\n\n## After your appointment\nAsk for oral care advice suited to your teeth and gums. If pain persists or you notice an unusual symptom after care, contact the practice for advice."
+    },
+    "grossesse-sante-bucco-dentaire": {
+      "slugEn": "pregnancy-and-dental-care",
+      "title": "Pregnancy and dental care: talk with your practitioner",
+      "excerpt": "Why it is useful to mention pregnancy and ask for advice before dental care or medication.",
+      "author": "Cabinet Sourire Serein team",
+      "imageAlt": "Illustration of a patient discussing dental care during pregnancy.",
+      "content": "## Mention your pregnancy from the first conversation\nIf you are pregnant or think you may be, tell the professional before an examination, treatment or medication. If you know it, mention how far along you are and any advice you have received from your maternity care team.\n\n## Ask for advice suited to your situation\nThe timing and arrangements for care depend on its urgency, your health and the clinical assessment. If useful, the practitioner may discuss your care with your maternity professional.\n\n## Do not wait for advice if a concern feels urgent\nIf you have pain, swelling or another worrying symptom, contact a health professional to ask what to do. This article provides general information and does not replace personalised advice."
+    },
+    "kinesitherapie-maxillo-faciale-informations": {
+      "slugEn": "maxillofacial-physiotherapy-what-to-know",
+      "title": "Maxillofacial physiotherapy: when to ask for advice",
+      "excerpt": "A few points to help you prepare a conversation about your jaw and its function.",
+      "author": "Cabinet Sourire Serein team",
+      "imageAlt": "Illustration of a patient discussing jaw and facial function.",
+      "content": "## Describe the discomfort clearly\nIf you have discomfort in your jaw or face, explain when it occurs, how long it has been present and what seems to make it worse. Also mention any care or examinations you have already had.\n\n## Suitability depends on an assessment\nDental or maxillofacial physiotherapy is not appropriate for every situation. The professional assesses your needs and explains whether this support may be suitable or whether another referral is needed.\n\n## Prepare your questions\nYou can ask about the aim of the proposed care, what it may involve and what follow-up is being considered. The answers depend on your examination and individual situation."
+    },
+    "urgence-dentaire-douala-que-faire": {
+      "slugEn": "dental-pain-in-douala-what-to-do",
+      "title": "Dental pain in Douala: how to contact the practice",
+      "excerpt": "General guidance on asking for an assessment and knowing when to seek urgent medical help.",
+      "author": "Cabinet Sourire Serein team",
+      "imageAlt": "Illustration of a dental professional discussing tooth pain with a patient.",
+      "content": "## Contact the practice\nIf dental pain is severe or getting worse, call Cabinet Sourire Serein on +237 677 87 34 42 to explain what is happening and confirm that the dental service is available. The listed hours are 24 hours a day, 7 days a week; call before travelling to confirm how you can be seen.\n\n## While waiting for professional advice\nDescribe your symptoms and mention any medicines you have taken or known allergies. Do not place medicine directly on a tooth or gum, and do not take treatment that has not been recommended by a professional.\n\n## When to seek urgent medical help\nDifficulty breathing or swallowing, significant facial swelling, a serious injury or uncontrolled bleeding requires urgent medical help. This article gives general guidance and does not replace an examination or medical advice."
+    }
+  },
+  "faqs": {
+    "Comment prendre rendez-vous ?": {
+      "question": "How can I request an appointment?",
+      "answer": "Call or message us on WhatsApp at +237 677 87 34 42. You can also send a request through the contact form."
+    },
+    "Où se trouve le cabinet ?": {
+      "question": "Where is the practice located?",
+      "answer": "Cabinet Sourire Serein is located at Clinique La Bienveillance, Ancienne gare routière, Dakar, Douala, Cameroon. Use the Google Maps link on the Contact page for directions."
+    },
+    "Quels sont les horaires affichés ?": {
+      "question": "What are the listed opening hours?",
+      "answer": "The practice hours provided are 24 hours a day, 7 days a week. Call before travelling to confirm that the dental service is available, especially outside usual hours."
+    },
+    "Quels soins dentaires sont présentés ?": {
+      "question": "Which dental services are listed?",
+      "answer": "The listed services include dental consultations, scaling and polishing, tooth decay care, composite restorations, maxillofacial physiotherapy, prosthetics and dental surgery. The appropriate care is determined after an assessment."
+    },
+    "La maternité fait-elle partie du cabinet dentaire ?": {
+      "question": "Is the maternity unit part of the dental practice?",
+      "answer": "No. Maternity services belong to Clinique La Bienveillance, the partner clinic that hosts the dental practice. Contact the partner clinic directly about those services."
+    }
+  }
+}

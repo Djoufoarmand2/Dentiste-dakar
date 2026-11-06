@@ -28,6 +28,7 @@ import {
   appointmentProviderName,
   submitAppointmentRequest,
 } from "@/lib/appointment-delivery";
+import { useSiteLocale } from "@/lib/site-locale";
 
 type AppointmentFormValues = Omit<ContactAppointmentInput, "service"> & {
   service: ContactAppointmentInput["service"] | "";
@@ -55,6 +56,8 @@ const defaultValues: AppointmentFormValues = {
 };
 
 export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?: string }) {
+  const locale = useSiteLocale();
+  const en = locale === "en";
   const form = useForm<AppointmentFormValues>({ defaultValues, mode: "onChange" });
   const request = useMutation({
     mutationFn: submitAppointmentRequest,
@@ -76,7 +79,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
     if (!values.service) {
       form.setError("service", {
         type: "required",
-        message: "Choisissez un soin.",
+        message: en ? "Please choose a service." : "Choisissez un soin.",
       });
       return;
     }
@@ -115,23 +118,23 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           <FormField
             control={form.control}
             name="name"
-            rules={{ required: "Indiquez votre nom et prénom.", maxLength: 120 }}
+            rules={{ required: en ? "Enter your full name." : "Indiquez votre nom et prénom.", maxLength: 120 }}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Nom et prénom *</FormLabel>
+                <FormLabel>{en ? "Full name *" : "Nom et prénom *"}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     name={field.name}
                     autoComplete="name"
-                    placeholder="Ex. Jean Dupont"
+                    placeholder={en ? "e.g. Amina Njoya" : "Ex. Jean Dupont"}
                     maxLength={120}
                     className="bg-white"
                     data-testid="input-appointment-name"
                   />
                 </FormControl>
                 <FormDescription className="sr-only">
-                  Votre nom et prénom sont obligatoires.
+                  {en ? "Your full name is required." : "Votre nom et prénom sont obligatoires."}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -141,16 +144,16 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             control={form.control}
             name="phone"
             rules={{
-              required: "Indiquez votre numéro de téléphone.",
-              maxLength: { value: 40, message: "Le numéro est trop long." },
+              required: en ? "Enter your phone number." : "Indiquez votre numéro de téléphone.",
+              maxLength: { value: 40, message: en ? "The number is too long." : "Le numéro est trop long." },
               validate: (value) => {
                 const digits = value.replace(/\D/g, "");
-                return (digits.length >= 8 && digits.length <= 15) || "Saisissez un numéro de téléphone valide.";
+                return (digits.length >= 8 && digits.length <= 15) || (en ? "Enter a valid phone number." : "Saisissez un numéro de téléphone valide.");
               },
             }}
             render={({ field, fieldState }) => (
               <FormItem>
-                <FormLabel>Numéro de téléphone *</FormLabel>
+                <FormLabel>{en ? "Phone number *" : "Numéro de téléphone *"}</FormLabel>
                 <FormControl>
                   <Input
                     {...field}
@@ -165,7 +168,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
                   />
                 </FormControl>
                 <FormDescription className="sr-only">
-                  Votre numéro de téléphone est obligatoire.
+                  {en ? "Your phone number is required." : "Votre numéro de téléphone est obligatoire."}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -177,16 +180,16 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           control={form.control}
           name="email"
           rules={{
-            required: "Indiquez votre adresse e-mail.",
+            required: en ? "Enter your email address." : "Indiquez votre adresse e-mail.",
             pattern: {
               value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "Saisissez une adresse e-mail valide.",
+              message: en ? "Enter a valid email address." : "Saisissez une adresse e-mail valide.",
             },
             maxLength: 254,
           }}
             render={({ field, fieldState }) => (
             <FormItem>
-              <FormLabel>Adresse e-mail *</FormLabel>
+              <FormLabel>{en ? "Email address *" : "Adresse e-mail *"}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -201,7 +204,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
                 />
               </FormControl>
               <FormDescription className="sr-only">
-                Votre adresse e-mail est obligatoire.
+                  {en ? "Your email address is required." : "Votre adresse e-mail est obligatoire."}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -211,10 +214,10 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
         <FormField
           control={form.control}
           name="service"
-          rules={{ required: "Choisissez un soin." }}
+          rules={{ required: en ? "Please choose a service." : "Choisissez un soin." }}
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Soin ou consultation *</FormLabel>
+              <FormLabel>{en ? "Service or consultation *" : "Soin ou consultation *"}</FormLabel>
               <FormControl>
                 <select
                   {...field}
@@ -223,16 +226,24 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
                   className="editor-input bg-white"
                   data-testid="select-appointment-service"
                 >
-                  <option value="">Choisissez un soin</option>
+                  <option value="">{en ? "Choose a service" : "Choisissez un soin"}</option>
                   {serviceOptions.map((service) => (
                     <option key={service} value={service}>
-                      {service}
+                      {en ? ({
+                        "Consultation dentaire": "Dental consultation",
+                        "Détartrage et polissage": "Scaling and polishing",
+                        "Traitement des caries": "Cavity treatment",
+                        "Plombage / composite": "Filling / composite",
+                        "Kinésithérapie dentaire / maxillo-faciale": "Dental / maxillofacial physiotherapy",
+                        "Laboratoire prothétique": "Prosthetics laboratory",
+                        "Chirurgie dentaire": "Dental surgery",
+                      } as Record<string, string>)[service] : service}
                     </option>
                   ))}
                 </select>
               </FormControl>
               <FormDescription className="sr-only">
-                Sélectionnez le soin souhaité.
+                {en ? "Select the service you are interested in." : "Sélectionnez le soin souhaité."}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -244,7 +255,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           name="preferredDate"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date souhaitée <span className="font-normal text-muted-foreground">(facultatif)</span></FormLabel>
+              <FormLabel>{en ? "Preferred date" : "Date souhaitée"} <span className="font-normal text-muted-foreground">({en ? "optional" : "facultatif"})</span></FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -255,7 +266,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
                 />
               </FormControl>
               <FormDescription className="sr-only">
-                Vous pouvez laisser ce champ vide.
+                {en ? "You may leave this field blank." : "Vous pouvez laisser ce champ vide."}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -267,20 +278,20 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           name="message"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Message ou précisions <span className="font-normal text-muted-foreground">(facultatif)</span></FormLabel>
+              <FormLabel>{en ? "Message or details" : "Message ou précisions"} <span className="font-normal text-muted-foreground">({en ? "optional" : "facultatif"})</span></FormLabel>
               <FormControl>
                 <Textarea
                   {...field}
                   name={field.name}
                   rows={4}
                   maxLength={2000}
-                  placeholder="Décrivez votre besoin ou vos disponibilités..."
+                  placeholder={en ? "Tell us what you need or when you are available..." : "Décrivez votre besoin ou vos disponibilités..."}
                   className="min-h-28 bg-white"
                   data-testid="textarea-appointment-message"
                 />
               </FormControl>
               <FormDescription className="sr-only">
-                Décrivez votre besoin ou vos disponibilités.
+                {en ? "Tell us what you need or when you are available." : "Décrivez votre besoin ou vos disponibilités."}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -291,7 +302,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden"
           aria-hidden="true"
         >
-          <label htmlFor="appointment-website">Ne pas remplir ce champ</label>
+          <label htmlFor="appointment-website">{en ? "Leave this field blank" : "Ne pas remplir ce champ"}</label>
           <input
             id="appointment-website"
             type="text"
@@ -308,10 +319,10 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             className="rounded-md border border-[#e7c8c1] bg-[#f8e9e5] p-4 text-sm leading-6 text-[#943d35]"
             data-testid="status-appointment-error"
           >
-            {request.error instanceof Error && request.error.message
+            {en ? "Your request could not be sent. Please try again." : (request.error instanceof Error && request.error.message
               ? request.error.message
-              : "L’envoi n’a pas abouti. Réessayez."}{" "}
-            Contactez le cabinet par téléphone au{" "}
+              : "L’envoi n’a pas abouti. Réessayez.")}{" "}
+            {en ? "Contact the practice by phone at " : "Contactez le cabinet par téléphone au "}
             <a href={`tel:${phoneLink}`} className="font-semibold underline underline-offset-2">
               {phone}
             </a>.
@@ -329,20 +340,22 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             {request.isPending ? (
               <>
                 <LoaderCircle size={16} className="animate-spin" />
-                Envoi en cours…
+                {en ? "Sending…" : "Envoi en cours…"}
               </>
             ) : (
               <>
-                Confirmer la demande de RDV
+                {en ? "Send appointment request" : "Confirmer la demande de RDV"}
                 <ArrowRight size={16} />
               </>
             )}
           </Button>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
             {appointmentProviderName
-              ? `Votre demande sera enregistrée dans Supabase et notifiée via ${appointmentProviderName}.`
-              : "Votre demande sera enregistrée dans l’espace privé du cabinet."}{" "}
-            Elle ne confirme pas encore un rendez-vous.
+              ? (en
+                ? `Your request will be recorded in Supabase and a notification sent via ${appointmentProviderName}.`
+                : `Votre demande sera enregistrée dans Supabase et notifiée via ${appointmentProviderName}.`)
+              : (en ? "Your request will be stored in the practice's private workspace." : "Votre demande sera enregistrée dans l’espace privé du cabinet.")}{" "}
+            {en ? "This does not confirm an appointment." : "Elle ne confirme pas encore un rendez-vous."}
           </p>
         </div>
       </form>
@@ -359,20 +372,21 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             <CheckCircle2 size={27} aria-hidden="true" />
           </span>
           <DialogTitle className="font-display text-2xl text-[#073e53]">
-            Demande enregistrée
+            {en ? "Request received" : "Demande enregistrée"}
           </DialogTitle>
           <DialogDescription
             role="status"
             className="pt-2 text-sm leading-6"
             data-testid="status-appointment-success"
           >
-            Votre demande a bien été reçue. Le cabinet vous recontactera pour
-            confirmer le rendez-vous. L’envoi de ce formulaire ne réserve pas
-            encore de créneau.
+            {en
+              ? "Your request has been received. The practice will contact you to confirm an appointment. Submitting this form does not reserve a time slot."
+              : "Votre demande a bien été reçue. Le cabinet vous recontactera pour confirmer le rendez-vous. L’envoi de ce formulaire ne réserve pas encore de créneau."}
             {notificationSent === false && (
               <span className="mt-2 block font-medium">
-                La notification par e-mail n’a pas pu être envoyée. Votre demande reste
-                disponible pour le cabinet dans son espace privé; inutile de la renvoyer.
+                {en
+                  ? "The email notification could not be sent. Your request is still available to the practice; there is no need to send it again."
+                  : "La notification par e-mail n’a pas pu être envoyée. Votre demande reste disponible pour le cabinet dans son espace privé; inutile de la renvoyer."}
               </span>
             )}
           </DialogDescription>
@@ -385,7 +399,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
               className="btn-gold w-full sm:w-auto"
               data-testid="button-close-appointment-confirmation"
             >
-              Terminé
+              {en ? "Done" : "Terminé"}
             </Button>
           </DialogClose>
         </DialogFooter>

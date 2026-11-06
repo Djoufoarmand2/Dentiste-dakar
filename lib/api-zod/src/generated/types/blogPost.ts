@@ -16,4 +16,11 @@ export interface BlogPost {
   author: string;
   date: string;
   published: boolean;
+  titleEn?: string;
+  slugEn?: string;
+  excerptEn?: string;
+  contentEn?: string;
+  authorEn?: string;
+  imageAlt?: string;
+  imageAltEn?: string;
 }

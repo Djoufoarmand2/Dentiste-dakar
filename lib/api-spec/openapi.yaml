@@ -428,6 +428,7 @@ components:
         phone: { type: string }
         email: { type: string }
         openingHours: { type: string }
+        openingHoursEn: { type: string }
         bookingUrl: { type: string }
         mapUrl: { type: string }
         logoUrl: { type: string }
@@ -441,6 +442,11 @@ components:
         primaryAction: { type: string }
         secondaryAction: { type: string }
         imageUrl: { type: string }
+        eyebrowEn: { type: string }
+        titleEn: { type: string }
+        descriptionEn: { type: string }
+        primaryActionEn: { type: string }
+        secondaryActionEn: { type: string }
       required: [eyebrow, title, description, primaryAction, secondaryAction, imageUrl]
     ServiceItem:
       type: object
@@ -451,6 +457,16 @@ components:
         summary: { type: string }
         description: { type: string }
         imageUrl: { type: string }
+        titleEn: { type: string }
+        slugEn: { type: string }
+        summaryEn: { type: string }
+        descriptionEn: { type: string }
+        purpose: { type: string }
+        purposeEn: { type: string }
+        procedureSteps: { type: string }
+        procedureStepsEn: { type: string }
+        imageAlt: { type: string }
+        imageAltEn: { type: string }
       required: [id, title, slug, summary, description, imageUrl]
     TeamMember:
       type: object
@@ -460,6 +476,8 @@ components:
         role: { type: string }
         biography: { type: string }
         imageUrl: { type: string }
+        roleEn: { type: string }
+        biographyEn: { type: string }
       required: [id, name, role, biography, imageUrl]
     GalleryImage:
       type: object
@@ -467,6 +485,7 @@ components:
         id: { type: string }
         alt: { type: string }
         imageUrl: { type: string }
+        altEn: { type: string }
       required: [id, alt, imageUrl]
     Testimonial:
       type: object
@@ -476,6 +495,8 @@ components:
         service: { type: string }
         quote: { type: string }
         rating: { type: integer, minimum: 1, maximum: 5 }
+        serviceEn: { type: string }
+        quoteEn: { type: string }
       required: [id, name, service, quote, rating]
     FAQItem:
       type: object
@@ -483,6 +504,8 @@ components:
         id: { type: string }
         question: { type: string }
         answer: { type: string }
+        questionEn: { type: string }
+        answerEn: { type: string }
       required: [id, question, answer]
     BlogPost:
       type: object
@@ -496,6 +519,13 @@ components:
         author: { type: string }
         date: { type: string }
         published: { type: boolean }
+        titleEn: { type: string }
+        slugEn: { type: string }
+        excerptEn: { type: string }
+        contentEn: { type: string }
+        authorEn: { type: string }
+        imageAlt: { type: string }
+        imageAltEn: { type: string }
       required: [id, title, slug, excerpt, content, imageUrl, author, date, published]
     Campaign:
       type: object
@@ -507,6 +537,8 @@ components:
         imageUrl: { type: string }
         videoUrl: { type: ["string", "null"] }
         active: { type: boolean }
+        titleEn: { type: string }
+        descriptionEn: { type: string }
       required: [id, title, description, mediaType, imageUrl, videoUrl, active]
     SiteContent:
       type: object
