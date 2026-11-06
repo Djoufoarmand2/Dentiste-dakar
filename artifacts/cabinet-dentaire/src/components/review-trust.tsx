@@ -29,24 +29,6 @@ function useInView<T extends HTMLElement>() {
   return [ref, seen] as const;
 }
 
-function useCountUp(target: number, active: boolean, duration = 900) {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    if (!active) return;
-    if (prefersReducedMotion()) { setValue(target); return; }
-    const start = performance.now();
-    let frame = 0;
-    const tick = (now: number) => {
-      const p = Math.min(1, (now - start) / duration);
-      setValue(target * (1 - Math.pow(1 - p, 3)));
-      if (p < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [active, target, duration]);
-  return value;
-}
-
 function RatingStars({ value, size = 22 }: { value: number; size?: number }) {
   const pct = Math.max(0, Math.min(100, (value / 5) * 100));
   const row = (cls: string) => <span className={cls} style={{ fontSize: size }}>{'★★★★★'}</span>;
@@ -70,7 +52,6 @@ export function ReviewTrustPanel({ testimonials, ctaHref, ctaLabel, variant = 'p
   const { query, summary } = useCombinedReviewSummary(testimonials);
   const [ref, seen] = useInView<HTMLDivElement>();
   const average = summary.average ?? 0;
-  const animatedCount = useCountUp(summary.count, seen);
   const fmt = new Intl.NumberFormat(locale === 'en' ? 'en' : 'fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const isAnchor = ctaHref.startsWith('#');
   const ctaClass = 'trust-cta';
@@ -91,12 +72,13 @@ export function ReviewTrustPanel({ testimonials, ctaHref, ctaLabel, variant = 'p
           <p className="trust-note">{t(locale, 'Le premier avis apparaîtra ici après publication.', 'The first review will appear here once published.')}</p>
         </div>
           : <div className="trust-score-inner">
-            <p className="trust-average" aria-label={t(locale, `Note moyenne ${fmt.format(average)} sur 5`, `Average rating ${fmt.format(average)} out of 5`)} data-testid="text-review-average">
+            <p className="trust-average" data-testid="text-review-average">
+              <span className="sr-only">{t(locale, `Note moyenne ${fmt.format(average)} sur 5`, `Average rating ${fmt.format(average)} out of 5`)}</span>
               <span aria-hidden="true"><span className="tabular-nums">{fmt.format(average)}</span><span className="trust-out-of">/5</span></span>
             </p>
             <RatingStars value={seen ? average : 0} />
-            <p className="trust-count" data-testid="text-review-count" aria-label={t(locale, `Basée sur ${summary.count} avis publiés`, `Based on ${summary.count} published reviews`)}>
-              <span aria-hidden="true">{t(locale, 'Basée sur', 'Based on')} <b className="tabular-nums">{Math.round(animatedCount)}</b> {summary.count > 1 ? t(locale, 'avis publiés', 'published reviews') : t(locale, 'avis publié', 'published review')}</span>
+            <p className="trust-count" data-testid="text-review-count">
+              {t(locale, 'Basée sur', 'Based on')} <b className="tabular-nums">{summary.count}</b> {summary.count > 1 ? t(locale, 'avis publiés', 'published reviews') : t(locale, 'avis publié', 'published review')}
             </p>
           </div>}
       {query.isError && <p className="trust-error" role="alert" data-testid="status-review-summary-error">
