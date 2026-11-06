@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { PublishAdminContentBody } from '../../lib/api-zod/src/generated/api.ts';
+import { normalizePublicationInput } from '../../supabase/functions/cabinet-api/validation.ts';
+
+const html = await readFile(new URL('../../artifacts/cabinet-dentaire/dist/public/index.html', import.meta.url), 'utf8');
+const snapshot = html.match(/<script id="cabinet-public-content" type="application\/json">([\s\S]*?)<\/script>/);
+assert.ok(snapshot, 'Build the public pages before running this test');
+const content = JSON.parse(snapshot[1]);
+assert.ok(content.campaigns.length, 'The fixture must contain a campaign');
+const publication = { content, expectedVersion: 1 };
+publication.content.campaigns[0].publishedAt = '';
+assert.equal(PublishAdminContentBody.safeParse(publication).success, false, 'Reproduce the older admin blank-date failure');
+assert.equal(PublishAdminContentBody.safeParse(normalizePublicationInput(publication)).success, true);
+assert.equal(publication.content.campaigns[0].publishedAt, '', 'Normalization must not mutate the original draft');
+publication.content.campaigns[0].publishedAt = 'not-a-date';
+assert.equal(PublishAdminContentBody.safeParse(normalizePublicationInput(publication)).success, false);
+publication.content.campaigns[0].publishedAt = '2026-11-06T08:00:00Z';
+assert.equal(PublishAdminContentBody.safeParse(normalizePublicationInput(publication)).success, true);
+assert.equal(PublishAdminContentBody.safeParse(normalizePublicationInput({ content })).success, false, 'Version is still required');
+console.log('PASS: blank optional dates, valid dates, invalid-date rejection, immutable drafts and required version.');
