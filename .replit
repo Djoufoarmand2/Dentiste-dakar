@@ -25,3 +25,4 @@ timeoutMs = 20000
 VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_VnpQmbYTB6FvvOOnTY0Tqw_sIPysndv"
 VITE_SUPABASE_URL = "https://hiuhpajyjnivphnatqox.supabase.co"
 VITE_FORMBOLD_ENDPOINT = "https://formbold.com/s/9m51R"
+CLOUDFLARE_HOOK_URL = "https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/3825e60a-7046-4ff6-881d-343ac8773767"
