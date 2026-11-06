@@ -1,4 +1,6 @@
 import { ArrowDownRight, ArrowRight, Mail, MapPin, MessageCircle, ShieldCheck, UsersRound } from 'lucide-react';
+import type { SiteContent } from '@workspace/api-client-react';
+import { defaultWhyChooseContent } from '@/lib/site-page-defaults';
 
 type Locale = 'fr' | 'en';
 
@@ -30,6 +32,7 @@ export type PatientService = {
 type WhyChooseContentProps = {
   clinic: PatientClinic;
   locale: Locale;
+  content?: SiteContent['whyChoose'];
 };
 
 type ServiceDetailContentProps = {
@@ -171,8 +174,12 @@ function ContactDetails({ clinic, locale }: { clinic: PatientClinic; locale: Loc
   </div>;
 }
 
-export function WhyChooseContent({ clinic, locale }: WhyChooseContentProps) {
+export function WhyChooseContent({ clinic, locale, content }: WhyChooseContentProps) {
   const t = copy[locale];
+  const page = content || defaultWhyChooseContent;
+  const localized = (fr: string, en?: string) => locale === 'en'
+    ? en?.trim() || 'English translation not yet available.'
+    : fr;
 
   return <main className="overflow-hidden bg-[#f1f3f9] text-[#20213e]" data-testid="page-why-choose">
     <section className="relative isolate overflow-hidden bg-[#18365f] text-white">
@@ -180,11 +187,11 @@ export function WhyChooseContent({ clinic, locale }: WhyChooseContentProps) {
       <div aria-hidden="true" className="pointer-events-none absolute right-[9%] top-20 hidden h-[23rem] w-[23rem] rounded-full border border-[#c8c7ff]/20 md:block" />
       <div className="relative mx-auto grid max-w-[1240px] gap-12 px-5 pb-16 pt-16 md:grid-cols-[1.1fr_.9fr] md:items-end md:px-8 md:pb-24 md:pt-24">
         <div className="max-w-3xl">
-          <PageKicker light>{t.whyEyebrow}</PageKicker>
+          <PageKicker light>{localized(page.eyebrow, page.eyebrowEn)}</PageKicker>
           <h1 className="mt-6 max-w-3xl font-display text-[clamp(2.55rem,6vw,5.2rem)] font-medium leading-[1.03] tracking-[-.035em] text-white">
-            {t.whyTitle}
+            {localized(page.title, page.titleEn)}
           </h1>
-          <p className="mt-7 max-w-2xl text-[15px] leading-7 text-white/75 md:text-base md:leading-8">{t.whyIntro}</p>
+          <p className="mt-7 max-w-2xl text-[15px] leading-7 text-white/75 md:text-base md:leading-8">{localized(page.intro, page.introEn)}</p>
         </div>
         <div className="relative ml-auto hidden w-full max-w-[340px] md:block" aria-hidden="true">
           <div className="aspect-[4/5] rounded-t-[11rem] border border-white/20 bg-[#24234c]/45 p-3">
@@ -206,19 +213,22 @@ export function WhyChooseContent({ clinic, locale }: WhyChooseContentProps) {
     <section className="mx-auto max-w-[1240px] px-5 py-16 md:px-8 md:py-24">
       <div className="grid gap-10 md:grid-cols-[.72fr_1.28fr] md:gap-20">
         <div>
-          <PageKicker>{t.valuesEyebrow}</PageKicker>
-          <h2 className="mt-5 max-w-md font-display text-3xl font-medium leading-[1.12] tracking-[-.025em] text-[#24234c] md:text-[2.7rem]">{t.valuesTitle}</h2>
+          <PageKicker>{localized(page.valuesEyebrow, page.valuesEyebrowEn)}</PageKicker>
+          <h2 className="mt-5 max-w-md font-display text-3xl font-medium leading-[1.12] tracking-[-.025em] text-[#24234c] md:text-[2.7rem]">{localized(page.valuesTitle, page.valuesTitleEn)}</h2>
           <div className="mt-8 h-px w-16 bg-[#7778bd]" />
         </div>
         <div className="divide-y divide-[#18365f]/12 border-y border-[#18365f]/12">
-          {t.values.map(({ number, title, text, Icon }) => <article key={number} className="group grid gap-4 py-6 transition-transform duration-300 hover:translate-x-1 sm:grid-cols-[3.5rem_1fr_auto] sm:items-start sm:gap-6 md:py-8">
-            <span className="pt-1 font-display text-sm text-[#7778bd]">{number}</span>
+          {page.values.map((value, index) => {
+            const Icon = [MessageCircle, ShieldCheck, UsersRound][index % 3];
+            return <article key={value.id} className="group grid gap-4 py-6 transition-transform duration-300 hover:translate-x-1 sm:grid-cols-[3.5rem_1fr_auto] sm:items-start sm:gap-6 md:py-8">
+            <span className="pt-1 font-display text-sm text-[#7778bd]">{String(index + 1).padStart(2, '0')}</span>
             <div>
-              <h3 className="font-display text-[1.45rem] font-medium text-[#24234c]">{title}</h3>
-              <p className="mt-2 max-w-xl text-sm leading-7 text-[#4e5573]">{text}</p>
+              <h3 className="font-display text-[1.45rem] font-medium text-[#24234c]">{localized(value.title, value.titleEn)}</h3>
+              <p className="mt-2 max-w-xl text-sm leading-7 text-[#4e5573]">{localized(value.body, value.bodyEn)}</p>
             </div>
             <span className="grid h-11 w-11 place-items-center rounded-full border border-[#7778bd]/25 text-[#555c9c] transition-colors duration-300 group-hover:bg-[#24234c] group-hover:text-white"><Icon size={18} strokeWidth={1.5} /></span>
-          </article>)}
+          </article>;
+          })}
         </div>
       </div>
     </section>
@@ -228,11 +238,11 @@ export function WhyChooseContent({ clinic, locale }: WhyChooseContentProps) {
       <div className="relative mx-auto grid max-w-[1240px] gap-8 px-5 py-14 md:grid-cols-[.4fr_1fr] md:items-start md:px-8 md:py-20">
         <div className="flex items-center gap-4 md:flex-col md:items-start">
           <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[#24234c] text-[#d8d9ff]"><UsersRound size={22} strokeWidth={1.4} /></span>
-          <PageKicker>{t.partnerEyebrow}</PageKicker>
+          <PageKicker>{localized(page.partnerEyebrow, page.partnerEyebrowEn)}</PageKicker>
         </div>
         <div className="max-w-3xl">
-          <h2 className="font-display text-3xl font-medium leading-tight tracking-[-.025em] text-[#24234c] md:text-[2.8rem]">{t.partnerTitle}</h2>
-          <p className="mt-5 max-w-2xl text-[15px] leading-7 text-[#4e5573]">{t.partnerBody}</p>
+          <h2 className="font-display text-3xl font-medium leading-tight tracking-[-.025em] text-[#24234c] md:text-[2.8rem]">{localized(page.partnerTitle, page.partnerTitleEn)}</h2>
+          <p className="mt-5 max-w-2xl text-[15px] leading-7 text-[#4e5573]">{localized(page.partnerBody, page.partnerBodyEn)}</p>
           <ContactDetails clinic={clinic} locale={locale} />
         </div>
       </div>

@@ -50,6 +50,52 @@ export const GetSiteContentResponse = zod.object({
   "primaryActionEn": zod.string().optional(),
   "secondaryActionEn": zod.string().optional()
 }),
+  "whyChoose": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "intro": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "introEn": zod.string().optional(),
+  "valuesEyebrow": zod.string(),
+  "valuesTitle": zod.string(),
+  "valuesEyebrowEn": zod.string().optional(),
+  "valuesTitleEn": zod.string().optional(),
+  "values": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional()
+})),
+  "partnerEyebrow": zod.string(),
+  "partnerTitle": zod.string(),
+  "partnerBody": zod.string(),
+  "partnerEyebrowEn": zod.string().optional(),
+  "partnerTitleEn": zod.string().optional(),
+  "partnerBodyEn": zod.string().optional()
+}).optional(),
+  "privacyPolicy": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "controllerName": zod.string(),
+  "sections": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional(),
+  "required": zod.boolean().optional()
+})),
+  "contactTitle": zod.string(),
+  "contactIntro": zod.string(),
+  "contactTitleEn": zod.string().optional(),
+  "contactIntroEn": zod.string().optional()
+}).optional(),
   "services": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -165,6 +211,52 @@ export const UpdateSiteContentBody = zod.object({
   "primaryActionEn": zod.string().optional(),
   "secondaryActionEn": zod.string().optional()
 }),
+  "whyChoose": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "intro": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "introEn": zod.string().optional(),
+  "valuesEyebrow": zod.string(),
+  "valuesTitle": zod.string(),
+  "valuesEyebrowEn": zod.string().optional(),
+  "valuesTitleEn": zod.string().optional(),
+  "values": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional()
+})),
+  "partnerEyebrow": zod.string(),
+  "partnerTitle": zod.string(),
+  "partnerBody": zod.string(),
+  "partnerEyebrowEn": zod.string().optional(),
+  "partnerTitleEn": zod.string().optional(),
+  "partnerBodyEn": zod.string().optional()
+}).optional(),
+  "privacyPolicy": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "controllerName": zod.string(),
+  "sections": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional(),
+  "required": zod.boolean().optional()
+})),
+  "contactTitle": zod.string(),
+  "contactIntro": zod.string(),
+  "contactTitleEn": zod.string().optional(),
+  "contactIntroEn": zod.string().optional()
+}).optional(),
   "services": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -275,6 +367,52 @@ export const UpdateSiteContentResponse = zod.object({
   "primaryActionEn": zod.string().optional(),
   "secondaryActionEn": zod.string().optional()
 }),
+  "whyChoose": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "intro": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "introEn": zod.string().optional(),
+  "valuesEyebrow": zod.string(),
+  "valuesTitle": zod.string(),
+  "valuesEyebrowEn": zod.string().optional(),
+  "valuesTitleEn": zod.string().optional(),
+  "values": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional()
+})),
+  "partnerEyebrow": zod.string(),
+  "partnerTitle": zod.string(),
+  "partnerBody": zod.string(),
+  "partnerEyebrowEn": zod.string().optional(),
+  "partnerTitleEn": zod.string().optional(),
+  "partnerBodyEn": zod.string().optional()
+}).optional(),
+  "privacyPolicy": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "controllerName": zod.string(),
+  "sections": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional(),
+  "required": zod.boolean().optional()
+})),
+  "contactTitle": zod.string(),
+  "contactIntro": zod.string(),
+  "contactTitleEn": zod.string().optional(),
+  "contactIntroEn": zod.string().optional()
+}).optional(),
   "services": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -601,6 +739,52 @@ export const GetAdminContentResponse = zod.object({
   "primaryActionEn": zod.string().optional(),
   "secondaryActionEn": zod.string().optional()
 }),
+  "whyChoose": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "intro": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "introEn": zod.string().optional(),
+  "valuesEyebrow": zod.string(),
+  "valuesTitle": zod.string(),
+  "valuesEyebrowEn": zod.string().optional(),
+  "valuesTitleEn": zod.string().optional(),
+  "values": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional()
+})),
+  "partnerEyebrow": zod.string(),
+  "partnerTitle": zod.string(),
+  "partnerBody": zod.string(),
+  "partnerEyebrowEn": zod.string().optional(),
+  "partnerTitleEn": zod.string().optional(),
+  "partnerBodyEn": zod.string().optional()
+}).optional(),
+  "privacyPolicy": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "controllerName": zod.string(),
+  "sections": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional(),
+  "required": zod.boolean().optional()
+})),
+  "contactTitle": zod.string(),
+  "contactIntro": zod.string(),
+  "contactTitleEn": zod.string().optional(),
+  "contactIntroEn": zod.string().optional()
+}).optional(),
   "services": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -719,6 +903,52 @@ export const PublishAdminContentBody = zod.object({
   "primaryActionEn": zod.string().optional(),
   "secondaryActionEn": zod.string().optional()
 }),
+  "whyChoose": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "intro": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "introEn": zod.string().optional(),
+  "valuesEyebrow": zod.string(),
+  "valuesTitle": zod.string(),
+  "valuesEyebrowEn": zod.string().optional(),
+  "valuesTitleEn": zod.string().optional(),
+  "values": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional()
+})),
+  "partnerEyebrow": zod.string(),
+  "partnerTitle": zod.string(),
+  "partnerBody": zod.string(),
+  "partnerEyebrowEn": zod.string().optional(),
+  "partnerTitleEn": zod.string().optional(),
+  "partnerBodyEn": zod.string().optional()
+}).optional(),
+  "privacyPolicy": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "controllerName": zod.string(),
+  "sections": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional(),
+  "required": zod.boolean().optional()
+})),
+  "contactTitle": zod.string(),
+  "contactIntro": zod.string(),
+  "contactTitleEn": zod.string().optional(),
+  "contactIntroEn": zod.string().optional()
+}).optional(),
   "services": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -833,6 +1063,52 @@ export const PublishAdminContentResponse = zod.object({
   "primaryActionEn": zod.string().optional(),
   "secondaryActionEn": zod.string().optional()
 }),
+  "whyChoose": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "intro": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "introEn": zod.string().optional(),
+  "valuesEyebrow": zod.string(),
+  "valuesTitle": zod.string(),
+  "valuesEyebrowEn": zod.string().optional(),
+  "valuesTitleEn": zod.string().optional(),
+  "values": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional()
+})),
+  "partnerEyebrow": zod.string(),
+  "partnerTitle": zod.string(),
+  "partnerBody": zod.string(),
+  "partnerEyebrowEn": zod.string().optional(),
+  "partnerTitleEn": zod.string().optional(),
+  "partnerBodyEn": zod.string().optional()
+}).optional(),
+  "privacyPolicy": zod.object({
+  "eyebrow": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "controllerName": zod.string(),
+  "sections": zod.array(zod.object({
+  "id": zod.string(),
+  "title": zod.string(),
+  "body": zod.string(),
+  "titleEn": zod.string().optional(),
+  "bodyEn": zod.string().optional(),
+  "required": zod.boolean().optional()
+})),
+  "contactTitle": zod.string(),
+  "contactIntro": zod.string(),
+  "contactTitleEn": zod.string().optional(),
+  "contactIntroEn": zod.string().optional()
+}).optional(),
   "services": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),

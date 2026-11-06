@@ -594,7 +594,30 @@ function renderPublicMarkup(route, meta) {
     return `<main><a href="${escapeAttribute(appPath(english ? '/en/services/' : '/soins/'))}">${english ? 'All services' : 'Tous les soins'}</a><article><h1>${escapeXml(title)}</h1><p>${escapeXml(summary)}</p>${image ? `<img src="${escapeAttribute(image)}" alt="${escapeAttribute(english ? translated.imageAlt : service.imageAlt || title)}" fetchpriority="high" decoding="async" />` : ''}<h2>${english ? 'About this care' : 'À propos de ce soin'}</h2><p>${escapeXml(description)}</p>${purpose ? `<h2>${english ? 'What is this care for?' : 'À quoi sert ce soin ?'}</h2><p>${escapeXml(purpose)}</p>` : ''}<h2>${english ? 'Your visit, step by step' : 'Votre parcours, étape par étape'}</h2>${steps.length ? `<ol>${steps.map((step) => `<li>${escapeXml(step)}</li>`).join('')}</ol>` : `<p>${english ? 'The practice will explain the general steps and options based on your situation.' : 'Le cabinet vous expliquera les étapes générales et les options selon votre situation.'}</p>`}<h2>${english ? 'Questions about this service?' : 'Une question sur ce soin ?'}</h2><p>${english ? 'Contact the practice for information and to discuss your request.' : 'Contactez le cabinet pour obtenir des renseignements et échanger sur votre demande.'}</p><p><a href="${escapeAttribute(whatsapp)}" rel="noopener noreferrer" target="_blank">WhatsApp +237 677 873 442</a> · <a href="mailto:bienveillanceclinique4@gmail.com">bienveillanceclinique4@gmail.com</a></p></article></main>`;
   }
   if (normalizedRoute === '/pourquoi-nous-choisir' || normalizedRoute === '/why-choose-us') {
-    return `<main><h1>${english ? 'Your smile, our attention at every step.' : 'Votre sourire, notre attention à chaque étape.'}</h1><p>${english ? 'Choosing a dental practice also means choosing how you are welcomed. We aim for clear conversations, attentive listening and respect for your pace.' : 'Choisir un cabinet, c’est aussi choisir la façon dont on vous accueille. Nous privilégions les échanges clairs, l’écoute attentive et le respect de votre rythme.'}</p><h2>${english ? 'A chance to be heard' : 'Être écouté'}</h2><p>${english ? 'Your questions, expectations and concerns belong in the conversation.' : 'Vos questions, vos attentes et vos préoccupations ont leur place dans la conversation.'}</p><h2>${english ? 'Clear information' : 'Comprendre les soins'}</h2><p>${english ? 'Information is shared in plain language so you can ask the questions that matter to you.' : 'Les informations vous sont présentées clairement afin que vous puissiez poser vos questions.'}</p><h2>${english ? 'At your own pace' : 'Avancer à votre rythme'}</h2><p>${english ? 'You can take time to understand the options discussed before deciding what to do next.' : 'Vous pouvez prendre le temps de comprendre les options proposées avant de décider de la suite.'}</p><p>${english ? 'The practice welcomes patients in Douala within the setting of Clinique La Bienveillance.' : 'Le Cabinet Sourire Serein vous accueille à Douala dans l’environnement de la Clinique La Bienveillance.'}</p></main>`;
+    const page = publicContent.whyChoose ?? {
+      eyebrow: 'Le cabinet · Douala',
+      title: 'Votre sourire, notre attention à chaque étape.',
+      intro: 'Choisir un cabinet, c’est aussi choisir la façon dont on vous accueille. Au Cabinet Sourire Serein, nous voulons que chaque échange soit clair, attentif et respectueux de votre rythme.',
+      titleEn: 'Your smile, our care at every step.',
+      introEn: 'Choosing a dental practice is also choosing how you will be welcomed. At Cabinet Sourire Serein, we want every conversation to feel clear, attentive and respectful of your pace.',
+      valuesEyebrow: 'Notre manière de vous accompagner',
+      valuesTitle: 'Des repères simples, dès le premier échange.',
+      valuesEyebrowEn: 'How we support you',
+      valuesTitleEn: 'A few clear things to expect from the first conversation.',
+      values: [
+        { title: 'Être écouté', body: 'Vos questions, vos attentes et vos préoccupations ont leur place dans la conversation.', titleEn: 'A chance to be heard', bodyEn: 'Your questions, expectations and concerns all have a place in the conversation.' },
+        { title: 'Comprendre les soins', body: 'Les informations vous sont présentées avec des mots clairs afin que vous puissiez poser vos questions.', titleEn: 'Clear information', bodyEn: 'Information is shared in plain language so you can ask the questions that matter to you.' },
+        { title: 'Avancer à votre rythme', body: 'Vous pouvez échanger avec l’équipe et prendre le temps de comprendre les options proposées.', titleEn: 'At your own pace', bodyEn: 'You can talk things through with the team and take time to understand the options discussed.' },
+      ],
+      partnerEyebrow: 'Un environnement de soins',
+      partnerTitle: 'Le Cabinet Sourire Serein, en lien avec la Clinique La Bienveillance.',
+      partnerBody: 'Le cabinet dentaire vous accueille à Douala dans l’environnement de la Clinique La Bienveillance.',
+      partnerTitleEn: 'Cabinet Sourire Serein, connected with Clinique La Bienveillance.',
+      partnerBodyEn: 'The dental practice welcomes patients in Douala within the setting of Clinique La Bienveillance.',
+    };
+    const choose = (fr, en) => english ? en || fr || 'English translation not yet available.' : fr || '';
+    const values = (page.values || []).map((value) => `<section><h2>${escapeXml(choose(value.title, value.titleEn))}</h2><p>${escapeXml(choose(value.body, value.bodyEn))}</p></section>`).join('');
+    return `<main>${page.eyebrow || page.eyebrowEn ? `<p>${escapeXml(choose(page.eyebrow, page.eyebrowEn))}</p>` : ''}<h1>${escapeXml(choose(page.title, page.titleEn))}</h1><p>${escapeXml(choose(page.intro, page.introEn))}</p><section><h2>${escapeXml(choose(page.valuesEyebrow, page.valuesEyebrowEn))}</h2><h3>${escapeXml(choose(page.valuesTitle, page.valuesTitleEn))}</h3>${values}</section><section><h2>${escapeXml(choose(page.partnerTitle, page.partnerTitleEn))}</h2><p>${escapeXml(choose(page.partnerBody, page.partnerBodyEn))}</p></section></main>`;
   }
   if (normalizedRoute === '/equipe' || normalizedRoute === '/team') {
     const members = (publicContent.team ?? []).filter((member) =>
@@ -631,7 +654,30 @@ function renderPublicMarkup(route, meta) {
     ].filter(Boolean).join('');
     return `<main>${heading}${intro}${rows || `<p>${english ? `Contact the dental practice in ${escapeXml(cityName)} for its address and opening hours.` : `Contactez le cabinet dentaire à ${escapeXml(cityName)} pour obtenir ses coordonnées et horaires.`}</p>`}</main>`;
   }
-  if (normalizedRoute === '/confidentialite' || normalizedRoute === '/privacy') return `<main>${heading}${intro}<p>${english ? 'Contact the practice to ask questions about personal data or exercise your rights.' : 'Contactez le cabinet pour poser vos questions sur les données personnelles ou exercer vos droits.'}</p></main>`;
+  if (normalizedRoute === '/confidentialite' || normalizedRoute === '/privacy') {
+    const policy = publicContent.privacyPolicy ?? {
+      eyebrow: 'Vos informations',
+      title: 'Confidentialité',
+      description: 'Cette page décrit les données demandées par le site, les services utilisés et la suppression manuelle décidée par le cabinet.',
+      eyebrowEn: 'Your information',
+      titleEn: 'Privacy',
+      descriptionEn: 'This page explains what information the website asks for, which services are used and how the practice handles deletion requests.',
+      controllerName: 'Djoufo Armand',
+      sections: [
+        { title: 'Gestion et suppression des données', body: 'Le cabinet décide de la suppression des avis et des demandes qu’il reçoit ; l’application ne leur applique pas de délai automatique.', titleEn: 'Data handling and deletion', bodyEn: 'The practice decides when to delete reviews and requests it receives; the application does not apply an automatic retention period.' },
+        { title: 'Demandes de rendez-vous', body: 'Le formulaire demande un nom, un numéro de téléphone, une adresse e-mail et un soin souhaité ; la date et le message sont facultatifs. Évitez d’indiquer des informations médicales sensibles.', titleEn: 'Appointment requests', bodyEn: 'The form asks for your name, phone number, email address and the service you are interested in; the preferred date and message are optional. Please avoid sensitive medical details.' },
+        { title: 'Avis publics', body: 'Le formulaire d’avis recueille un nom d’affichage, une note, un commentaire et l’autorisation de publication. L’avis est visible publiquement et peut être retiré par le cabinet.', titleEn: 'Public reviews', bodyEn: 'The review form collects a display name, rating, comment and permission to publish. The review is visible publicly and can be removed by the practice.' },
+        { title: 'Conservation et demandes de données', body: 'Les avis sont enregistrés dans Supabase et restent visibles jusqu’à leur suppression par l’administrateur ; aucun effacement automatique n’est configuré. Le cabinet supprime manuellement les demandes.', titleEn: 'Retention and data requests', bodyEn: 'Reviews are stored in Supabase and remain visible until an administrator removes them; no automatic deletion period is configured. The practice manually removes requests.' },
+      ],
+      contactTitle: 'Questions ou demande de suppression',
+      contactIntro: 'Pour contacter le responsable du traitement, demander l’accès ou la suppression de données :',
+      contactTitleEn: 'Questions or deletion requests',
+      contactIntroEn: 'To contact the data controller or request access to or deletion of data:',
+    };
+    const choose = (fr, en) => english ? en || fr || 'English translation not yet available.' : fr || '';
+    const sections = (policy.sections || []).map((section) => `<section><h2>${escapeXml(choose(section.title, section.titleEn))}</h2><p>${escapeXml(choose(section.body, section.bodyEn))}</p></section>`).join('');
+    return `<main><p>${escapeXml(choose(policy.eyebrow, policy.eyebrowEn))}</p><h1>${escapeXml(choose(policy.title, policy.titleEn))}</h1><p>${escapeXml(choose(policy.description, policy.descriptionEn))}</p><section><h2>${english ? 'Data controller' : 'Responsable du traitement'}</h2><p>${escapeXml(clinic.name)} · ${escapeXml(clinic.address)} · ${escapeXml(clinic.phone)} · ${escapeXml(clinic.email)}</p><p>${escapeXml(policy.controllerName)}</p></section>${sections}<section><h2>${escapeXml(choose(policy.contactTitle, policy.contactTitleEn))}</h2><p>${escapeXml(choose(policy.contactIntro, policy.contactIntroEn))} ${escapeXml(clinic.email)} · ${escapeXml(clinic.phone)}</p></section></main>`;
+  }
   return `<main>${heading}${intro}</main>`;
 }
 

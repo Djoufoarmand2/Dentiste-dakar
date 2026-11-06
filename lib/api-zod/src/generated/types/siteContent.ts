@@ -11,13 +11,17 @@ import type { ClinicInfo } from './clinicInfo';
 import type { FAQItem } from './fAQItem';
 import type { GalleryImage } from './galleryImage';
 import type { HeroContent } from './heroContent';
+import type { PrivacyPolicyContent } from './privacyPolicyContent';
 import type { ServiceItem } from './serviceItem';
 import type { TeamMember } from './teamMember';
 import type { Testimonial } from './testimonial';
+import type { WhyChooseContent } from './whyChooseContent';
 
 export interface SiteContent {
   clinic: ClinicInfo;
   hero: HeroContent;
+  whyChoose?: WhyChooseContent;
+  privacyPolicy?: PrivacyPolicyContent;
   services: ServiceItem[];
   team: TeamMember[];
   gallery: GalleryImage[];

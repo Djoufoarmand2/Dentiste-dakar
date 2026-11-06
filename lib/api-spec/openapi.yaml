@@ -540,11 +540,73 @@ components:
         titleEn: { type: string }
         descriptionEn: { type: string }
       required: [id, title, description, mediaType, imageUrl, videoUrl, active]
+    WhyChooseValue:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        titleEn: { type: string }
+        bodyEn: { type: string }
+      required: [id, title, body]
+    WhyChooseContent:
+      type: object
+      properties:
+        eyebrow: { type: string }
+        title: { type: string }
+        intro: { type: string }
+        eyebrowEn: { type: string }
+        titleEn: { type: string }
+        introEn: { type: string }
+        valuesEyebrow: { type: string }
+        valuesTitle: { type: string }
+        valuesEyebrowEn: { type: string }
+        valuesTitleEn: { type: string }
+        values:
+          type: array
+          items: { $ref: "#/components/schemas/WhyChooseValue" }
+        partnerEyebrow: { type: string }
+        partnerTitle: { type: string }
+        partnerBody: { type: string }
+        partnerEyebrowEn: { type: string }
+        partnerTitleEn: { type: string }
+        partnerBodyEn: { type: string }
+      required: [eyebrow, title, intro, valuesEyebrow, valuesTitle, values, partnerEyebrow, partnerTitle, partnerBody]
+    PrivacyPolicySection:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        titleEn: { type: string }
+        bodyEn: { type: string }
+        required: { type: boolean }
+      required: [id, title, body]
+    PrivacyPolicyContent:
+      type: object
+      properties:
+        eyebrow: { type: string }
+        title: { type: string }
+        description: { type: string }
+        eyebrowEn: { type: string }
+        titleEn: { type: string }
+        descriptionEn: { type: string }
+        controllerName: { type: string }
+        sections:
+          type: array
+          items: { $ref: "#/components/schemas/PrivacyPolicySection" }
+        contactTitle: { type: string }
+        contactIntro: { type: string }
+        contactTitleEn: { type: string }
+        contactIntroEn: { type: string }
+      required: [eyebrow, title, description, controllerName, sections, contactTitle, contactIntro]
     SiteContent:
       type: object
       properties:
         clinic: { $ref: "#/components/schemas/ClinicInfo" }
         hero: { $ref: "#/components/schemas/HeroContent" }
+        whyChoose: { $ref: "#/components/schemas/WhyChooseContent" }
+        privacyPolicy: { $ref: "#/components/schemas/PrivacyPolicyContent" }
         services:
           type: array
           items: { $ref: "#/components/schemas/ServiceItem" }
@@ -572,6 +634,8 @@ components:
       properties:
         clinic: { $ref: "#/components/schemas/ClinicInfo" }
         hero: { $ref: "#/components/schemas/HeroContent" }
+        whyChoose: { $ref: "#/components/schemas/WhyChooseContent" }
+        privacyPolicy: { $ref: "#/components/schemas/PrivacyPolicyContent" }
         services:
           type: array
           items: { $ref: "#/components/schemas/ServiceItem" }

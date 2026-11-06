@@ -154,6 +154,58 @@ export interface HeroContent {
   secondaryActionEn?: string;
 }
 
+export interface WhyChooseValue {
+  id: string;
+  title: string;
+  body: string;
+  titleEn?: string;
+  bodyEn?: string;
+}
+
+export interface WhyChooseContent {
+  eyebrow: string;
+  title: string;
+  intro: string;
+  eyebrowEn?: string;
+  titleEn?: string;
+  introEn?: string;
+  valuesEyebrow: string;
+  valuesTitle: string;
+  valuesEyebrowEn?: string;
+  valuesTitleEn?: string;
+  values: WhyChooseValue[];
+  partnerEyebrow: string;
+  partnerTitle: string;
+  partnerBody: string;
+  partnerEyebrowEn?: string;
+  partnerTitleEn?: string;
+  partnerBodyEn?: string;
+}
+
+export interface PrivacyPolicySection {
+  id: string;
+  title: string;
+  body: string;
+  titleEn?: string;
+  bodyEn?: string;
+  required?: boolean;
+}
+
+export interface PrivacyPolicyContent {
+  eyebrow: string;
+  title: string;
+  description: string;
+  eyebrowEn?: string;
+  titleEn?: string;
+  descriptionEn?: string;
+  controllerName: string;
+  sections: PrivacyPolicySection[];
+  contactTitle: string;
+  contactIntro: string;
+  contactTitleEn?: string;
+  contactIntroEn?: string;
+}
+
 export interface ServiceItem {
   id: string;
   title: string;
@@ -255,6 +307,8 @@ export interface Campaign {
 export interface SiteContent {
   clinic: ClinicInfo;
   hero: HeroContent;
+  whyChoose?: WhyChooseContent;
+  privacyPolicy?: PrivacyPolicyContent;
   services: ServiceItem[];
   team: TeamMember[];
   gallery: GalleryImage[];
@@ -273,6 +327,8 @@ export interface ContentDocument {
 export interface SiteContentInput {
   clinic: ClinicInfo;
   hero: HeroContent;
+  whyChoose?: WhyChooseContent;
+  privacyPolicy?: PrivacyPolicyContent;
   services: ServiceItem[];
   team: TeamMember[];
   gallery: GalleryImage[];
