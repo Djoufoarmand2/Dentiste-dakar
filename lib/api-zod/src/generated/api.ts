@@ -172,7 +172,10 @@ export const GetSiteContentResponse = zod.object({
   "videoUrl": zod.string().nullable(),
   "active": zod.boolean(),
   "titleEn": zod.string().optional(),
-  "descriptionEn": zod.string().optional()
+  "descriptionEn": zod.string().optional(),
+  "publishedAt": zod.coerce.date().optional(),
+  "transcript": zod.string().optional(),
+  "transcriptEn": zod.string().optional()
 }))
 })
 
@@ -333,7 +336,10 @@ export const UpdateSiteContentBody = zod.object({
   "videoUrl": zod.string().nullable(),
   "active": zod.boolean(),
   "titleEn": zod.string().optional(),
-  "descriptionEn": zod.string().optional()
+  "descriptionEn": zod.string().optional(),
+  "publishedAt": zod.coerce.date().optional(),
+  "transcript": zod.string().optional(),
+  "transcriptEn": zod.string().optional()
 }))
 })
 
@@ -489,7 +495,10 @@ export const UpdateSiteContentResponse = zod.object({
   "videoUrl": zod.string().nullable(),
   "active": zod.boolean(),
   "titleEn": zod.string().optional(),
-  "descriptionEn": zod.string().optional()
+  "descriptionEn": zod.string().optional(),
+  "publishedAt": zod.coerce.date().optional(),
+  "transcript": zod.string().optional(),
+  "transcriptEn": zod.string().optional()
 }))
 })
 
@@ -861,7 +870,10 @@ export const GetAdminContentResponse = zod.object({
   "videoUrl": zod.string().nullable(),
   "active": zod.boolean(),
   "titleEn": zod.string().optional(),
-  "descriptionEn": zod.string().optional()
+  "descriptionEn": zod.string().optional(),
+  "publishedAt": zod.coerce.date().optional(),
+  "transcript": zod.string().optional(),
+  "transcriptEn": zod.string().optional()
 }))
 }),
   "version": zod.number().int().min(1)
@@ -1025,7 +1037,10 @@ export const PublishAdminContentBody = zod.object({
   "videoUrl": zod.string().nullable(),
   "active": zod.boolean(),
   "titleEn": zod.string().optional(),
-  "descriptionEn": zod.string().optional()
+  "descriptionEn": zod.string().optional(),
+  "publishedAt": zod.coerce.date().optional(),
+  "transcript": zod.string().optional(),
+  "transcriptEn": zod.string().optional()
 }))
 }),
   "expectedVersion": zod.number().int().min(1)
@@ -1185,7 +1200,10 @@ export const PublishAdminContentResponse = zod.object({
   "videoUrl": zod.string().nullable(),
   "active": zod.boolean(),
   "titleEn": zod.string().optional(),
-  "descriptionEn": zod.string().optional()
+  "descriptionEn": zod.string().optional(),
+  "publishedAt": zod.coerce.date().optional(),
+  "transcript": zod.string().optional(),
+  "transcriptEn": zod.string().optional()
 }))
 }),
   "version": zod.number().int().min(1)

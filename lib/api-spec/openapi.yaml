@@ -539,6 +539,9 @@ components:
         active: { type: boolean }
         titleEn: { type: string }
         descriptionEn: { type: string }
+        publishedAt: { type: string, format: date-time }
+        transcript: { type: string }
+        transcriptEn: { type: string }
       required: [id, title, description, mediaType, imageUrl, videoUrl, active]
     WhyChooseValue:
       type: object

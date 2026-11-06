@@ -18,4 +18,7 @@ export interface Campaign {
   active: boolean;
   titleEn?: string;
   descriptionEn?: string;
+  publishedAt?: Date;
+  transcript?: string;
+  transcriptEn?: string;
 }
