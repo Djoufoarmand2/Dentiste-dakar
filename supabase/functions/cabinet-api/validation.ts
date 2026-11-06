@@ -27,6 +27,12 @@ export function normalizePublicationInput(input: unknown): unknown {
 
 export function parseContent(input: unknown, mediaBaseUrl: string) {
   const content = GetSiteContentResponse.parse(input);
+  const activeVideoWithoutDate = content.campaigns.find(
+    (campaign) => campaign.mediaType === 'video' && campaign.active && !campaign.publishedAt,
+  );
+  if (activeVideoWithoutDate) {
+    throw new Error(`La date originale de mise en ligne YouTube est obligatoire pour la vidéo active « ${activeVideoWithoutDate.title} ».`);
+  }
   function check(value: unknown, key = ''): void {
     if (typeof value === 'string') {
       if (value.length > 100_000) throw new Error('Un champ de texte est trop long.');

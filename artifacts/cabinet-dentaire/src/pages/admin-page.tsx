@@ -17,6 +17,7 @@ import {
   usePublishContent,
 } from '@/lib/cms';
 import { CmsError } from '@/lib/supabase';
+import { isValidCampaignPublicationDate } from '@/lib/campaign-dates';
 import { fillEnglishFieldsForAdmin, fillEnglishFieldsForBlogAdmin, fillEnglishFieldsForFaqAdmin } from '@/lib/cms-translations';
 import { defaultPrivacyPolicyContent, defaultWhyChooseContent } from '@/lib/site-page-defaults';
 import { Link } from 'wouter';
@@ -92,7 +93,7 @@ const fieldLabels: Record<string, string> = {
   partnerBodyEn: 'Présentation du partenaire · anglais', controllerName: 'Responsable du traitement',
   contactTitle: 'Titre du contact confidentialité', contactIntro: 'Présentation du contact confidentialité',
   contactTitleEn: 'Titre du contact confidentialité · anglais', contactIntroEn: 'Présentation du contact confidentialité · anglais',
-  publishedAt: 'Date de publication (ISO 8601)', transcript: 'Transcription vidéo', transcriptEn: 'Transcription vidéo · anglais',
+  publishedAt: 'Date originale de mise en ligne YouTube', transcript: 'Transcription vidéo', transcriptEn: 'Transcription vidéo · anglais',
 };
 
 function ensureTranslationFields(content: SiteContent): SiteContent {
@@ -204,6 +205,7 @@ export default function AdminPage() {
   const [version, setVersion] = useState<number | null>(null);
   const [section, setSection] = useState<AdminSection>('clinic');
   const [saved, setSaved] = useState(false);
+  const [publicationValidationError, setPublicationValidationError] = useState<string | null>(null);
   const [seoRefreshStatus, setSeoRefreshStatus] = useState<'idle' | 'preview' | 'triggering' | 'started' | 'failed'>('idle');
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
 
@@ -247,6 +249,7 @@ export default function AdminPage() {
 
   function markDraftChanged() {
     setSaved(false);
+    setPublicationValidationError(null);
     setSeoRefreshStatus('idle');
   }
 
@@ -335,6 +338,18 @@ export default function AdminPage() {
 
   function publish() {
     if (!draft || version === null) return;
+    const videoMissingDate = draft.campaigns.find(
+      (campaign) => campaign.mediaType === 'video' && campaign.active && !isValidCampaignPublicationDate(campaign.publishedAt),
+    );
+    if (videoMissingDate) {
+      setSection('campaigns');
+      setFocusTarget(`admin-entry-campaigns-${videoMissingDate.id}`);
+      setPublicationValidationError(
+        `Ajoutez la date originale de mise en ligne YouTube pour « ${videoMissingDate.title || 'cette vidéo'} » avant de publier.`,
+      );
+      return;
+    }
+    setPublicationValidationError(null);
     update.mutate({ content: draft, expectedVersion: version }, {
       onSuccess: async (document) => {
         client.setQueryData([...adminContentKey, session?.user.id], document);
@@ -418,29 +433,45 @@ export default function AdminPage() {
           </section>}
           {entries.map((item, index) => <section key={String(item.id ?? index)} id={`admin-entry-${section}-${String(item.id ?? index)}`} className="rounded-[22px] border border-border bg-card p-5 md:p-6" data-testid={`admin-entry-${section}-${String(item.id ?? index)}`}>
             <div className="mb-5 flex items-center justify-between border-b border-border pb-4"><div><p className="text-[9px] uppercase tracking-[.18em] text-muted-foreground">{sectionLabels[section]} · {String(item.id || `Élément ${index + 1}`)}</p><h3 className="mt-1 font-display text-xl">{String(item.title || item.name || item.question || item.alt || `Élément ${index + 1}`)}</h3></div><button type="button" onClick={() => removeItem(index)} disabled={busy || (section === 'privacyPolicy' && item.required === true)} title={section === 'privacyPolicy' && item.required === true ? 'Cette rubrique est nécessaire à la page de confidentialité.' : 'Supprimer cet élément'} aria-label="Supprimer cet élément" className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-30" data-testid={`button-remove-${section}-${index}`}><Trash2 size={16} /></button></div>
-            <div className="grid gap-4 md:grid-cols-2">{Object.entries(item).filter(([key]) => !(section === 'privacyPolicy' && key === 'required')).map(([key, value]) => <AdminField key={`${String(item.id)}-${key}`} name={key} value={value} onChange={(raw) => setArrayField(index, key, raw)} wide={['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'body', 'transcript', 'transcriptEn'].includes(key)} protectedUrls={protectedUrls} disabled={busy} />)}</div>
+             <div className="grid gap-4 md:grid-cols-2">{Object.entries(item).filter(([key]) => !(section === 'privacyPolicy' && key === 'required')).map(([key, value]) => {
+               const videoDateField = section === 'campaigns' && key === 'publishedAt' && item.mediaType === 'video';
+               return <AdminField
+                 key={`${String(item.id)}-${key}`}
+                 name={key}
+                 value={value}
+                 onChange={(raw) => setArrayField(index, key, raw)}
+                 wide={['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'body', 'transcript', 'transcriptEn'].includes(key)}
+                 protectedUrls={protectedUrls}
+                 disabled={busy}
+                 required={videoDateField && item.active === true}
+                 helperText={videoDateField ? 'Utilisez la date réelle de publication de la vidéo sur YouTube. Obligatoire avant publication si la vidéo est active.' : undefined}
+               />;
+             })}</div>
             {typeof item.imageUrl === 'string' && item.imageUrl && <div className="mt-4"><p className="mb-2 text-[10px] uppercase tracking-[.16em] text-muted-foreground">Aperçu</p><div className="h-48 overflow-hidden rounded-xl bg-secondary"><img src={item.imageUrl} alt="Aperçu du visuel" loading="lazy" className="h-full w-full object-cover" /></div></div>}
           </section>)}
           {!entries.length && <div className="rounded-[22px] border border-dashed border-border bg-card/60 p-10 text-center" data-testid={`empty-admin-${section}`}><ImageIcon className="mx-auto text-primary/70" size={24} /><h3 className="mt-4 font-display text-xl">Aucun élément pour le moment</h3><p className="mt-2 text-sm text-muted-foreground">Ajoutez un premier élément. Les URL d’images sont facultatives.</p></div>}
           <button onClick={addItem} className="inline-flex items-center gap-2 rounded-full border border-primary/30 px-5 py-3 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground" data-testid={`button-add-${section}`}><Plus size={15} /> Ajouter {sectionLabels[section].toLowerCase()}</button>
         </div>}
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-[#e6e3eb] p-4 md:px-6"><div><p className="text-xs font-semibold">Publication immédiate</p><p role={update.isError || seoRefreshStatus === 'failed' ? 'alert' : 'status'} className="mt-1 text-[11px] text-muted-foreground">{update.isError ? update.error.message : seoRefreshMessage || (saved ? 'Le site public affiche les changements.' : 'Publiez pour rendre vos modifications visibles sur le site.')}</p>{update.error instanceof CmsError && update.error.status === 409 && <button className="mt-3 text-xs font-semibold text-primary underline" onClick={() => void reloadDraft()} data-testid="button-reload-conflict">Recharger la dernière publication</button>}</div><button onClick={publish} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-bold uppercase tracking-[.13em] text-primary-foreground disabled:opacity-60" data-testid="button-publish-bottom">{busy ? 'Publication…' : 'Publier maintenant'} <ArrowUpRight size={14} /></button></div>
+         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-[#e6e3eb] p-4 md:px-6"><div><p className="text-xs font-semibold">Publication immédiate</p><p role={publicationValidationError || update.isError || seoRefreshStatus === 'failed' ? 'alert' : 'status'} className={`mt-1 text-[11px] ${publicationValidationError ? 'font-semibold text-destructive' : 'text-muted-foreground'}`}>{publicationValidationError || (update.isError ? update.error.message : seoRefreshMessage || (saved ? 'Le site public affiche les changements.' : 'Publiez pour rendre vos modifications visibles sur le site.'))}</p>{update.error instanceof CmsError && update.error.status === 409 && <button className="mt-3 text-xs font-semibold text-primary underline" onClick={() => void reloadDraft()} data-testid="button-reload-conflict">Recharger la dernière publication</button>}</div><button onClick={publish} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-bold uppercase tracking-[.13em] text-primary-foreground disabled:opacity-60" data-testid="button-publish-bottom">{busy ? 'Publication…' : 'Publier maintenant'} <ArrowUpRight size={14} /></button></div>
       </main>
     </div>
   </div>;
 }
 
-function AdminField({ name, value, onChange, wide = false, protectedUrls, disabled }: { name: string; value: unknown; onChange: (value: string) => void; wide?: boolean; protectedUrls: string[]; disabled: boolean }) {
+function AdminField({ name, value, onChange, wide = false, protectedUrls, disabled, required = false, helperText }: { name: string; value: unknown; onChange: (value: string) => void; wide?: boolean; protectedUrls: string[]; disabled: boolean; required?: boolean; helperText?: string }) {
   if (['imageUrl', 'logoUrl', 'videoUrl'].includes(name)) return <MediaField value={String(value ?? '')} onChange={onChange} kind={name === 'videoUrl' ? 'video' : 'image'} protectedUrls={protectedUrls} disabled={disabled} />;
   const label = fieldLabels[name] || name;
   const isBool = typeof value === 'boolean';
   const isLong = wide || ['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'purpose', 'procedureSteps', 'descriptionEn', 'biographyEn', 'answerEn', 'contentEn', 'excerptEn', 'purposeEn', 'procedureStepsEn', 'quoteEn'].includes(name);
   const isSelect = name === 'mediaType';
+  const inputType = name === 'publishedAt' ? 'date' : name === 'rating' ? 'number' : name === 'date' ? 'date' : name.toLowerCase().includes('url') ? 'url' : 'text';
+  const inputValue = name === 'publishedAt' && typeof value === 'string' ? value.slice(0, 10) : String(value ?? '');
   return <label className={`block text-xs font-medium text-foreground/80 ${wide ? 'md:col-span-2' : ''}`} data-testid={`field-${name}`}>
     <span className="mb-2 block">{label}</span>
     {isBool ? <select disabled={disabled} className="editor-input" value={String(value)} onChange={(event) => onChange(event.target.value)} data-testid={`input-${name}`}><option value="true">Oui</option><option value="false">Non</option></select>
       : isSelect ? <select disabled={disabled} className="editor-input" value={String(value ?? 'image')} onChange={(event) => onChange(event.target.value)} data-testid={`input-${name}`}><option value="image">Image</option><option value="video">Vidéo</option></select>
       : isLong ? <textarea disabled={disabled} rows={name === 'content' ? 8 : 4} className="editor-input resize-y" value={String(value ?? '')} onChange={(event) => onChange(event.target.value)} placeholder={name.toLowerCase().includes('url') ? 'https://…' : ''} data-testid={`input-${name}`} />
-      : <input disabled={disabled} className="editor-input" type={name === 'rating' ? 'number' : name === 'date' ? 'date' : name.toLowerCase().includes('url') ? 'url' : 'text'} min={name === 'rating' ? 1 : undefined} max={name === 'rating' ? 5 : undefined} value={String(value ?? '')} onChange={(event) => onChange(event.target.value)} placeholder={name.toLowerCase().includes('url') ? 'https://…' : ''} data-testid={`input-${name}`} />}
+      : <input disabled={disabled} required={required} aria-required={required || undefined} className="editor-input" type={inputType} min={name === 'rating' ? 1 : undefined} max={name === 'rating' ? 5 : undefined} value={inputValue} onChange={(event) => onChange(event.target.value)} placeholder={name.toLowerCase().includes('url') ? 'https://…' : ''} data-testid={`input-${name}`} />}
+    {helperText && <span className="mt-2 block text-[11px] leading-5 text-muted-foreground">{helperText}</span>}
   </label>;
 }

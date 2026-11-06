@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import type { ContentDocument, ContentPublication, SiteContent } from '@workspace/api-client-react';
 import { cmsRequest } from './supabase';
 import { useCabinetSession } from '@/components/auth-provider';
+import { normalizeCampaignPublicationDate } from './campaign-dates';
 
 export const publicContentKey = ['cabinet', 'public-content'] as const;
 export const adminContentKey = ['cabinet', 'admin-content'] as const;
@@ -50,7 +51,7 @@ export function usePublishContent() {
       ...publication.content,
       campaigns: publication.content.campaigns.map((campaign) => ({
         ...campaign,
-        publishedAt: campaign.publishedAt?.trim() || undefined,
+        publishedAt: normalizeCampaignPublicationDate(campaign.publishedAt),
       })),
     };
     return cmsRequest<ContentDocument>('/admin/site-content', { method: 'PUT', body: JSON.stringify({ ...publication, content }) });
