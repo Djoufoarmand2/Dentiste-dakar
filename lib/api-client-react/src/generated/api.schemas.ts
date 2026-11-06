@@ -134,6 +134,7 @@ export interface ClinicInfo {
   phone: string;
   email: string;
   openingHours: string;
+  openingHoursEn?: string;
   bookingUrl: string;
   mapUrl: string;
   logoUrl: string;
@@ -146,6 +147,11 @@ export interface HeroContent {
   primaryAction: string;
   secondaryAction: string;
   imageUrl: string;
+  eyebrowEn?: string;
+  titleEn?: string;
+  descriptionEn?: string;
+  primaryActionEn?: string;
+  secondaryActionEn?: string;
 }
 
 export interface ServiceItem {
@@ -155,6 +161,16 @@ export interface ServiceItem {
   summary: string;
   description: string;
   imageUrl: string;
+  titleEn?: string;
+  slugEn?: string;
+  summaryEn?: string;
+  descriptionEn?: string;
+  purpose?: string;
+  purposeEn?: string;
+  procedureSteps?: string;
+  procedureStepsEn?: string;
+  imageAlt?: string;
+  imageAltEn?: string;
 }
 
 export interface TeamMember {
@@ -163,12 +179,15 @@ export interface TeamMember {
   role: string;
   biography: string;
   imageUrl: string;
+  roleEn?: string;
+  biographyEn?: string;
 }
 
 export interface GalleryImage {
   id: string;
   alt: string;
   imageUrl: string;
+  altEn?: string;
 }
 
 export interface Testimonial {
@@ -181,12 +200,16 @@ export interface Testimonial {
      * @maximum 5
      */
   rating: number;
+  serviceEn?: string;
+  quoteEn?: string;
 }
 
 export interface FAQItem {
   id: string;
   question: string;
   answer: string;
+  questionEn?: string;
+  answerEn?: string;
 }
 
 export interface BlogPost {
@@ -199,6 +222,13 @@ export interface BlogPost {
   author: string;
   date: string;
   published: boolean;
+  titleEn?: string;
+  slugEn?: string;
+  excerptEn?: string;
+  contentEn?: string;
+  authorEn?: string;
+  imageAlt?: string;
+  imageAltEn?: string;
 }
 
 export type CampaignMediaType = typeof CampaignMediaType[keyof typeof CampaignMediaType];
@@ -218,6 +248,8 @@ export interface Campaign {
   /** @nullable */
   videoUrl: string | null;
   active: boolean;
+  titleEn?: string;
+  descriptionEn?: string;
 }
 
 export interface SiteContent {

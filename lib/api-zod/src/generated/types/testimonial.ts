@@ -16,4 +16,6 @@ export interface Testimonial {
      * @maximum 5
      */
   rating: number;
+  serviceEn?: string;
+  quoteEn?: string;
 }

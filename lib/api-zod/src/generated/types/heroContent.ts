@@ -13,4 +13,9 @@ export interface HeroContent {
   primaryAction: string;
   secondaryAction: string;
   imageUrl: string;
+  eyebrowEn?: string;
+  titleEn?: string;
+  descriptionEn?: string;
+  primaryActionEn?: string;
+  secondaryActionEn?: string;
 }

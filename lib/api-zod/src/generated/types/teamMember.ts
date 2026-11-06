@@ -12,4 +12,6 @@ export interface TeamMember {
   role: string;
   biography: string;
   imageUrl: string;
+  roleEn?: string;
+  biographyEn?: string;
 }

@@ -16,4 +16,6 @@ export interface Campaign {
   /** @nullable */
   videoUrl: string | null;
   active: boolean;
+  titleEn?: string;
+  descriptionEn?: string;
 }

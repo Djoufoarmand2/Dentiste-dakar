@@ -32,6 +32,7 @@ export const GetSiteContentResponse = zod.object({
   "phone": zod.string(),
   "email": zod.string(),
   "openingHours": zod.string(),
+  "openingHoursEn": zod.string().optional(),
   "bookingUrl": zod.string(),
   "mapUrl": zod.string(),
   "logoUrl": zod.string()
@@ -42,7 +43,12 @@ export const GetSiteContentResponse = zod.object({
   "description": zod.string(),
   "primaryAction": zod.string(),
   "secondaryAction": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "primaryActionEn": zod.string().optional(),
+  "secondaryActionEn": zod.string().optional()
 }),
   "services": zod.array(zod.object({
   "id": zod.string(),
@@ -50,31 +56,48 @@ export const GetSiteContentResponse = zod.object({
   "slug": zod.string(),
   "summary": zod.string(),
   "description": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "summaryEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "purpose": zod.string().optional(),
+  "purposeEn": zod.string().optional(),
+  "procedureSteps": zod.string().optional(),
+  "procedureStepsEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "team": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "role": zod.string(),
   "biography": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "roleEn": zod.string().optional(),
+  "biographyEn": zod.string().optional()
 })),
   "gallery": zod.array(zod.object({
   "id": zod.string(),
   "alt": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "altEn": zod.string().optional()
 })),
   "testimonials": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "service": zod.string(),
   "quote": zod.string(),
-  "rating": zod.number().int().min(1).max(getSiteContentResponseTestimonialsItemRatingMax)
+  "rating": zod.number().int().min(1).max(getSiteContentResponseTestimonialsItemRatingMax),
+  "serviceEn": zod.string().optional(),
+  "quoteEn": zod.string().optional()
 })),
   "faqs": zod.array(zod.object({
   "id": zod.string(),
   "question": zod.string(),
-  "answer": zod.string()
+  "answer": zod.string(),
+  "questionEn": zod.string().optional(),
+  "answerEn": zod.string().optional()
 })),
   "blogPosts": zod.array(zod.object({
   "id": zod.string(),
@@ -85,7 +108,14 @@ export const GetSiteContentResponse = zod.object({
   "imageUrl": zod.string(),
   "author": zod.string(),
   "date": zod.string(),
-  "published": zod.boolean()
+  "published": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "excerptEn": zod.string().optional(),
+  "contentEn": zod.string().optional(),
+  "authorEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
@@ -94,7 +124,9 @@ export const GetSiteContentResponse = zod.object({
   "mediaType": zod.enum(['image', 'video']),
   "imageUrl": zod.string(),
   "videoUrl": zod.string().nullable(),
-  "active": zod.boolean()
+  "active": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional()
 }))
 })
 
@@ -115,6 +147,7 @@ export const UpdateSiteContentBody = zod.object({
   "phone": zod.string(),
   "email": zod.string(),
   "openingHours": zod.string(),
+  "openingHoursEn": zod.string().optional(),
   "bookingUrl": zod.string(),
   "mapUrl": zod.string(),
   "logoUrl": zod.string()
@@ -125,7 +158,12 @@ export const UpdateSiteContentBody = zod.object({
   "description": zod.string(),
   "primaryAction": zod.string(),
   "secondaryAction": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "primaryActionEn": zod.string().optional(),
+  "secondaryActionEn": zod.string().optional()
 }),
   "services": zod.array(zod.object({
   "id": zod.string(),
@@ -133,31 +171,48 @@ export const UpdateSiteContentBody = zod.object({
   "slug": zod.string(),
   "summary": zod.string(),
   "description": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "summaryEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "purpose": zod.string().optional(),
+  "purposeEn": zod.string().optional(),
+  "procedureSteps": zod.string().optional(),
+  "procedureStepsEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "team": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "role": zod.string(),
   "biography": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "roleEn": zod.string().optional(),
+  "biographyEn": zod.string().optional()
 })),
   "gallery": zod.array(zod.object({
   "id": zod.string(),
   "alt": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "altEn": zod.string().optional()
 })),
   "testimonials": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "service": zod.string(),
   "quote": zod.string(),
-  "rating": zod.number().int().min(1).max(updateSiteContentBodyTestimonialsItemRatingMax)
+  "rating": zod.number().int().min(1).max(updateSiteContentBodyTestimonialsItemRatingMax),
+  "serviceEn": zod.string().optional(),
+  "quoteEn": zod.string().optional()
 })),
   "faqs": zod.array(zod.object({
   "id": zod.string(),
   "question": zod.string(),
-  "answer": zod.string()
+  "answer": zod.string(),
+  "questionEn": zod.string().optional(),
+  "answerEn": zod.string().optional()
 })),
   "blogPosts": zod.array(zod.object({
   "id": zod.string(),
@@ -168,7 +223,14 @@ export const UpdateSiteContentBody = zod.object({
   "imageUrl": zod.string(),
   "author": zod.string(),
   "date": zod.string(),
-  "published": zod.boolean()
+  "published": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "excerptEn": zod.string().optional(),
+  "contentEn": zod.string().optional(),
+  "authorEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
@@ -177,7 +239,9 @@ export const UpdateSiteContentBody = zod.object({
   "mediaType": zod.enum(['image', 'video']),
   "imageUrl": zod.string(),
   "videoUrl": zod.string().nullable(),
-  "active": zod.boolean()
+  "active": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional()
 }))
 })
 
@@ -193,6 +257,7 @@ export const UpdateSiteContentResponse = zod.object({
   "phone": zod.string(),
   "email": zod.string(),
   "openingHours": zod.string(),
+  "openingHoursEn": zod.string().optional(),
   "bookingUrl": zod.string(),
   "mapUrl": zod.string(),
   "logoUrl": zod.string()
@@ -203,7 +268,12 @@ export const UpdateSiteContentResponse = zod.object({
   "description": zod.string(),
   "primaryAction": zod.string(),
   "secondaryAction": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "primaryActionEn": zod.string().optional(),
+  "secondaryActionEn": zod.string().optional()
 }),
   "services": zod.array(zod.object({
   "id": zod.string(),
@@ -211,31 +281,48 @@ export const UpdateSiteContentResponse = zod.object({
   "slug": zod.string(),
   "summary": zod.string(),
   "description": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "summaryEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "purpose": zod.string().optional(),
+  "purposeEn": zod.string().optional(),
+  "procedureSteps": zod.string().optional(),
+  "procedureStepsEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "team": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "role": zod.string(),
   "biography": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "roleEn": zod.string().optional(),
+  "biographyEn": zod.string().optional()
 })),
   "gallery": zod.array(zod.object({
   "id": zod.string(),
   "alt": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "altEn": zod.string().optional()
 })),
   "testimonials": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "service": zod.string(),
   "quote": zod.string(),
-  "rating": zod.number().int().min(1).max(updateSiteContentResponseTestimonialsItemRatingMax)
+  "rating": zod.number().int().min(1).max(updateSiteContentResponseTestimonialsItemRatingMax),
+  "serviceEn": zod.string().optional(),
+  "quoteEn": zod.string().optional()
 })),
   "faqs": zod.array(zod.object({
   "id": zod.string(),
   "question": zod.string(),
-  "answer": zod.string()
+  "answer": zod.string(),
+  "questionEn": zod.string().optional(),
+  "answerEn": zod.string().optional()
 })),
   "blogPosts": zod.array(zod.object({
   "id": zod.string(),
@@ -246,7 +333,14 @@ export const UpdateSiteContentResponse = zod.object({
   "imageUrl": zod.string(),
   "author": zod.string(),
   "date": zod.string(),
-  "published": zod.boolean()
+  "published": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "excerptEn": zod.string().optional(),
+  "contentEn": zod.string().optional(),
+  "authorEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
@@ -255,7 +349,9 @@ export const UpdateSiteContentResponse = zod.object({
   "mediaType": zod.enum(['image', 'video']),
   "imageUrl": zod.string(),
   "videoUrl": zod.string().nullable(),
-  "active": zod.boolean()
+  "active": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional()
 }))
 })
 
@@ -487,6 +583,7 @@ export const GetAdminContentResponse = zod.object({
   "phone": zod.string(),
   "email": zod.string(),
   "openingHours": zod.string(),
+  "openingHoursEn": zod.string().optional(),
   "bookingUrl": zod.string(),
   "mapUrl": zod.string(),
   "logoUrl": zod.string()
@@ -497,7 +594,12 @@ export const GetAdminContentResponse = zod.object({
   "description": zod.string(),
   "primaryAction": zod.string(),
   "secondaryAction": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "primaryActionEn": zod.string().optional(),
+  "secondaryActionEn": zod.string().optional()
 }),
   "services": zod.array(zod.object({
   "id": zod.string(),
@@ -505,31 +607,48 @@ export const GetAdminContentResponse = zod.object({
   "slug": zod.string(),
   "summary": zod.string(),
   "description": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "summaryEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "purpose": zod.string().optional(),
+  "purposeEn": zod.string().optional(),
+  "procedureSteps": zod.string().optional(),
+  "procedureStepsEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "team": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "role": zod.string(),
   "biography": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "roleEn": zod.string().optional(),
+  "biographyEn": zod.string().optional()
 })),
   "gallery": zod.array(zod.object({
   "id": zod.string(),
   "alt": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "altEn": zod.string().optional()
 })),
   "testimonials": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "service": zod.string(),
   "quote": zod.string(),
-  "rating": zod.number().int().min(1).max(getAdminContentResponseContentTestimonialsItemRatingMax)
+  "rating": zod.number().int().min(1).max(getAdminContentResponseContentTestimonialsItemRatingMax),
+  "serviceEn": zod.string().optional(),
+  "quoteEn": zod.string().optional()
 })),
   "faqs": zod.array(zod.object({
   "id": zod.string(),
   "question": zod.string(),
-  "answer": zod.string()
+  "answer": zod.string(),
+  "questionEn": zod.string().optional(),
+  "answerEn": zod.string().optional()
 })),
   "blogPosts": zod.array(zod.object({
   "id": zod.string(),
@@ -540,7 +659,14 @@ export const GetAdminContentResponse = zod.object({
   "imageUrl": zod.string(),
   "author": zod.string(),
   "date": zod.string(),
-  "published": zod.boolean()
+  "published": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "excerptEn": zod.string().optional(),
+  "contentEn": zod.string().optional(),
+  "authorEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
@@ -549,7 +675,9 @@ export const GetAdminContentResponse = zod.object({
   "mediaType": zod.enum(['image', 'video']),
   "imageUrl": zod.string(),
   "videoUrl": zod.string().nullable(),
-  "active": zod.boolean()
+  "active": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional()
 }))
 }),
   "version": zod.number().int().min(1)
@@ -573,6 +701,7 @@ export const PublishAdminContentBody = zod.object({
   "phone": zod.string(),
   "email": zod.string(),
   "openingHours": zod.string(),
+  "openingHoursEn": zod.string().optional(),
   "bookingUrl": zod.string(),
   "mapUrl": zod.string(),
   "logoUrl": zod.string()
@@ -583,7 +712,12 @@ export const PublishAdminContentBody = zod.object({
   "description": zod.string(),
   "primaryAction": zod.string(),
   "secondaryAction": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "primaryActionEn": zod.string().optional(),
+  "secondaryActionEn": zod.string().optional()
 }),
   "services": zod.array(zod.object({
   "id": zod.string(),
@@ -591,31 +725,48 @@ export const PublishAdminContentBody = zod.object({
   "slug": zod.string(),
   "summary": zod.string(),
   "description": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "summaryEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "purpose": zod.string().optional(),
+  "purposeEn": zod.string().optional(),
+  "procedureSteps": zod.string().optional(),
+  "procedureStepsEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "team": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "role": zod.string(),
   "biography": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "roleEn": zod.string().optional(),
+  "biographyEn": zod.string().optional()
 })),
   "gallery": zod.array(zod.object({
   "id": zod.string(),
   "alt": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "altEn": zod.string().optional()
 })),
   "testimonials": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "service": zod.string(),
   "quote": zod.string(),
-  "rating": zod.number().int().min(1).max(publishAdminContentBodyContentTestimonialsItemRatingMax)
+  "rating": zod.number().int().min(1).max(publishAdminContentBodyContentTestimonialsItemRatingMax),
+  "serviceEn": zod.string().optional(),
+  "quoteEn": zod.string().optional()
 })),
   "faqs": zod.array(zod.object({
   "id": zod.string(),
   "question": zod.string(),
-  "answer": zod.string()
+  "answer": zod.string(),
+  "questionEn": zod.string().optional(),
+  "answerEn": zod.string().optional()
 })),
   "blogPosts": zod.array(zod.object({
   "id": zod.string(),
@@ -626,7 +777,14 @@ export const PublishAdminContentBody = zod.object({
   "imageUrl": zod.string(),
   "author": zod.string(),
   "date": zod.string(),
-  "published": zod.boolean()
+  "published": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "excerptEn": zod.string().optional(),
+  "contentEn": zod.string().optional(),
+  "authorEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
@@ -635,7 +793,9 @@ export const PublishAdminContentBody = zod.object({
   "mediaType": zod.enum(['image', 'video']),
   "imageUrl": zod.string(),
   "videoUrl": zod.string().nullable(),
-  "active": zod.boolean()
+  "active": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional()
 }))
 }),
   "expectedVersion": zod.number().int().min(1)
@@ -655,6 +815,7 @@ export const PublishAdminContentResponse = zod.object({
   "phone": zod.string(),
   "email": zod.string(),
   "openingHours": zod.string(),
+  "openingHoursEn": zod.string().optional(),
   "bookingUrl": zod.string(),
   "mapUrl": zod.string(),
   "logoUrl": zod.string()
@@ -665,7 +826,12 @@ export const PublishAdminContentResponse = zod.object({
   "description": zod.string(),
   "primaryAction": zod.string(),
   "secondaryAction": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "eyebrowEn": zod.string().optional(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "primaryActionEn": zod.string().optional(),
+  "secondaryActionEn": zod.string().optional()
 }),
   "services": zod.array(zod.object({
   "id": zod.string(),
@@ -673,31 +839,48 @@ export const PublishAdminContentResponse = zod.object({
   "slug": zod.string(),
   "summary": zod.string(),
   "description": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "summaryEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional(),
+  "purpose": zod.string().optional(),
+  "purposeEn": zod.string().optional(),
+  "procedureSteps": zod.string().optional(),
+  "procedureStepsEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "team": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "role": zod.string(),
   "biography": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "roleEn": zod.string().optional(),
+  "biographyEn": zod.string().optional()
 })),
   "gallery": zod.array(zod.object({
   "id": zod.string(),
   "alt": zod.string(),
-  "imageUrl": zod.string()
+  "imageUrl": zod.string(),
+  "altEn": zod.string().optional()
 })),
   "testimonials": zod.array(zod.object({
   "id": zod.string(),
   "name": zod.string(),
   "service": zod.string(),
   "quote": zod.string(),
-  "rating": zod.number().int().min(1).max(publishAdminContentResponseContentTestimonialsItemRatingMax)
+  "rating": zod.number().int().min(1).max(publishAdminContentResponseContentTestimonialsItemRatingMax),
+  "serviceEn": zod.string().optional(),
+  "quoteEn": zod.string().optional()
 })),
   "faqs": zod.array(zod.object({
   "id": zod.string(),
   "question": zod.string(),
-  "answer": zod.string()
+  "answer": zod.string(),
+  "questionEn": zod.string().optional(),
+  "answerEn": zod.string().optional()
 })),
   "blogPosts": zod.array(zod.object({
   "id": zod.string(),
@@ -708,7 +891,14 @@ export const PublishAdminContentResponse = zod.object({
   "imageUrl": zod.string(),
   "author": zod.string(),
   "date": zod.string(),
-  "published": zod.boolean()
+  "published": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "slugEn": zod.string().optional(),
+  "excerptEn": zod.string().optional(),
+  "contentEn": zod.string().optional(),
+  "authorEn": zod.string().optional(),
+  "imageAlt": zod.string().optional(),
+  "imageAltEn": zod.string().optional()
 })),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
@@ -717,7 +907,9 @@ export const PublishAdminContentResponse = zod.object({
   "mediaType": zod.enum(['image', 'video']),
   "imageUrl": zod.string(),
   "videoUrl": zod.string().nullable(),
-  "active": zod.boolean()
+  "active": zod.boolean(),
+  "titleEn": zod.string().optional(),
+  "descriptionEn": zod.string().optional()
 }))
 }),
   "version": zod.number().int().min(1)

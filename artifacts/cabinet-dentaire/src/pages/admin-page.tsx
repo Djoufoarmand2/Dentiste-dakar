@@ -17,6 +17,7 @@ import {
   usePublishContent,
 } from '@/lib/cms';
 import { CmsError } from '@/lib/supabase';
+import { fillEnglishFieldsForAdmin, fillEnglishFieldsForBlogAdmin, fillEnglishFieldsForFaqAdmin } from '@/lib/cms-translations';
 import { Link } from 'wouter';
 
 type ArraySection = 'services' | 'team' | 'gallery' | 'testimonials' | 'faqs' | 'blogPosts' | 'campaigns';
@@ -32,13 +33,13 @@ const sections: { key: ArraySection; label: string }[] = [
 ];
 
 const newItem: Record<ArraySection, Record<string, unknown>> = {
-  services: { id: '', title: '', slug: '', summary: '', description: '', imageUrl: '' },
-  team: { id: '', name: '', role: '', biography: '', imageUrl: '' },
-  gallery: { id: '', alt: '', imageUrl: '' },
-  testimonials: { id: '', name: '', service: '', quote: '', rating: 5 },
-  faqs: { id: '', question: '', answer: '' },
-  blogPosts: { id: '', title: '', slug: '', excerpt: '', content: '', imageUrl: '', author: '', date: new Date().toISOString().slice(0, 10), published: false },
-  campaigns: { id: '', title: '', description: '', mediaType: 'image', imageUrl: '', videoUrl: null, active: false },
+  services: { id: '', title: '', slug: '', summary: '', description: '', imageUrl: '', titleEn: '', slugEn: '', summaryEn: '', descriptionEn: '', purpose: '', purposeEn: '', procedureSteps: '', procedureStepsEn: '', imageAlt: '', imageAltEn: '' },
+  team: { id: '', name: '', role: '', biography: '', imageUrl: '', roleEn: '', biographyEn: '' },
+  gallery: { id: '', alt: '', imageUrl: '', altEn: '' },
+  testimonials: { id: '', name: '', service: '', quote: '', rating: 5, serviceEn: '', quoteEn: '' },
+  faqs: { id: '', question: '', answer: '', questionEn: '', answerEn: '' },
+  blogPosts: { id: '', title: '', slug: '', excerpt: '', content: '', imageUrl: '', author: '', date: new Date().toISOString().slice(0, 10), published: false, titleEn: '', slugEn: '', excerptEn: '', contentEn: '', authorEn: '', imageAlt: '', imageAltEn: '' },
+  campaigns: { id: '', title: '', description: '', mediaType: 'image', imageUrl: '', videoUrl: null, active: false, titleEn: '', descriptionEn: '' },
 };
 
 const fieldLabels: Record<string, string> = {
@@ -51,7 +52,65 @@ const fieldLabels: Record<string, string> = {
   question: 'Question', answer: 'Réponse', excerpt: 'Chapô', content: 'Texte de l’article',
   author: 'Auteur', date: 'Date', published: 'Publié', mediaType: 'Type de média',
   videoUrl: 'Lien de la vidéo', active: 'Campagne active',
+  eyebrowEn: 'Accroche · anglais', titleEn: 'Titre · anglais', descriptionEn: 'Description · anglais',
+  primaryActionEn: 'Action principale · anglais', secondaryActionEn: 'Action secondaire · anglais',
+  slugEn: 'Adresse courte · anglais', summaryEn: 'Résumé · anglais', purpose: 'À quoi sert ce soin ?',
+  purposeEn: 'À quoi sert ce soin ? · anglais', procedureSteps: 'Étapes générales du parcours',
+  procedureStepsEn: 'Étapes générales du parcours · anglais', imageAlt: 'Texte alternatif de l’image',
+  imageAltEn: 'Texte alternatif · anglais', roleEn: 'Rôle · anglais', biographyEn: 'Présentation · anglais',
+  altEn: 'Texte alternatif · anglais', serviceEn: 'Soin concerné · anglais', questionEn: 'Question · anglais',
+  answerEn: 'Réponse · anglais', excerptEn: 'Chapô · anglais', contentEn: 'Texte de l’article · anglais',
+  authorEn: 'Auteur · anglais', openingHoursEn: 'Horaires · anglais', quoteEn: 'Témoignage traduit · anglais',
 };
+
+function ensureTranslationFields(content: SiteContent): SiteContent {
+  return {
+    ...content,
+    clinic: { ...content.clinic, openingHoursEn: content.clinic.openingHoursEn ?? '' },
+    hero: {
+      ...content.hero,
+      eyebrowEn: content.hero.eyebrowEn?.trim() || `Dental practice in ${content.clinic.city || 'Douala'}`,
+      titleEn: content.hero.titleEn?.trim() || `Attentive dental care in ${content.clinic.city || 'Douala'}.`,
+      descriptionEn: content.hero.descriptionEn?.trim() || `Cabinet Sourire Serein welcomes patients at Clinique La Bienveillance in ${content.clinic.city || 'Douala'} for dental consultations and care.`,
+      primaryActionEn: content.hero.primaryActionEn?.trim() || 'Request an appointment',
+      secondaryActionEn: content.hero.secondaryActionEn?.trim() || 'Explore our services',
+    },
+    services: content.services.map((source) => {
+      const item = fillEnglishFieldsForAdmin(source);
+      return {
+      ...item,
+      titleEn: item.titleEn ?? '',
+      slugEn: item.slugEn ?? '',
+      summaryEn: item.summaryEn ?? '',
+      descriptionEn: item.descriptionEn ?? '',
+      purpose: item.purpose ?? '',
+      purposeEn: item.purposeEn ?? '',
+      procedureSteps: item.procedureSteps ?? '',
+      procedureStepsEn: item.procedureStepsEn ?? '',
+      imageAlt: item.imageAlt ?? '',
+      imageAltEn: item.imageAltEn ?? '',
+    };
+    }),
+    team: content.team.map((item) => ({ ...item, roleEn: item.roleEn ?? '', biographyEn: item.biographyEn ?? '' })),
+    gallery: content.gallery.map((item) => ({ ...item, altEn: item.altEn ?? '' })),
+    testimonials: content.testimonials.map((item) => ({ ...item, serviceEn: item.serviceEn ?? '', quoteEn: item.quoteEn ?? '' })),
+    faqs: content.faqs.map((item) => fillEnglishFieldsForFaqAdmin(item)),
+    blogPosts: content.blogPosts.map((source) => {
+      const item = fillEnglishFieldsForBlogAdmin(source);
+      return {
+      ...item,
+      titleEn: item.titleEn ?? '',
+      slugEn: item.slugEn ?? '',
+      excerptEn: item.excerptEn ?? '',
+      contentEn: item.contentEn ?? '',
+      authorEn: item.authorEn ?? '',
+      imageAlt: item.imageAlt ?? '',
+      imageAltEn: item.imageAltEn ?? '',
+    };
+    }),
+    campaigns: content.campaigns.map((item) => ({ ...item, titleEn: item.titleEn ?? '', descriptionEn: item.descriptionEn ?? '' })),
+  };
+}
 
 export default function AdminPage() {
   const { session } = useCabinetSession();
@@ -66,7 +125,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (contentQuery.data && draft === null) {
-      setDraft(JSON.parse(JSON.stringify(contentQuery.data.content)) as SiteContent);
+      setDraft(ensureTranslationFields(JSON.parse(JSON.stringify(contentQuery.data.content)) as SiteContent));
       setVersion(contentQuery.data.version);
     }
   }, [contentQuery.data, draft]);
@@ -121,7 +180,7 @@ export default function AdminPage() {
         client.setQueryData([...adminContentKey, session?.user.id], document);
         void client.invalidateQueries({ queryKey: publicContentKey });
         void client.invalidateQueries({ queryKey: adminAccessKey });
-        setDraft(JSON.parse(JSON.stringify(document.content)) as SiteContent);
+        setDraft(ensureTranslationFields(JSON.parse(JSON.stringify(document.content)) as SiteContent));
         setVersion(document.version);
         setSaved(true);
       },
@@ -132,7 +191,7 @@ export default function AdminPage() {
     if (!window.confirm('Recharger la dernière publication ? Les modifications non publiées affichées ici seront abandonnées.')) return;
     const result = await contentQuery.refetch();
     if (result.data) {
-      setDraft(structuredClone(result.data.content));
+      setDraft(ensureTranslationFields(structuredClone(result.data.content)));
       setVersion(result.data.version);
       setSaved(false);
       update.reset();
@@ -182,7 +241,7 @@ function AdminField({ name, value, onChange, wide = false, protectedUrls, disabl
   if (['imageUrl', 'logoUrl', 'videoUrl'].includes(name)) return <MediaField value={String(value ?? '')} onChange={onChange} kind={name === 'videoUrl' ? 'video' : 'image'} protectedUrls={protectedUrls} disabled={disabled} />;
   const label = fieldLabels[name] || name;
   const isBool = typeof value === 'boolean';
-  const isLong = wide || ['description', 'biography', 'quote', 'answer', 'content', 'excerpt'].includes(name);
+  const isLong = wide || ['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'purpose', 'procedureSteps', 'descriptionEn', 'biographyEn', 'answerEn', 'contentEn', 'excerptEn', 'purposeEn', 'procedureStepsEn', 'quoteEn'].includes(name);
   const isSelect = name === 'mediaType';
   return <label className={`block text-xs font-medium text-foreground/80 ${wide ? 'md:col-span-2' : ''}`} data-testid={`field-${name}`}>
     <span className="mb-2 block">{label}</span>

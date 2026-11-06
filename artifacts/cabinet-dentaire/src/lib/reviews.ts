@@ -13,6 +13,7 @@ function normalizeReviewText(value: string) {
 export function combinePublicReviews(reviews: readonly Review[], historicTestimonials: readonly Testimonial[]): Testimonial[] {
   const seen = new Set<string>();
   return [...reviews, ...historicTestimonials].filter((review) => {
+    if (/démonstration|fictif|fictive|à remplacer|exemple de contenu/i.test(`${review.name} ${review.quote} ${review.service}`)) return false;
     const key = `${normalizeReviewText(review.name)}\u0000${normalizeReviewText(review.quote)}`;
     if (seen.has(key)) return false;
     seen.add(key);
