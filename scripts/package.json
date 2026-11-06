@@ -7,6 +7,7 @@
     "hello": "tsx ./src/hello.ts",
     "cabinet:supabase": "node ./src/cabinet-supabase.mjs",
     "test:review-rate-limit": "node ./src/test-cabinet-review-rate-limit.mjs",
+    "test:campaign-video-dates": "tsx ./src/test-cabinet-publication-dates.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

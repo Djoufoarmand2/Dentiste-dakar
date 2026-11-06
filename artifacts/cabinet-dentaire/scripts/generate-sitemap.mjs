@@ -532,6 +532,8 @@ function structuredDataTags(meta) {
         ? new Date(campaign.publishedAt).toISOString()
         : undefined;
       if (!title || !description || !thumbnail || (!youtube?.embedUrl && !contentUrl) || !meta.canonical) continue;
+      // Avoid emitting invalid VideoObject markup for legacy content whose source date is missing.
+      if (!publishedAt) continue;
       graph.push({
         '@type': 'VideoObject',
         '@id': `${meta.canonical}#video-${encodeURIComponent(campaign.id)}`,
