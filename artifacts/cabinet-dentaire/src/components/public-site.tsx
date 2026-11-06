@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   ArrowLeft, ArrowRight, ChevronDown, Clock3, Image as ImageIcon, MapPin, Menu,
-  MessageCircle, Phone, Quote, Sparkles, X,
+  MessageCircle, Phone, Quote, X,
 } from 'lucide-react';
 import type { BlogPost, Campaign, ServiceItem, SiteContent, Testimonial } from '@workspace/api-client-react';
 import { Link, useLocation } from 'wouter';
@@ -266,7 +266,7 @@ export function ImageFrame({ src, alt, className = '', label = 'Photographie à 
   >
     {hasImage ? <>
       <img src={src} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} decoding="async" className="h-full w-full object-cover" />
-      <span className="image-indicator" aria-hidden="true"><Sparkles size={12} strokeWidth={2.2} /><span className="image-indicator-label">{indicatorText}</span></span>
+      <span className="image-indicator" aria-hidden="true"><span className="image-indicator-label">{indicatorText}</span></span>
       <div className={`image-context ${isActive ? 'is-active' : ''}`} aria-hidden={!isActive}>
         <span className="image-context-kicker">À découvrir</span>
         <p>{detailText}</p>
@@ -448,7 +448,7 @@ export function HomePage({ content }: { content: SiteContent }) {
         <section id="galerie" className="section-pad bg-[#e6e3eb]">
           <div className="wrap">
             <SectionHead eyebrow="Le cabinet" title="Un lieu pensé pour votre confort." text="Un aperçu de l’atmosphère qui vous attend." />
-            {photos.length ? <div className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.slice(0, 6).map((p) => <figure key={p.id} className="overflow-hidden rounded-md" data-testid={`home-gallery-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Photo du cabinet à ajouter" indicator={galleryCaption(p)} details={p.alt} className="aspect-[4/3] transition-transform duration-500 hover:scale-[1.03]" /><figcaption className="sr-only">{p.alt}</figcaption></figure>)}</div>
+            {photos.length ? <div className="mt-12 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">{photos.slice(0, 6).map((p) => <figure key={p.id} className="overflow-hidden rounded-md" data-testid={`home-gallery-${p.id}`}><ImageFrame src={p.imageUrl} alt={p.alt} label="Photo du cabinet à ajouter" indicator={galleryCaption(p)} details={p.alt} className="aspect-[4/3]" /><figcaption className="sr-only">{p.alt}</figcaption></figure>)}</div>
               : <EmptyInline title="L’espace se dévoilera bientôt" text="La galerie du cabinet est en préparation." />}
             <div className="mt-10 text-center"><ActionLink href="/galerie" variant="navy" testId="link-home-gallery">Voir la galerie</ActionLink></div>
           </div>
