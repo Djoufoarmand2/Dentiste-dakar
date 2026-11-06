@@ -45,3 +45,9 @@ export function getYouTubeEmbedUrl(rawUrl: string): string | null {
   if (!videoIdPattern.test(videoId)) return null;
   return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&playsinline=1`;
 }
+
+export function getYouTubeThumbnailUrl(rawUrl: string): string | null {
+  const embedUrl = getYouTubeEmbedUrl(rawUrl);
+  const videoId = embedUrl?.match(/\/embed\/([A-Za-z0-9_-]{11})/)?.[1];
+  return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null;
+}

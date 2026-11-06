@@ -62,7 +62,7 @@ const newItem: Record<ArraySection, Record<string, unknown>> = {
   testimonials: { id: '', name: '', service: '', quote: '', rating: 5, serviceEn: '', quoteEn: '' },
   faqs: { id: '', question: '', answer: '', questionEn: '', answerEn: '' },
   blogPosts: { id: '', title: '', slug: '', excerpt: '', content: '', imageUrl: '', author: '', date: new Date().toISOString().slice(0, 10), published: false, titleEn: '', slugEn: '', excerptEn: '', contentEn: '', authorEn: '', imageAlt: '', imageAltEn: '' },
-  campaigns: { id: '', title: '', description: '', mediaType: 'image', imageUrl: '', videoUrl: null, active: false, titleEn: '', descriptionEn: '' },
+  campaigns: { id: '', title: '', description: '', mediaType: 'image', imageUrl: '', videoUrl: null, active: false, titleEn: '', descriptionEn: '', publishedAt: '', transcript: '', transcriptEn: '' },
 };
 
 const fieldLabels: Record<string, string> = {
@@ -92,6 +92,7 @@ const fieldLabels: Record<string, string> = {
   partnerBodyEn: 'Présentation du partenaire · anglais', controllerName: 'Responsable du traitement',
   contactTitle: 'Titre du contact confidentialité', contactIntro: 'Présentation du contact confidentialité',
   contactTitleEn: 'Titre du contact confidentialité · anglais', contactIntroEn: 'Présentation du contact confidentialité · anglais',
+  publishedAt: 'Date de publication (ISO 8601)', transcript: 'Transcription vidéo', transcriptEn: 'Transcription vidéo · anglais',
 };
 
 function ensureTranslationFields(content: SiteContent): SiteContent {
@@ -143,7 +144,7 @@ function ensureTranslationFields(content: SiteContent): SiteContent {
       imageAltEn: item.imageAltEn ?? '',
     };
     }),
-    campaigns: content.campaigns.map((item) => ({ ...item, titleEn: item.titleEn ?? '', descriptionEn: item.descriptionEn ?? '' })),
+    campaigns: content.campaigns.map((item) => ({ ...item, titleEn: item.titleEn ?? '', descriptionEn: item.descriptionEn ?? '', publishedAt: item.publishedAt ?? '', transcript: item.transcript ?? '', transcriptEn: item.transcriptEn ?? '' })),
   };
 }
 
@@ -175,7 +176,7 @@ function missingEnglishContent(content: SiteContent): TranslationGap[] {
     testimonials: [['service', 'serviceEn'], ['quote', 'quoteEn']],
     faqs: [['question', 'questionEn'], ['answer', 'answerEn']],
     blogPosts: [['title', 'titleEn'], ['slug', 'slugEn'], ['excerpt', 'excerptEn'], ['content', 'contentEn'], ['author', 'authorEn'], ['imageAlt', 'imageAltEn']],
-    campaigns: [['title', 'titleEn'], ['description', 'descriptionEn']],
+    campaigns: [['title', 'titleEn'], ['description', 'descriptionEn'], ['transcript', 'transcriptEn']],
   };
 
   for (const section of ['clinic', 'hero', 'whyChoose', 'privacyPolicy'] as const) {
@@ -382,7 +383,7 @@ export default function AdminPage() {
           </section>}
           {entries.map((item, index) => <section key={String(item.id ?? index)} id={`admin-entry-${section}-${String(item.id ?? index)}`} className="rounded-[22px] border border-border bg-card p-5 md:p-6" data-testid={`admin-entry-${section}-${String(item.id ?? index)}`}>
             <div className="mb-5 flex items-center justify-between border-b border-border pb-4"><div><p className="text-[9px] uppercase tracking-[.18em] text-muted-foreground">{sectionLabels[section]} · {String(item.id || `Élément ${index + 1}`)}</p><h3 className="mt-1 font-display text-xl">{String(item.title || item.name || item.question || item.alt || `Élément ${index + 1}`)}</h3></div><button type="button" onClick={() => removeItem(index)} disabled={busy || (section === 'privacyPolicy' && item.required === true)} title={section === 'privacyPolicy' && item.required === true ? 'Cette rubrique est nécessaire à la page de confidentialité.' : 'Supprimer cet élément'} aria-label="Supprimer cet élément" className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-30" data-testid={`button-remove-${section}-${index}`}><Trash2 size={16} /></button></div>
-            <div className="grid gap-4 md:grid-cols-2">{Object.entries(item).filter(([key]) => !(section === 'privacyPolicy' && key === 'required')).map(([key, value]) => <AdminField key={`${String(item.id)}-${key}`} name={key} value={value} onChange={(raw) => setArrayField(index, key, raw)} wide={['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'body'].includes(key)} protectedUrls={protectedUrls} disabled={busy} />)}</div>
+            <div className="grid gap-4 md:grid-cols-2">{Object.entries(item).filter(([key]) => !(section === 'privacyPolicy' && key === 'required')).map(([key, value]) => <AdminField key={`${String(item.id)}-${key}`} name={key} value={value} onChange={(raw) => setArrayField(index, key, raw)} wide={['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'body', 'transcript', 'transcriptEn'].includes(key)} protectedUrls={protectedUrls} disabled={busy} />)}</div>
             {typeof item.imageUrl === 'string' && item.imageUrl && <div className="mt-4"><p className="mb-2 text-[10px] uppercase tracking-[.16em] text-muted-foreground">Aperçu</p><div className="h-48 overflow-hidden rounded-xl bg-secondary"><img src={item.imageUrl} alt="Aperçu du visuel" loading="lazy" className="h-full w-full object-cover" /></div></div>}
           </section>)}
           {!entries.length && <div className="rounded-[22px] border border-dashed border-border bg-card/60 p-10 text-center" data-testid={`empty-admin-${section}`}><ImageIcon className="mx-auto text-primary/70" size={24} /><h3 className="mt-4 font-display text-xl">Aucun élément pour le moment</h3><p className="mt-2 text-sm text-muted-foreground">Ajoutez un premier élément. Les URL d’images sont facultatives.</p></div>}

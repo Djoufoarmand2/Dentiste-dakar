@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { localizedPath, rememberedSiteLocale, SiteLocaleProvider, type SiteLocale } from '@/lib/site-locale';
 import { englishBlogPost, englishService } from '@/lib/cms-translations';
+import { getYouTubeThumbnailUrl } from '@/lib/video-url';
 
 const queryClient = new QueryClient();
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -134,10 +135,13 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
   };
   const isWhyChooseRoute = localizedRoute === '/pourquoi-nous-choisir' || localizedRoute === '/why-choose-us';
   const isPrivacyRoute = localizedRoute === '/confidentialite' || localizedRoute === '/privacy';
+  const isInformationRoute = localizedRoute === '/informations' || localizedRoute === '/information';
   const cmsPageTitle = isWhyChooseRoute
     ? (locale === 'en' ? query.data.whyChoose?.titleEn?.trim() : query.data.whyChoose?.title?.trim())
     : isPrivacyRoute
       ? (locale === 'en' ? query.data.privacyPolicy?.titleEn?.trim() : query.data.privacyPolicy?.title?.trim())
+      : isInformationRoute
+        ? (locale === 'en' ? `Dental practice news and videos in ${query.data.clinic.city}` : `Actualités et vidéos du cabinet dentaire à ${query.data.clinic.city}`)
       : '';
   const pageName = (locale === 'en' ? (article ? englishBlogPost(article).title : service ? englishService(service).title : '') : article?.title || service?.title)
     || cmsPageTitle
@@ -145,6 +149,17 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
     || (locale === 'en' ? 'Cabinet Sourire Serein' : 'Cabinet Sourire Serein');
   const clinicName = query.data.clinic.name;
   const city = query.data.clinic.city;
+  const activeCampaigns = query.data.campaigns.filter((campaign) => campaign.active);
+  const campaignText = activeCampaigns
+    .slice(0, 2)
+    .map((campaign) => locale === 'en'
+      ? [campaign.titleEn?.trim(), campaign.descriptionEn?.trim()].filter(Boolean).join(' — ')
+      : [campaign.title?.trim(), campaign.description?.trim()].filter(Boolean).join(' — '))
+    .filter(Boolean)
+    .join(' ');
+  const informationDescription = locale === 'en'
+    ? `Watch practice videos and read current campaigns from ${clinicName} in ${city}.${campaignText ? ` ${campaignText}` : ''}`
+    : `Regardez les vidéos et actualités de ${clinicName}, cabinet dentaire à ${city}.${campaignText ? ` ${campaignText}` : ''}`;
   const routeDescriptions: Record<SiteLocale, Record<string, string>> = {
     fr: {
     '/soins': `Découvrez les soins dentaires présentés par ${clinicName} à ${city}. Contactez le cabinet pour organiser une consultation.`,
@@ -154,7 +169,7 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
     '/avis': `Lisez les avis publiés sur ${clinicName}, cabinet dentaire à ${city}, et partagez votre expérience.`,
     '/faq': `Réponses aux questions fréquentes sur les soins dentaires, les rendez-vous et la première visite à ${city}.`,
     '/blog': `Articles et informations générales sur l’hygiène bucco-dentaire et les soins dentaires à ${city}.`,
-    '/informations': `Retrouvez les coordonnées et les informations pratiques communiquées pour ${clinicName} à ${city}.`,
+    '/informations': informationDescription,
     '/contact': `Contactez ${clinicName}, cabinet dentaire à ${city}, pour demander des renseignements ou un rendez-vous.`,
     '/confidentialite': 'Informations sur la collecte, l’utilisation et la protection de vos données personnelles sur le site.',
     },
@@ -166,7 +181,7 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
       '/reviews': `Read visitor reviews shared about ${clinicName}, a dental practice in ${city}.`,
       '/faq': `Answers to common questions about dental care, appointments and first visits in ${city}.`,
       '/blog': `General information about oral health and dental care in ${city}.`,
-      '/information': `Find practical information shared by ${clinicName} in ${city}.`,
+      '/information': informationDescription,
       '/contact': `Contact ${clinicName}, a dental practice in ${city}, to ask a question or request an appointment.`,
       '/privacy': `Information about how this website collects, uses and protects personal data.`,
     },
@@ -175,6 +190,8 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
     ? (locale === 'en' ? query.data.whyChoose?.introEn?.trim() : query.data.whyChoose?.intro?.trim())
     : isPrivacyRoute
       ? (locale === 'en' ? query.data.privacyPolicy?.descriptionEn?.trim() : query.data.privacyPolicy?.description?.trim())
+      : isInformationRoute
+        ? informationDescription
       : '';
   const contentDescription = locale === 'en'
     ? (article ? englishBlogPost(article).excerpt : service ? englishService(service).summary : cmsPageDescription)
@@ -185,9 +202,19 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
       ? `${pageName} at ${clinicName} in ${city}. Contact the practice for information.`
       : `${pageName} au ${clinicName}, à ${city}. Informations et contact.`)), 160);
   const title = seoTitle(localizedRoute === '/' ? (locale === 'en' ? `Dentist in ${city}` : `Cabinet dentaire à ${city}`) : pageName, query.data.clinic.name);
-  const imageUrl = article?.imageUrl?.trim() || service?.imageUrl?.trim() || query.data.hero.imageUrl?.trim() || query.data.clinic.logoUrl?.trim() || undefined;
+  const informationCampaign = activeCampaigns.find((campaign) => campaign.mediaType === 'video') || activeCampaigns[0];
+  const informationPoster = informationCampaign?.imageUrl?.trim()
+    || (informationCampaign?.videoUrl ? getYouTubeThumbnailUrl(informationCampaign.videoUrl) || undefined : undefined);
+  const imageUrl = article?.imageUrl?.trim() || service?.imageUrl?.trim() || (isInformationRoute ? informationPoster : undefined) || query.data.hero.imageUrl?.trim() || query.data.clinic.logoUrl?.trim() || undefined;
   const indexable = indexableSeoConfigured(query.data);
-  return <SiteLocaleProvider locale={locale}><DocumentMetadata title={title} description={description} imageUrl={imageUrl} imageAlt={article ? (locale === 'en' ? englishBlogPost(article).imageAlt : article.imageAlt?.trim() || `Illustration de l’article : ${pageName}`) : service ? (locale === 'en' ? englishService(service).imageAlt : service.imageAlt?.trim() || `Illustration du soin : ${pageName}`) : query.data.hero.title} isArticle={!!article} indexable={indexable} locale={locale} currentPath={path} content={query.data} />{page(query.data)}</SiteLocaleProvider>;
+  const imageAlt = article
+    ? (locale === 'en' ? englishBlogPost(article).imageAlt : article.imageAlt?.trim() || `Illustration de l’article : ${pageName}`)
+    : service
+      ? (locale === 'en' ? englishService(service).imageAlt : service.imageAlt?.trim() || `Illustration du soin : ${pageName}`)
+      : isInformationRoute && informationCampaign
+        ? (locale === 'en' ? `Thumbnail for ${informationCampaign.titleEn?.trim() || 'practice video'}` : `Miniature de la vidéo : ${informationCampaign.title}`)
+        : query.data.hero.title;
+  return <SiteLocaleProvider locale={locale}><DocumentMetadata title={title} description={description} imageUrl={imageUrl} imageAlt={imageAlt} isArticle={!!article} indexable={indexable} locale={locale} currentPath={path} content={query.data} />{page(query.data)}</SiteLocaleProvider>;
 }
 
 function DocumentMetadata({ title, description, imageUrl, imageAlt, isArticle = false, indexable = false, locale, currentPath, content }: { title: string; description: string; imageUrl?: string; imageAlt?: string; isArticle?: boolean; indexable?: boolean; locale: SiteLocale; currentPath: string; content: SiteContent }) {

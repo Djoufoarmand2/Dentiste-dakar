@@ -140,6 +140,40 @@ function httpsImageUrl(value) {
   }
 }
 
+function httpsVideoUrl(value) {
+  try {
+    const video = new URL(value || '');
+    return video.protocol === 'https:' ? video.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function youtubeVideoDetails(value) {
+  try {
+    const url = new URL(value || '');
+    if (!['http:', 'https:'].includes(url.protocol)) return undefined;
+    const host = url.hostname.toLowerCase();
+    const segments = url.pathname.split('/').filter(Boolean);
+    let id = '';
+    if (['youtu.be', 'www.youtu.be'].includes(host)) id = segments[0] || '';
+    else if (['youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'].includes(host)) {
+      if (url.pathname === '/watch') id = url.searchParams.get('v') || '';
+      else if (['embed', 'shorts', 'live'].includes(segments[0] || '')) id = segments[1] || '';
+    } else if (['youtube-nocookie.com', 'www.youtube-nocookie.com'].includes(host) && segments[0] === 'embed') {
+      id = segments[1] || '';
+    }
+    if (!/^[A-Za-z0-9_-]{11}$/.test(id)) return undefined;
+    return {
+      id,
+      embedUrl: `https://www.youtube-nocookie.com/embed/${id}?rel=0&playsinline=1`,
+      thumbnailUrl: `https://i.ytimg.com/vi/${id}/hqdefault.jpg`,
+    };
+  } catch {
+    return undefined;
+  }
+}
+
 const clinicName = publicContent?.clinic?.name?.trim() || 'Cabinet Sourire Serein';
 const city = publicContent?.clinic?.city?.trim() || 'Douala';
 const siteTitle = truncateMeta(viteSetting('VITE_SITE_TITLE') || `Cabinet dentaire à ${city} | ${clinicName}`, 60);
@@ -332,6 +366,14 @@ function pageMetadata(route) {
     : undefined;
   const translatedArticle = article ? englishBlogPost(article) : undefined;
   const translatedService = service ? englishService(service) : undefined;
+  const activeCampaigns = (publicContent?.campaigns ?? []).filter((campaign) => campaign.active);
+  const activeVideoCampaigns = activeCampaigns.filter((campaign) => campaign.mediaType === 'video' && campaign.videoUrl);
+  const videoCampaignSummary = activeCampaigns.slice(0, 2).map((campaign) => english
+    ? [campaign.titleEn?.trim(), campaign.descriptionEn?.trim()].filter(Boolean).join(' — ')
+    : [campaign.title?.trim(), campaign.description?.trim()].filter(Boolean).join(' — ')).filter(Boolean).join(' ');
+  const informationDescription = english
+    ? `Watch practice videos and read current campaigns from ${name} in ${city}.${videoCampaignSummary ? ` ${videoCampaignSummary}` : ''}`
+    : `Regardez les vidéos et actualités de ${name}, cabinet dentaire à ${city}.${videoCampaignSummary ? ` ${videoCampaignSummary}` : ''}`;
   const pageNames = english ? {
     '/services': `Dental services in ${city}`,
     '/why-choose-us': 'Why choose our practice',
@@ -340,7 +382,7 @@ function pageMetadata(route) {
     '/reviews': `Reviews of the dental practice in ${city}`,
     '/faq': 'Dental care frequently asked questions',
     '/blog': `Dental health articles in ${city}`,
-    '/information': 'Practice information',
+    '/information': `Dental practice news and videos in ${city}`,
     '/contact': `Contact and appointments in ${city}`,
     '/privacy': 'Privacy policy',
   } : {
@@ -351,7 +393,7 @@ function pageMetadata(route) {
     '/avis': `Avis sur le cabinet dentaire à ${city}`,
     '/faq': 'Questions fréquentes sur les soins dentaires',
     '/blog': `Conseils dentaires à ${city}`,
-    '/informations': 'Informations pratiques sur le cabinet',
+    '/informations': `Actualités et vidéos du cabinet dentaire à ${city}`,
     '/contact': `Contact et rendez-vous à ${city}`,
     '/confidentialite': 'Politique de confidentialité',
   };
@@ -366,7 +408,7 @@ function pageMetadata(route) {
     '/reviews': `Read visitor reviews shared about ${name}, a dental practice in ${city}.`,
     '/faq': `Answers to common questions about dental care, appointments and first visits in ${city}.`,
     '/blog': `General information about oral health and dental care in ${city}.`,
-    '/information': `Find practical information shared by ${name} in ${city}.`,
+    '/information': informationDescription,
     '/contact': `Contact ${name}, a dental practice in ${city}, to ask a question or request an appointment.`,
     '/privacy': 'Information about how this website collects, uses and protects personal data.',
   } : {
@@ -377,7 +419,7 @@ function pageMetadata(route) {
     '/avis': `Lisez les avis publiés sur ${name}, cabinet dentaire à ${city}, et partagez votre expérience.`,
     '/faq': `Réponses aux questions fréquentes sur les soins dentaires, les rendez-vous et la première visite à ${city}.`,
     '/blog': `Articles et informations générales sur l’hygiène bucco-dentaire et les soins dentaires à ${city}.`,
-    '/informations': `Retrouvez les coordonnées et les informations pratiques communiquées pour ${name} à ${city}.`,
+    '/informations': informationDescription,
     '/contact': `Contactez ${name}, cabinet dentaire à ${city}, pour demander des renseignements ou un rendez-vous.`,
     '/confidentialite': 'Informations sur la collecte, l’utilisation et la protection de vos données personnelles sur le site.',
   };
@@ -388,14 +430,22 @@ function pageMetadata(route) {
       || (english ? `${pageName} at ${name} in ${city}. Contact the practice for information.` : `${pageName} au ${name}, à ${city}. Informations et contact.`),
     160,
   );
-  const socialImage = httpsImageUrl(article?.imageUrl) || httpsImageUrl(service?.imageUrl) || httpsImageUrl(publicContent?.hero?.imageUrl) || configuredImageUrl;
+  const informationCampaign = activeCampaigns.find((campaign) => campaign.mediaType === 'video') || activeCampaigns[0];
+  const videoThumbnail = informationCampaign?.videoUrl ? youtubeVideoDetails(informationCampaign.videoUrl)?.thumbnailUrl : undefined;
+  const socialImage = httpsImageUrl(article?.imageUrl)
+    || httpsImageUrl(service?.imageUrl)
+    || (normalizedRoute === '/informations' || normalizedRoute === '/information' ? httpsImageUrl(informationCampaign?.imageUrl) || videoThumbnail : undefined)
+    || httpsImageUrl(publicContent?.hero?.imageUrl)
+    || configuredImageUrl;
   const canonical = canIndex && origin ? `${origin}${canonicalRoute === '/' ? '/' : canonicalRoute}` : undefined;
   const imageAlt = article
     ? (english ? translatedArticle?.imageAlt || 'Dental health article illustration.' : article.imageAlt?.trim() || `Illustration de l’article : ${pageName}`)
     : service
       ? (english ? translatedService?.imageAlt || 'Dental care illustration.' : service.imageAlt?.trim() || `Illustration du soin : ${pageName}`)
+    : (normalizedRoute === '/informations' || normalizedRoute === '/information') && informationCampaign
+      ? (english ? `Thumbnail for ${informationCampaign.titleEn?.trim() || 'practice video'}` : `Miniature de la vidéo : ${informationCampaign.title}`)
     : publicContent?.hero?.title;
-  return { title, description, socialImage, canonical, canonicalRoute, type: article ? 'article' : 'website', article, service, clinicName: name, locale, imageAlt };
+  return { title, description, socialImage, canonical, canonicalRoute, type: article ? 'article' : 'website', article, service, videoCampaigns: activeVideoCampaigns, clinicName: name, locale, imageAlt };
 }
 
 function withPageMetadata(template, route) {
@@ -468,6 +518,35 @@ function structuredDataTags(meta) {
       mainEntityOfPage: meta.canonical,
       inLanguage: meta.locale === 'en' ? 'en-CM' : 'fr-CM',
     });
+  }
+  if (meta.canonicalRoute === '/informations/' || meta.canonicalRoute === '/en/information/') {
+    for (const campaign of meta.videoCampaigns ?? []) {
+      const title = meta.locale === 'en' ? campaign.titleEn?.trim() || 'Dental practice video' : campaign.title?.trim();
+      const description = meta.locale === 'en'
+        ? campaign.descriptionEn?.trim() || 'Video update from the dental practice.'
+        : campaign.description?.trim();
+      const youtube = youtubeVideoDetails(campaign.videoUrl);
+      const contentUrl = httpsVideoUrl(campaign.videoUrl);
+      const thumbnail = httpsImageUrl(campaign.imageUrl) || youtube?.thumbnailUrl;
+      const publishedAt = campaign.publishedAt && !Number.isNaN(Date.parse(campaign.publishedAt))
+        ? new Date(campaign.publishedAt).toISOString()
+        : undefined;
+      if (!title || !description || !thumbnail || (!youtube?.embedUrl && !contentUrl) || !meta.canonical) continue;
+      graph.push({
+        '@type': 'VideoObject',
+        '@id': `${meta.canonical}#video-${encodeURIComponent(campaign.id)}`,
+        name: title,
+        description,
+        thumbnailUrl: [thumbnail],
+        uploadDate: publishedAt,
+        embedUrl: youtube?.embedUrl,
+        contentUrl: youtube ? undefined : contentUrl,
+        transcript: meta.locale === 'en' ? campaign.transcriptEn?.trim() || undefined : campaign.transcript?.trim() || undefined,
+        publisher: { '@type': 'Organization', name: clinicName },
+        mainEntityOfPage: meta.canonical,
+        inLanguage: meta.locale === 'en' ? 'en-CM' : 'fr-CM',
+      });
+    }
   }
   const json = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph })
     .replace(/</g, '\\u003c');
@@ -645,7 +724,43 @@ function renderPublicMarkup(route, meta) {
     }).join('');
     return `<main>${heading}${intro}${items || `<p>${english ? 'Answers to common questions will be published soon.' : 'Les réponses aux questions fréquentes seront publiées prochainement.'}</p>`}</main>`;
   }
-  if (normalizedRoute === '/informations' || normalizedRoute === '/contact' || normalizedRoute === '/information') {
+  if (normalizedRoute === '/informations' || normalizedRoute === '/information') {
+    const campaigns = (publicContent.campaigns ?? []).filter((campaign) => campaign.active);
+    const campaignsMarkup = campaigns.map((campaign) => {
+      const title = english ? campaign.titleEn?.trim() || 'Practice video' : campaign.title;
+      const description = english ? campaign.descriptionEn?.trim() || 'News and information from the dental practice.' : campaign.description;
+      const youtube = campaign.mediaType === 'video' ? youtubeVideoDetails(campaign.videoUrl) : undefined;
+      const directVideo = campaign.mediaType === 'video' ? httpsVideoUrl(campaign.videoUrl) : undefined;
+      const image = httpsImageUrl(campaign.imageUrl);
+      const thumbnail = image || youtube?.thumbnailUrl;
+      const media = campaign.mediaType === 'video'
+        ? youtube
+          ? `<iframe src="${escapeAttribute(youtube.embedUrl)}" title="${escapeAttribute(english ? `Campaign video: ${title}` : `Vidéo de la campagne : ${title}`)}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`
+          : directVideo
+            ? `<video src="${escapeAttribute(directVideo)}" ${thumbnail ? `poster="${escapeAttribute(thumbnail)}"` : ''} controls playsinline preload="metadata" aria-label="${escapeAttribute(title)}"></video>`
+            : ''
+        : image
+          ? `<img src="${escapeAttribute(image)}" alt="${escapeAttribute(title)}" loading="lazy" decoding="async" />`
+          : '';
+      const publishedAt = campaign.publishedAt && !Number.isNaN(Date.parse(campaign.publishedAt))
+        ? `<time datetime="${escapeAttribute(new Date(campaign.publishedAt).toISOString())}">${escapeXml(new Date(campaign.publishedAt).toLocaleDateString(english ? 'en' : 'fr-FR', { dateStyle: 'long' }))}</time>`
+        : '';
+      const transcript = english ? campaign.transcriptEn?.trim() : campaign.transcript?.trim();
+      const transcriptMarkup = campaign.mediaType === 'video' && transcript
+        ? `<details><summary>${english ? 'Read the video transcript' : 'Lire la transcription de la vidéo'}</summary><p>${escapeXml(transcript).replace(/\r?\n/g, '<br />')}</p></details>`
+        : '';
+      const sourceLink = youtube
+        ? `<p><a href="${escapeAttribute(campaign.videoUrl)}" target="_blank" rel="noopener noreferrer">${english ? 'Open the video on YouTube' : 'Ouvrir la vidéo sur YouTube'}</a></p>`
+        : '';
+      return `<article><div>${media}</div><h2>${escapeXml(title)}</h2><p>${escapeXml(description)}</p>${publishedAt}${sourceLink}${transcriptMarkup}</article>`;
+    }).join('');
+    const empty = english ? 'Practice updates and videos will appear here when available.' : 'Les actualités et vidéos du cabinet seront publiées ici dès qu’elles seront disponibles.';
+    const informationHeading = english
+      ? `Dental practice news and videos in ${cityName}`
+      : `Actualités et vidéos du cabinet dentaire à ${cityName}`;
+    return `<main><h1>${escapeXml(informationHeading)}</h1><p>${escapeXml(meta.description)}</p>${campaignsMarkup || `<p>${empty}</p>`}</main>`;
+  }
+  if (normalizedRoute === '/contact') {
     const rows = [
       clinic.address ? `<p><strong>${english ? 'Address' : 'Adresse'}:</strong> ${escapeXml(clinic.address)}</p>` : '',
       clinic.phone ? `<p><strong>${english ? 'Phone' : 'Téléphone'}:</strong> <a href="tel:${escapeAttribute(clinic.phone)}">${escapeXml(clinic.phone)}</a></p>` : '',

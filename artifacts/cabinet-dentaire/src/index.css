@@ -288,6 +288,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .input-valid { border-color: #5d7f46 !important; box-shadow: 0 0 0 2px rgba(93,127,70,.12); }
 .input-invalid { border-color: #a44c42 !important; box-shadow: 0 0 0 2px rgba(164,76,66,.1); }
 .floating-call { position: fixed; right: max(1.1rem, env(safe-area-inset-right)); bottom: max(1.1rem, env(safe-area-inset-bottom)); z-index: 35; }
+.floating-phone { position: fixed; right: max(1.1rem, env(safe-area-inset-right)); bottom: calc(max(1.1rem, env(safe-area-inset-bottom)) + 4.25rem); z-index: 35; display: none; }
 .editor-input { width:100%; border:1px solid hsl(var(--border)); background:#fff; border-radius:12px; padding:11px 13px; color:hsl(var(--foreground)); outline:none; transition:border-color .2s, box-shadow .2s; }
 .editor-input:focus { border-color:var(--accent-blue); box-shadow:0 0 0 3px rgba(49,92,154,.16); }
 .image-empty { background: linear-gradient(150deg,#e4e4f0,#f7f8fc); }
@@ -424,10 +425,13 @@ body:not(.public-site) :is(a,button,input,textarea,select):focus-visible { outli
 @keyframes hero-color-drift { from { background-position:0% 45%; } to { background-position:100% 55%; } }
 .public-site .floating-call { background:#25D366 !important; box-shadow:0 8px 24px rgba(37,211,102,.28); }
 .public-site .floating-call:hover { background:#1ebe5d !important; box-shadow:0 10px 28px rgba(37,211,102,.38); transform:translateY(-3px) scale(1.04); }
+.public-site .floating-phone { display:none; background:#2563eb !important; box-shadow:0 8px 24px rgba(37,99,235,.3); }
+.public-site .floating-phone:hover { background:#1d4ed8 !important; box-shadow:0 10px 28px rgba(37,99,235,.38); transform:translateY(-3px) scale(1.04); }
 .public-site :is(h1,h2,h3) { text-wrap:balance; }
 @keyframes soft-enter { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 .min-h-\[100dvh\].bg-\[\#e6e3eb\] header { animation:soft-enter .48s cubic-bezier(.2,.75,.25,1) both; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } }
+@media (max-width: 767px) { .public-site .floating-phone { display:grid; } }
 @media (prefers-reduced-motion: reduce) {
   .public-site .announcement-bar { animation:none !important; background-position:50% 50%; }
   .announcement-bar::before, .announcement-marquee { display:none; }

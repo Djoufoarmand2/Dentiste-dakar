@@ -302,6 +302,9 @@ export interface Campaign {
   active: boolean;
   titleEn?: string;
   descriptionEn?: string;
+  publishedAt?: string;
+  transcript?: string;
+  transcriptEn?: string;
 }
 
 export interface SiteContent {
