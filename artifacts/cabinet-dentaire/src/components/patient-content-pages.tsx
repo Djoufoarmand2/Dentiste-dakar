@@ -165,10 +165,10 @@ function ContactDetails({ clinic, locale }: { clinic: PatientClinic; locale: Loc
   const phoneDigits = clinic.phone.replace(/\D/g, '');
   const whatsappHref = `https://wa.me/${phoneDigits}`;
 
-  const cardClass = 'group flex min-h-[82px] min-w-0 items-center gap-3 rounded-xl border border-white/20 bg-white/[0.08] px-4 py-3 text-white shadow-[0_8px_24px_rgba(7,1,22,.12)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-white/45 hover:bg-white/[0.15] hover:shadow-[0_14px_32px_rgba(7,1,22,.24)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#c8c7ff] motion-reduce:transform-none motion-reduce:transition-none';
+  const cardClass = 'group flex min-h-[82px] min-w-0 items-center gap-3 rounded-xl border border-[#24234c]/15 bg-white/90 px-4 py-3 text-[#24234c] shadow-[0_8px_24px_rgba(7,1,22,.10)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-[#555c9c]/50 hover:bg-white hover:shadow-[0_14px_32px_rgba(7,1,22,.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#555c9c] motion-reduce:transform-none motion-reduce:transition-none';
 
-  return <div className="mt-7 max-w-3xl border-t border-white/15 pt-5">
-    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-xs font-medium text-white/85">
+  return <div className="mt-7 max-w-3xl border-t border-[#24234c]/15 pt-5">
+    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#24234c]/15 bg-white/70 px-3 py-1.5 text-xs font-semibold text-[#24234c]">
       <MapPin size={14} aria-hidden="true" />
       {clinic.city || 'Douala'}
     </div>
@@ -176,26 +176,26 @@ function ContactDetails({ clinic, locale }: { clinic: PatientClinic; locale: Loc
       {clinic.phone && <a href={`tel:${clinic.phone}`} className={cardClass} data-testid="link-why-phone">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#29c7c3] text-[#070116] shadow-[0_0_22px_rgba(41,199,195,.25)] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"><Phone size={19} aria-hidden="true" /></span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[10px] font-bold uppercase tracking-[.15em] text-white/65">{isEnglish ? 'Call the practice' : 'Appeler le cabinet'}</span>
+          <span className="block text-[10px] font-bold uppercase tracking-[.15em] text-[#555c9c]">{isEnglish ? 'Call the practice' : 'Appeler le cabinet'}</span>
           <span className="mt-1 block break-words text-sm font-semibold leading-5">{clinic.phone}</span>
         </span>
-        <ArrowRight size={16} aria-hidden="true" className="shrink-0 text-white/55 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-white motion-reduce:transition-none" />
+        <ArrowRight size={16} aria-hidden="true" className="shrink-0 text-[#555c9c] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#24234c] motion-reduce:transition-none" />
       </a>}
       {clinic.email && <a href={`mailto:${clinic.email}`} className={cardClass} data-testid="link-why-email">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#c8c7ff] text-[#24234c] shadow-[0_0_22px_rgba(200,199,255,.2)] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"><Mail size={19} aria-hidden="true" /></span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[10px] font-bold uppercase tracking-[.15em] text-white/65">{isEnglish ? 'Send an email' : 'Envoyer un e-mail'}</span>
+          <span className="block text-[10px] font-bold uppercase tracking-[.15em] text-[#555c9c]">{isEnglish ? 'Send an email' : 'Envoyer un e-mail'}</span>
           <span className="mt-1 block break-all text-sm font-semibold leading-5">{clinic.email}</span>
         </span>
-        <ArrowRight size={16} aria-hidden="true" className="shrink-0 text-white/55 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-white motion-reduce:transition-none" />
+        <ArrowRight size={16} aria-hidden="true" className="shrink-0 text-[#555c9c] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#24234c] motion-reduce:transition-none" />
       </a>}
       {phoneDigits && <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className={cardClass} data-testid="link-why-whatsapp">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#25d366] text-[#073b2b] shadow-[0_0_22px_rgba(37,211,102,.22)] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"><FaWhatsapp size={20} aria-hidden="true" /></span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[10px] font-bold uppercase tracking-[.15em] text-white/65">WhatsApp</span>
+          <span className="block text-[10px] font-bold uppercase tracking-[.15em] text-[#555c9c]">WhatsApp</span>
           <span className="mt-1 block text-sm font-semibold leading-5">{isEnglish ? 'Message the practice' : 'Écrire au cabinet'}</span>
         </span>
-        <ArrowRight size={16} aria-hidden="true" className="shrink-0 text-white/55 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-white motion-reduce:transition-none" />
+        <ArrowRight size={16} aria-hidden="true" className="shrink-0 text-[#555c9c] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#24234c] motion-reduce:transition-none" />
       </a>}
     </div>
   </div>;
