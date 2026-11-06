@@ -157,6 +157,7 @@ export async function handleRequest(request: Request): Promise<Response> {
       const { error } = await db.from('cabinet_appointments').upsert({
         id, name, phone, email: parsed.data.email.trim().toLowerCase(),
         service: parsed.data.service, preferred_date: parsed.data.preferredDate || null,
+        preferred_window: parsed.data.preferredWindow || null,
         message: parsed.data.message?.trim() || null,
       }, { onConflict: 'id', ignoreDuplicates: true });
       if (error) throw new HttpError(503, 'Impossible d’enregistrer votre demande. Réessayez ou contactez le cabinet.');
@@ -197,7 +198,8 @@ export async function handleRequest(request: Request): Promise<Response> {
       if (error) throw new HttpError(503, 'Impossible de charger les demandes.');
       return respond((data ?? []).map(row => ({
         id: row.id, name: row.name, phone: row.phone, email: row.email,
-        service: row.service, preferredDate: row.preferred_date, message: row.message,
+        service: row.service, preferredDate: row.preferred_date,
+        preferredWindow: row.preferred_window, message: row.message,
         createdAt: row.created_at,
       })));
     }

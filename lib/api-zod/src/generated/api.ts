@@ -524,6 +524,7 @@ export const SubmitContactAppointmentBody = zod.object({
   "email": zod.string().email().max(submitContactAppointmentBodyEmailMax),
   "service": zod.enum(['Consultation dentaire', 'Détartrage et polissage', 'Traitement des caries', 'Plombage / composite', 'Kinésithérapie dentaire / maxillo-faciale', 'Laboratoire prothétique', 'Chirurgie dentaire']),
   "preferredDate": zod.coerce.date().optional(),
+  "preferredWindow": zod.enum(['weekdays', 'saturday']).optional(),
   "message": zod.string().max(submitContactAppointmentBodyMessageMax).optional(),
   "website": zod.string().max(submitContactAppointmentBodyWebsiteMax).optional(),
   "submissionId": zod.string().uuid().optional()
@@ -543,6 +544,7 @@ export const GetAdminAppointmentsResponseItem = zod.object({
   "email": zod.string(),
   "service": zod.string(),
   "preferredDate": zod.string().nullish(),
+  "preferredWindow": zod.union([zod.literal('weekdays'),zod.literal('saturday'),zod.literal(null)]).nullish(),
   "message": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 })

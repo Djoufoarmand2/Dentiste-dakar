@@ -33,6 +33,7 @@ export function AdminAppointmentsPanel() {
           <div>
             <h3 className="font-semibold">{item.name} — {item.service}</h3>
             <p className="text-sm">{new Date(item.createdAt).toLocaleString('fr-FR')} · Date souhaitée : {item.preferredDate || 'Non précisée'}</p>
+            <p className="mt-1 text-sm font-medium text-[#18365f]">Plage préférée : {item.preferredWindow === 'weekdays' ? 'Lundi–vendredi · 16 h–19 h (sur rendez-vous)' : item.preferredWindow === 'saturday' ? 'Samedi · 10 h–14 h (sur rendez-vous)' : 'Non précisée'}</p>
             <p className="mt-2 text-sm"><a className="underline" href={`tel:${item.phone.replace(/[^\d+]/g, '')}`}>{item.phone}</a> · <a className="underline" href={`mailto:${item.email}`}>{item.email}</a></p>
             {item.message && <p className="mt-2 whitespace-pre-wrap text-sm">{item.message}</p>}
           </div>

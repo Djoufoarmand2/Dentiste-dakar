@@ -30,6 +30,10 @@ const uiText = (locale: 'fr' | 'en', fr: string, en: string) => locale === 'en' 
 const cmsText = (locale: 'fr' | 'en', fr?: string, en?: string) =>
   locale === 'fr' ? fr?.trim() || '' : en?.trim() || 'English translation not yet available.';
 const routeFor = (href: string, locale: 'fr' | 'en', content?: SiteContent) => localizedPath(href, locale, content);
+const confirmedHoursFr = 'Du lundi au vendredi · 16h00–19h00 (sur rendez-vous)\nSamedi · 10h00–14h00 (sur rendez-vous)';
+const confirmedHoursEn = 'Monday to Friday · 4:00–7:00 pm (by appointment)\nSaturday · 10:00 am–2:00 pm (by appointment)';
+const isLegacyHours = (value: string) =>
+  /8\s*h\s*[–-]\s*17\s*h|24\s*h.*24.*7\s*j.*7|24\s*hours?.*7\s*days?/i.test(value);
 
 const partnerLogoId = 'partner-clinique-la-bienveillance-logo';
 const partnerPhotoId = 'photo-clinique-la-bienveillance';
@@ -110,14 +114,16 @@ const galleryCaption = (item: SiteContent['gallery'][number], locale: 'fr' | 'en
 
 const bookHref = (clinic: SiteContent['clinic']) => clinic.bookingUrl || `tel:${clinic.phone || ''}`;
 const hoursLabel = (clinic: SiteContent['clinic'], locale: 'fr' | 'en') => {
+  const frenchHours = clinic.openingHours?.trim() || '';
+  const englishHours = clinic.openingHoursEn?.trim() || '';
+  const legacyFrench = isLegacyHours(frenchHours);
+  const legacyEnglish = isLegacyHours(englishHours);
   if (locale === 'en') {
-    if (clinic.openingHoursEn?.trim()) return clinic.openingHoursEn.trim();
-    if (!clinic.openingHours?.trim()) return 'Practice hours to be added';
-    const hours = clinic.openingHours.trim();
-    if (/24\s*h\s*\/\s*24/i.test(hours) && /7\s*j\s*\/\s*7/i.test(hours)) return '24 hours a day · 7 days a week';
-    return `Practice hours (provided in French): ${hours}`;
+    if (englishHours && !legacyEnglish) return englishHours;
+    if (!frenchHours || legacyFrench || legacyEnglish) return confirmedHoursEn;
+    return `Practice hours (provided in French): ${frenchHours}`;
   }
-  return clinic.openingHours || 'Horaires à renseigner';
+  return frenchHours && !legacyFrench ? frenchHours : confirmedHoursFr;
 };
 
 export function LogoWordmark({ clinic, inverse = false }: { clinic?: SiteContent['clinic']; inverse?: boolean }) {
@@ -200,7 +206,7 @@ export function Footer({ clinic, content }: { clinic?: SiteContent['clinic']; co
 
 function AnnouncementBar({ clinic }: { clinic?: SiteContent['clinic'] }) {
   const locale = useSiteLocale();
-  const hasHours = Boolean((locale === 'en' ? clinic?.openingHoursEn?.trim() || clinic?.openingHours?.trim() : clinic?.openingHours?.trim()));
+  const hasHours = Boolean(clinic);
   const hours = clinic ? hoursLabel(clinic, locale).replace(/\s*\n\s*/g, ' · ') : '';
   const message = hasHours
     ? `${uiText(locale, 'Horaires du cabinet', 'Practice hours')}: ${hours}`
@@ -860,7 +866,7 @@ export function ContactPage({ content }: { content: SiteContent }) {
         <a href={`tel:${clinic.phone}`} className="flex items-start gap-4" data-testid="link-contact-phone">{row(<Phone size={17} />, uiText(locale, 'Téléphone', 'Phone'), clinic.phone || uiText(locale, 'À renseigner', 'To be added'))}</a>
         <a href={`mailto:${clinic.email}`} className="flex items-start gap-4" data-testid="link-contact-email">{row(<MessageCircle size={17} />, uiText(locale, 'Courriel', 'Email'), clinic.email || uiText(locale, 'À renseigner', 'To be added'))}</a>
         <div className="flex items-start gap-4" data-testid="text-contact-address">{row(<MapPin size={17} />, uiText(locale, 'Adresse', 'Address'), clinic.address ? (locale === 'en' ? `Address supplied by the practice (not translated): ${clinic.address}` : clinic.address) : uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon'))}</div>
-        <div className="flex items-start gap-4" data-testid="text-contact-hours">{row(<Clock3 size={17} />, uiText(locale, 'Horaires', 'Hours'), hoursLabel(clinic, locale))}</div>
+        <div className="flex items-start gap-4 whitespace-pre-line" data-testid="text-contact-hours">{row(<Clock3 size={17} />, uiText(locale, 'Horaires', 'Hours'), hoursLabel(clinic, locale))}</div>
       </div><div className="mt-9"><BookButton clinic={clinic} testId="button-contact-book">{uiText(locale, 'Demander un rendez-vous', 'Request an appointment')}</BookButton></div></div>
       <div className="card-ref p-6 md:p-9">
         <p className="eyebrow">{uiText(locale, 'À votre rythme', 'At your pace')}</p>
