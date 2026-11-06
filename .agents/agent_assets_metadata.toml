@@ -14,3 +14,17 @@ mtime_ms = 1793954872935
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/2e967fd9-99cc-473d-8cbc-fc2eba4c9945/8b9f3525-cabb-4226-b4d0-39006919a194"
 storage_version_token = "1793954884182472"
 content_type = "text/html"
+
+[[outputs]]
+id = "nhXJygILXCV-4NN-X9on1"
+uri = "file://generated-artifacts/site-architecture-cabinet-sourire-serein.pdf"
+type = "pdf"
+title = "Cartographie complète du site — Cabinet Sourire Serein"
+description = "PDF technique de 13 pages : architecture GitHub–Cloudflare–Supabase, routes FR/EN, données et API, médias, formulaires, SEO, sécurité, procédures, historique et points à surveiller. Aucune valeur de secret ni donnée patient n’est incluse."
+logical_id = "bab012bd-6e3e-4558-a128-84f5499fd57f"
+content_hash = "sha256:0430f2fe5c2504c154b3cab975c7cf1acbd7ca9ebcf3732fee8b9d6cb6cb5bc4"
+size = 480318
+mtime_ms = 1793962007804
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/bab012bd-6e3e-4558-a128-84f5499fd57f/b883b952-03fc-4602-900d-54a5f38289e9"
+storage_version_token = "1793962077059517"
+content_type = "application/pdf"
