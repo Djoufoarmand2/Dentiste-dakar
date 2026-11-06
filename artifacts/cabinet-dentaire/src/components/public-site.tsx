@@ -200,7 +200,17 @@ export function Footer({ clinic, content }: { clinic?: SiteContent['clinic']; co
       <div><p className="footer-title">{uiText(locale, 'Nous trouver', 'Find us')}</p><p className="text-sm leading-7 text-white/70">{clinic?.address ? (locale === 'en' ? `Address supplied by the practice (not translated): ${clinic.address}` : clinic.address) : uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon')}<br />{safeCity(clinic?.city)}</p><a href={clinic?.mapUrl || mapsDirections} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs text-[#f0a0a6] hover:text-white" data-testid="link-footer-map">{uiText(locale, 'Itinéraire', 'Directions')} <ArrowRight size={14} /></a><a href={partnerSite} target="_blank" rel="noopener noreferrer" className="mt-3 block text-xs text-white/60 hover:text-white">{uiText(locale, 'Établissement partenaire : La Bienveillance', 'Partner clinic: La Bienveillance')}</a></div>
       <div><p className="footer-title">{uiText(locale, 'Contact', 'Contact')}</p><a href={`tel:${clinic?.phone || ''}`} className="block text-base font-medium" data-testid="link-footer-phone">{clinic?.phone || uiText(locale, 'Contactez-nous', 'Contact us')}</a><a href={`mailto:${clinic?.email || ''}`} className="mt-2 block text-sm text-white/70" data-testid="link-footer-email">{clinic?.email || uiText(locale, 'Adresse à renseigner', 'Email address to be added')}</a><p className="mt-4 whitespace-pre-line text-xs leading-6 text-white/60">{clinic ? hoursLabel(clinic, locale) : uiText(locale, 'Horaires à renseigner', 'Practice hours to be added')}</p></div>
     </div>
-    <div className="border-t border-white/10"><div className="mx-auto flex max-w-[1240px] flex-col justify-between gap-2 px-5 py-5 text-[11px] text-white/75 md:flex-row md:px-8"><span>© {new Date().getFullYear()} {safeName(clinic?.name)} · Douala</span><span>{uiText(locale, 'Une présence attentive, un sourire à la fois.', 'Attentive care, one smile at a time.')}</span><Link href={localizedPath(location, locale === 'en' ? 'fr' : 'en', content)} lang={locale === 'en' ? 'fr' : 'en'} className="underline underline-offset-4">{locale === 'en' ? 'Français' : 'English'}</Link></div></div>
+    <div className="border-t border-white/10">
+      <div className="mx-auto flex max-w-[1240px] flex-col justify-between gap-3 px-5 py-5 text-[11px] text-white/75 sm:flex-row sm:flex-wrap sm:items-center md:px-8">
+        <span>© {new Date().getFullYear()} {safeName(clinic?.name)} · Douala</span>
+        <span>{uiText(locale, 'Une présence attentive, un sourire à la fois.', 'Attentive care, one smile at a time.')}</span>
+        <span className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] py-1 pl-1 pr-3 text-white/80">
+          <span aria-hidden="true" className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-[#1587bd] to-[#16b7a8] text-[9px] font-black tracking-[-0.08em] text-white shadow-sm">DJ</span>
+          <span>{uiText(locale, 'Site réalisé par', 'Website by')} <strong className="font-semibold text-white">DJ Corporation</strong></span>
+        </span>
+        <Link href={localizedPath(location, locale === 'en' ? 'fr' : 'en', content)} lang={locale === 'en' ? 'fr' : 'en'} className="underline underline-offset-4">{locale === 'en' ? 'Français' : 'English'}</Link>
+      </div>
+    </div>
   </footer>;
 }
 
