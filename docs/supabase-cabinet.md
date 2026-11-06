@@ -108,6 +108,7 @@ frontend ni migration Cloudflare n'est effectuée par cette procédure.
 ```sh
 pnpm --filter @workspace/scripts run cabinet:supabase backup
 pnpm --filter @workspace/scripts run cabinet:supabase setup
+pnpm --filter @workspace/scripts run cabinet:supabase migrate-appointment-windows
 pnpm --filter @workspace/scripts run cabinet:supabase deploy
 pnpm --filter @workspace/scripts run cabinet:supabase inspect
 node scripts/src/check-cabinet-supabase.mjs
@@ -120,6 +121,12 @@ importé et conserve la première sauvegarde de configuration. Examiner tout
 changement de schéma avant de le réappliquer. `deploy` compile les schémas
 générés depuis OpenAPI avec la fonction ; redéployer après toute évolution
 du contrat qui affecte la validation.
+
+`migrate-appointment-windows` applique uniquement la migration qui ajoute la
+préférence de plage horaire et remplace les horaires génériques par ceux
+confirmés par le cabinet. Il vérifie ensuite la colonne et les deux textes
+enregistrés. Après son exécution, `deploy` redéploie `cabinet-api` et vérifie
+que la lecture publique renvoie ces horaires.
 
 Le contrôle d'intégration crée puis retire un compte ordinaire de test. Une fois
 l'adresse administrateur réellement confirmée, il peut générer en mémoire une
