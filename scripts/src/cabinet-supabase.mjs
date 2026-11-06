@@ -104,7 +104,7 @@ async function setup() {
 }
 
 async function deploy() {
-  const readiness = await sql("select to_regclass('public.cabinet_appointments') is not null and to_regclass('public.cabinet_reviews') is not null and to_regprocedure('public.cabinet_allow_review_submission(text)') is not null as ready", true);
+  const readiness = await sql("select to_regclass('public.cabinet_appointments') is not null and to_regclass('public.cabinet_reviews') is not null and to_regprocedure('public.cabinet_allow_review_submission(text)') is not null and exists (select 1 from information_schema.columns where table_schema='public' and table_name='cabinet_appointments' and column_name='preferred_window') as ready", true);
   if (readiness?.[0]?.ready !== true) throw new Error('Appliquez toutes les migrations Supabase avant de déployer la fonction.');
   const result = await build({
     entryPoints: [resolve(root, 'supabase/functions/cabinet-api/index.ts')], bundle: true, write: false,
@@ -121,7 +121,16 @@ async function deploy() {
   form.set('metadata', JSON.stringify({ name: 'cabinet-api', entrypoint_path: 'index.ts', verify_jwt: false }));
   form.append('file', new Blob([code], { type: 'application/typescript' }), 'index.ts');
   const deployed = await management('/functions/deploy?slug=cabinet-api', { method: 'POST', body: form });
-  console.info(JSON.stringify({ function: deployed.slug, status: deployed.status, version: deployed.version }));
+  const publicResponse = await fetch(`${url}/functions/v1/cabinet-api/site-content`, { headers: { apikey: service } });
+  const publicContent = await publicResponse.json().catch(() => null);
+  if (
+    !publicResponse.ok
+    || publicContent?.clinic?.openingHours !== 'Du lundi au vendredi · 16h00–19h00 (sur rendez-vous)\nSamedi · 10h00–14h00 (sur rendez-vous)'
+    || publicContent?.clinic?.openingHoursEn !== 'Monday to Friday · 4:00–7:00 pm (by appointment)\nSaturday · 10:00 am–2:00 pm (by appointment)'
+  ) {
+    throw new Error('La fonction a été déployée, mais la lecture publique des horaires n’est pas encore vérifiée.');
+  }
+  console.info(JSON.stringify({ function: deployed.slug, status: deployed.status, version: deployed.version, publicHoursVerified: true }));
 }
 
 async function inspect() {
@@ -139,8 +148,52 @@ async function migrateAppointments() {
   console.info(JSON.stringify({ appointmentsMigration: 'applied' }));
 }
 
+async function migrateAppointmentWindows() {
+  const migration = await readFile(
+    resolve(root, 'supabase/migrations/202611060001_cabinet_appointment_windows.sql'),
+    'utf8',
+  );
+  await sql(migration);
+  const result = await sql(
+    `select json_build_object(
+      'preferredWindowColumn', exists (
+        select 1 from information_schema.columns
+        where table_schema = 'public'
+          and table_name = 'cabinet_appointments'
+          and column_name = 'preferred_window'
+      ),
+      'openingHoursFr', (
+        select content #>> '{clinic,openingHours}'
+        from public.cabinet_site_content where id = true
+      ),
+      'openingHoursEn', (
+        select content #>> '{clinic,openingHoursEn}'
+        from public.cabinet_site_content where id = true
+      )
+    ) as checks`,
+    true,
+  );
+  const checks = result?.[0]?.checks;
+  if (
+    checks?.preferredWindowColumn !== true
+    || checks.openingHoursFr !== 'Du lundi au vendredi · 16h00–19h00 (sur rendez-vous)\nSamedi · 10h00–14h00 (sur rendez-vous)'
+    || checks.openingHoursEn !== 'Monday to Friday · 4:00–7:00 pm (by appointment)\nSaturday · 10:00 am–2:00 pm (by appointment)'
+  ) {
+    throw new Error('La migration a été exécutée, mais sa vérification Supabase a échoué.');
+  }
+  console.info(JSON.stringify({ appointmentWindowsMigration: 'applied', checks }));
+}
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const operation = { setup, backup, deploy, inspect, 'migrate-reviews': migrateReviews, 'migrate-appointments': migrateAppointments }[process.argv[2]];
-  if (!operation) throw new Error('Commande attendue : setup, backup, deploy, inspect ou migrate-reviews.');
+  const operation = {
+    setup,
+    backup,
+    deploy,
+    inspect,
+    'migrate-reviews': migrateReviews,
+    'migrate-appointments': migrateAppointments,
+    'migrate-appointment-windows': migrateAppointmentWindows,
+  }[process.argv[2]];
+  if (!operation) throw new Error('Commande attendue : setup, backup, deploy, inspect, migrate-reviews, migrate-appointments ou migrate-appointment-windows.');
   try { await operation(); } catch (error) { console.error(error.message); process.exitCode = 1; }
 }
