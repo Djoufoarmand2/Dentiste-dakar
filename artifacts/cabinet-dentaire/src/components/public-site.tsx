@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import {
   ArrowLeft, ArrowRight, ChevronDown, Clock3, Image as ImageIcon, MapPin, Menu,
   MessageCircle, Phone, Quote, X,
@@ -17,6 +17,7 @@ import heroIllustration from '@/lib/hero-illustration.json';
 import { supabaseUrl } from '@/lib/supabase';
 import { localizedPath, useSiteLocale } from '@/lib/site-locale';
 import { englishBlogPost, englishFaq, englishService } from '@/lib/cms-translations';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 const navItemsFr = [
   ['Soins', '/soins'], ['Pourquoi nous choisir', '/pourquoi-nous-choisir'], ['Notre équipe', '/equipe'], ['Le cabinet', '/galerie'],
@@ -330,7 +331,7 @@ function PageIntro({ eyebrow, title, text }: { eyebrow: string; title: string; t
   </section>;
 }
 
-export function ImageFrame({ src, alt, className = '', label, indicator, details, priority = false }: { src?: string; alt: string; className?: string; label?: string; indicator?: string; details?: string; priority?: boolean }) {
+export function ImageFrame({ src, alt, className = '', label, indicator, details, priority = false, onClick }: { src?: string; alt: string; className?: string; label?: string; indicator?: string; details?: string; priority?: boolean; onClick?: () => void }) {
   const locale = useSiteLocale();
   const [isActive, setIsActive] = useState(false);
   const hasImage = !!src?.trim();
@@ -340,10 +341,18 @@ export function ImageFrame({ src, alt, className = '', label, indicator, details
 
   return <div
     className={`image-empty image-frame-interactive relative overflow-hidden ${className}`}
-    role="group"
-    aria-label={uiText(locale, `Visuel : ${indicatorText}`, `Image: ${indicatorText}`)}
+    role={onClick ? 'button' : 'group'}
+    aria-label={onClick ? uiText(locale, `Ouvrir l’image : ${indicatorText}`, `Open image: ${indicatorText}`) : uiText(locale, `Visuel : ${indicatorText}`, `Image: ${indicatorText}`)}
+    aria-haspopup={onClick ? 'dialog' : undefined}
     tabIndex={0}
     data-image-active={isActive}
+    onClick={onClick}
+    onKeyDown={onClick ? (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        onClick();
+      }
+    } : undefined}
     onPointerEnter={(event) => { if (event.pointerType !== 'touch') setIsActive(true); }}
     onPointerLeave={() => setIsActive(false)}
     onFocusCapture={() => setIsActive(true)}
@@ -714,6 +723,8 @@ export function TeamPage({ content }: { content: SiteContent }) {
 export function GalleryPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
   const photos = visibleGallery(content.gallery);
+  const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
   const staticEnglish: Record<string, { alt: string; caption: string }> = {
     'clinic-sign': { alt: 'Exterior sign of Clinique La Bienveillance in Douala.', caption: 'Clinique La Bienveillance sign' },
     'clinic-professional': { alt: 'A healthcare professional working at a desk.', caption: 'A moment at work' },
@@ -722,19 +733,105 @@ export function GalleryPage({ content }: { content: SiteContent }) {
     'family-welcome': { alt: 'A healthcare professional welcomes a family at the partner clinic.', caption: 'Welcoming families' },
     'patient-support': { alt: 'A healthcare professional supporting a patient during a conversation.', caption: 'Patient support' },
   };
+  const siteImages = [
+    ...clinicGalleryPhotos.map((photo) => ({
+      src: photo.src,
+      alt: locale === 'en' ? staticEnglish[photo.id]?.alt || photo.alt : photo.alt,
+      caption: locale === 'en' ? staticEnglish[photo.id]?.caption || photo.caption : photo.caption,
+    })),
+    ...photos.filter((photo) => photo.imageUrl?.trim()).map((photo) => ({
+      src: photo.imageUrl,
+      alt: cmsText(locale, photo.alt, photo.altEn),
+      caption: galleryCaption(photo, locale),
+    })),
+    ...content.services.filter((service) => service.imageUrl?.trim()).map((service) => ({
+      src: service.imageUrl,
+      alt: cmsText(locale, service.imageAlt || service.title, service.imageAltEn || service.titleEn),
+      caption: cmsText(locale, service.title, service.titleEn),
+    })),
+    ...visibleTeamMembers(content.team).filter((member) => member.imageUrl?.trim()).map((member) => ({
+      src: member.imageUrl,
+      alt: uiText(locale, `Portrait de ${member.name}`, `Portrait of ${member.name}`),
+      caption: cmsText(locale, member.role, member.roleEn) || member.name,
+    })),
+    ...content.blogPosts.filter((post) => post.published && post.imageUrl?.trim()).map((post) => ({
+      src: post.imageUrl,
+      alt: cmsText(locale, post.imageAlt || post.title, post.imageAltEn || post.titleEn),
+      caption: cmsText(locale, post.title, post.titleEn),
+    })),
+    ...content.campaigns.filter((campaign) => campaign.active && campaign.mediaType === 'image' && campaign.imageUrl?.trim()).map((campaign) => ({
+      src: campaign.imageUrl,
+      alt: cmsText(locale, campaign.title, campaign.titleEn),
+      caption: cmsText(locale, campaign.title, campaign.titleEn),
+    })),
+    ...(content.hero.imageUrl?.trim() ? [{
+      src: content.hero.imageUrl,
+      alt: cmsText(locale, content.hero.title, content.hero.titleEn),
+      caption: uiText(locale, 'Bannière d’accueil', 'Homepage banner'),
+    }] : []),
+  ].filter((image, index, all) => all.findIndex((candidate) => candidate.src === image.src) === index);
+  const activeImage = activeImageIndex === null ? null : siteImages[activeImageIndex];
+  const showPreviousImage = () => setActiveImageIndex((index) => index === null ? null : (index - 1 + siteImages.length) % siteImages.length);
+  const showNextImage = () => setActiveImageIndex((index) => index === null ? null : (index + 1) % siteImages.length);
+  const handleGalleryKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      showPreviousImage();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      showNextImage();
+    }
+  };
   return <SiteShell clinic={content.clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Le cabinet en images', 'The practice in pictures')} title={uiText(locale, 'Un lieu pensé pour votre confort.', 'A place designed with your comfort in mind.')} text={uiText(locale, 'Retrouvez les visuels officiels du lieu qui accueille le cabinet dentaire.', 'See images of the setting where the dental practice welcomes patients.')} />
     <section className="wrap section-pad">
       <p className="mb-8 max-w-3xl text-xs leading-5 text-muted-foreground">{uiText(locale, 'Cette galerie réunit des photos fournies par l’établissement partenaire et, pour certains soins, des illustrations générées par IA qui ne représentent pas les locaux ni l’équipe réelle.', 'This gallery includes photographs supplied by the partner clinic and, for some services, AI-generated illustrations that do not depict the actual premises or team.')}</p>
+      <p className="mb-5 text-sm font-medium text-[#073e53]">{uiText(locale, 'Sélectionnez une image pour l’agrandir, puis faites défiler toutes les images du site.', 'Select an image to enlarge it, then browse through all images on the site.')} <span className="text-muted-foreground">({siteImages.length})</span></p>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
         {clinicGalleryPhotos.map((photo) => <figure key={photo.id} className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-black/5" data-testid={`gallery-image-${photo.id}`}>
-          <ImageFrame src={photo.src} alt={locale === 'en' ? staticEnglish[photo.id]?.alt || 'Image description not available in English.' : photo.alt} label={uiText(locale, 'Photo du cabinet ou de l’établissement partenaire', 'Practice or partner-clinic photograph')} indicator={locale === 'en' ? staticEnglish[photo.id]?.caption || photo.caption : photo.caption} details={locale === 'en' ? staticEnglish[photo.id]?.alt || 'Image description not available in English.' : photo.alt} className="aspect-[4/3]" />
+          <ImageFrame src={photo.src} alt={locale === 'en' ? staticEnglish[photo.id]?.alt || 'Image description not available in English.' : photo.alt} label={uiText(locale, 'Photo du cabinet ou de l’établissement partenaire', 'Practice or partner-clinic photograph')} indicator={locale === 'en' ? staticEnglish[photo.id]?.caption || photo.caption : photo.caption} details={locale === 'en' ? staticEnglish[photo.id]?.alt || 'Image description not available in English.' : photo.alt} className="aspect-[4/3] cursor-zoom-in" onClick={() => setActiveImageIndex(siteImages.findIndex((image) => image.src === photo.src))} />
           <figcaption className="px-3 py-2 text-xs font-medium text-[#073e53] md:px-4 md:py-3 md:text-sm">{locale === 'en' ? staticEnglish[photo.id]?.caption || 'Image caption not available in English.' : photo.caption}</figcaption>
         </figure>)}
         {photos.map((photo) => <figure key={photo.id} className="overflow-hidden rounded-md bg-white shadow-sm ring-1 ring-black/5" data-testid={`gallery-image-${photo.id}`}>
-          <ImageFrame src={photo.imageUrl} alt={cmsText(locale, photo.alt, photo.altEn)} label={uiText(locale, 'Illustration de l’activité', 'Activity illustration')} indicator={galleryCaption(photo, locale)} details={cmsText(locale, photo.alt, photo.altEn)} className="aspect-[4/3]" />
+          <ImageFrame src={photo.imageUrl} alt={cmsText(locale, photo.alt, photo.altEn)} label={uiText(locale, 'Illustration de l’activité', 'Activity illustration')} indicator={galleryCaption(photo, locale)} details={cmsText(locale, photo.alt, photo.altEn)} className={`aspect-[4/3] ${photo.imageUrl?.trim() ? 'cursor-zoom-in' : ''}`} onClick={photo.imageUrl?.trim() ? () => setActiveImageIndex(siteImages.findIndex((image) => image.src === photo.imageUrl)) : undefined} />
           <figcaption className="px-3 py-2 text-xs font-medium text-[#073e53] md:px-4 md:py-3 md:text-sm">{galleryCaption(photo, locale)}</figcaption>
         </figure>)}
       </div>
+      <Dialog open={activeImageIndex !== null} onOpenChange={(open) => { if (!open) setActiveImageIndex(null); }}>
+        <DialogContent
+          className="gallery-lightbox fixed inset-0 !left-0 !top-0 z-50 grid h-[100dvh] w-screen max-h-[100dvh] max-w-none !translate-x-0 !translate-y-0 grid-rows-[auto_1fr_auto] gap-0 overflow-hidden rounded-none border-0 bg-[#060914]/95 p-0 text-white shadow-none [&>button:last-child]:hidden"
+          onKeyDown={handleGalleryKeyDown}
+          onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null; }}
+          onTouchEnd={(event) => {
+            const endX = event.changedTouches[0]?.clientX;
+            if (touchStartX.current !== null && endX !== undefined && Math.abs(endX - touchStartX.current) > 55) {
+              if (endX < touchStartX.current) showNextImage();
+              else showPreviousImage();
+            }
+            touchStartX.current = null;
+          }}
+        >
+          {activeImage && <>
+            <div className="flex items-center justify-between gap-4 border-b border-white/10 px-4 py-3 sm:px-7">
+              <DialogTitle className="min-w-0 truncate font-display text-base font-semibold text-white sm:text-xl">{activeImage.caption}</DialogTitle>
+              <div className="flex shrink-0 items-center gap-3">
+                <span className="text-xs tabular-nums text-white/70" aria-live="polite">{activeImageIndex! + 1} / {siteImages.length}</span>
+                <DialogClose asChild>
+                  <button type="button" className="grid h-10 w-10 place-items-center rounded-full border border-white/25 text-white transition hover:bg-white/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" aria-label={uiText(locale, 'Fermer la galerie', 'Close gallery')} data-testid="button-close-image-viewer"><X size={21} /></button>
+                </DialogClose>
+              </div>
+            </div>
+            <div className="relative flex min-h-0 items-center justify-center px-3 py-4 sm:px-16 sm:py-6">
+              <button type="button" onClick={showPreviousImage} className="absolute left-3 z-10 grid h-11 w-11 place-items-center rounded-full border border-white/25 bg-black/35 text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:left-6 sm:h-14 sm:w-14" aria-label={uiText(locale, 'Image précédente', 'Previous image')} data-testid="button-previous-image"><ArrowLeft size={22} /></button>
+              <img key={activeImage.src} src={activeImage.src} alt={activeImage.alt} className="max-h-full max-w-full object-contain" data-testid="image-viewer-current" />
+              <button type="button" onClick={showNextImage} className="absolute right-3 z-10 grid h-11 w-11 place-items-center rounded-full border border-white/25 bg-black/35 text-white transition hover:bg-white/20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:right-6 sm:h-14 sm:w-14" aria-label={uiText(locale, 'Image suivante', 'Next image')} data-testid="button-next-image"><ArrowRight size={22} /></button>
+            </div>
+            <div className="border-t border-white/10 px-5 py-3 text-center">
+              <DialogDescription className="mx-auto max-w-4xl text-sm leading-6 text-white/75">{activeImage.alt}</DialogDescription>
+              <p className="mt-1 text-[11px] text-white/45">{uiText(locale, 'Utilisez les flèches, les touches ← → ou le glissement sur mobile.', 'Use the arrows, ← → keys, or swipe on mobile.')}</p>
+            </div>
+          </>}
+        </DialogContent>
+      </Dialog>
     </section><RelatedPages content={content} current="galerie" /></main></SiteShell>;
 }
 
