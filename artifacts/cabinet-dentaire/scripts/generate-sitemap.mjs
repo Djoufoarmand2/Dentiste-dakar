@@ -713,7 +713,7 @@ function renderPublicMarkup(route, meta) {
     const reviews = (publicContent.testimonials ?? []).filter((review) =>
       review.quote && !isProvisionalCopy(review.name, review.quote, review.service));
     const items = reviews.map((review) => `<article><h2>${escapeXml(review.name || (english ? 'Visitor review' : 'Avis de visiteur'))}</h2>${review.service ? `<p>${escapeXml(english ? review.serviceEn || 'Dental care' : review.service)}</p>` : ''}<blockquote>${escapeXml(review.quote)}</blockquote>${english && !review.quoteEn ? '<p><small>Review originally submitted in French.</small></p>' : ''}</article>`).join('');
-    return `<main>${heading}${intro}${items || `<p>${english ? 'Reviews will appear after they have been approved.' : 'Les avis seront affichés après leur validation.'}</p>`}</main>`;
+    return `<main>${heading}${intro}<section><h2>${english ? 'They put their trust in us' : 'Ils nous font confiance'}</h2><p>${english ? 'The live average and count are calculated from reviews published on this website, not from Google reviews. Contributions are not independently verified.' : 'La moyenne et le nombre affichés en direct sont calculés à partir des avis publiés sur ce site, et non des avis Google. Les contributions ne sont pas vérifiées indépendamment.'}</p><a href="#laisser-un-avis">${english ? 'Share your experience' : 'Partager votre expérience'}</a></section>${items || `<p>${english ? 'Published reviews will appear here.' : 'Les avis publiés apparaîtront ici.'}</p>`}<section id="laisser-un-avis"><h2>${english ? 'Write a review' : 'Rédiger un avis'}</h2><p>${english ? 'Enable JavaScript to submit your review, or contact the practice for help.' : 'Activez JavaScript pour envoyer votre avis ou contactez le cabinet pour obtenir de l’aide.'}</p></section></main>`;
   }
   if (normalizedRoute === '/faq') {
     const faqs = (publicContent.faqs ?? []).filter((faq) =>
@@ -798,6 +798,15 @@ function renderPublicMarkup(route, meta) {
 
 const baseTemplate = await readFile(indexPath, 'utf8');
 const routesToRender = [...routes];
+function discoveryMarkup(route) {
+  if (/\/(?:contact|confidentialite|privacy)\/?$/.test(route)) return '';
+  const english = route.startsWith('/en/');
+  const links = english
+    ? [['/en/services/', 'Dental services'], ['/en/reviews/', 'Visitor reviews'], ['/en/information/', 'News and videos'], ['/en/gallery/', 'Gallery'], ['/en/blog/', 'Dental advice'], ['/en/faq/', 'Frequently asked questions']]
+    : [['/soins/', 'Nos soins'], ['/avis/', 'Avis des visiteurs'], ['/informations/', 'Actualités et vidéos'], ['/galerie/', 'Galerie'], ['/blog/', 'Conseils dentaires'], ['/faq/', 'Questions fréquentes']];
+  const current = route.replace(/\/+$/, '');
+  return `<nav aria-label="${english ? 'Explore the practice' : 'Découvrir le cabinet'}"><h2>${english ? 'Explore the practice' : 'Découvrir le cabinet'}</h2><ul>${links.filter(([href]) => href.replace(/\/+$/, '') !== current).map(([href, label]) => `<li><a href="${escapeAttribute(appPath(href))}">${escapeXml(label)}</a></li>`).join('')}</ul></nav>`;
+}
 // Public API output only: never embed the private administrator document.
 const publicSnapshot = publicContent
   ? JSON.stringify(publicContent).replaceAll('<', '\\u003c').replaceAll('\u2028', '\\u2028').replaceAll('\u2029', '\\u2029')
@@ -809,7 +818,7 @@ for (const route of routesToRender) {
     ? renderBlogMarkup(route)
     : renderPublicMarkup(route, metadata);
   // Reserve image space before downloads to avoid large layout shifts.
-  const body = markup.replace(/<img(?![^>]*\bwidth=)/g, '<img width="1200" height="800" style="max-width:100%;height:auto"');
+  const body = markup.replace(/<img(?![^>]*\bwidth=)/g, '<img width="1200" height="800" style="max-width:100%;height:auto"') + discoveryMarkup(route);
   const template = publicSnapshot
     ? baseTemplate.replace('</head>', `<script id="cabinet-public-content" type="application/json">${publicSnapshot}</script></head>`)
     : baseTemplate;

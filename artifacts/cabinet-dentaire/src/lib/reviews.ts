@@ -26,6 +26,7 @@ export function usePublicReviews() {
     queryKey: publicReviewsKey,
     queryFn: () => cmsRequest<Review[]>('/reviews', {}, false),
     staleTime: 15_000,
+    refetchInterval: 30_000,
     refetchOnWindowFocus: true,
   });
 }

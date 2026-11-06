@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "loZ_o8Q-v07h2pGbOml3b"
+uri = "file://generated-artifacts/site-audit/audit-final-cabinet-sourire-serein.html"
+type = "html"
+title = "Audit final du site publié"
+description = "Rapport des trois pages : scores mobiles, contrôles effectués et améliorations restantes. Version GitHub et Cloudflare 543d534."
+logical_id = "2e967fd9-99cc-473d-8cbc-fc2eba4c9945"
+content_hash = "sha256:60ab74a091e0c6d63bd214ffab4fa09e972c0c43d219752b0c5ad5997f1b5dd4"
+size = 7025
+mtime_ms = 1793954872935
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/2e967fd9-99cc-473d-8cbc-fc2eba4c9945/8b9f3525-cabb-4226-b4d0-39006919a194"
+storage_version_token = "1793954884182472"
+content_type = "text/html"
