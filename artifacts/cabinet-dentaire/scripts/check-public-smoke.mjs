@@ -179,7 +179,8 @@ for (const icon of iconResources) {
   const response = await fetch(icon.url);
   assert.equal(response.status, 200, `${icon.label} should be served`);
   assert.match(response.headers.get('content-type') || '', icon.contentType, `${icon.label} should have a browser-compatible image type`);
-  assert.ok(Number(response.headers.get('content-length') || 0) > 0, `${icon.label} should not be empty`);
+  const iconBytes = await response.arrayBuffer();
+  assert.ok(iconBytes.byteLength > 0, `${icon.label} should not be empty`);
 }
 
 const robotsResponse = await fetch(new URL('robots.txt', baseUrl));
