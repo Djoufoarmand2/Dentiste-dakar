@@ -1,6 +1,30 @@
 import { GetSiteContentResponse } from '../../../lib/api-zod/src/generated/api';
 
 const urlFields = new Set(['imageUrl', 'logoUrl', 'videoUrl', 'mapUrl', 'bookingUrl']);
+// Empty optional dates from older admin clients mean "not supplied", not an
+// invalid date. Nonempty invalid dates still fail the generated API contract.
+export function normalizePublicationInput(input: unknown): unknown {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return input;
+  const publication = input as Record<string, unknown>;
+  const content = publication.content;
+  if (!content || typeof content !== 'object' || Array.isArray(content)) return input;
+  const values = content as Record<string, unknown>;
+  if (!Array.isArray(values.campaigns)) return input;
+  return {
+    ...publication,
+    content: {
+      ...values,
+      campaigns: values.campaigns.map((item: unknown) => {
+        if (!item || typeof item !== 'object' || Array.isArray(item)) return item;
+        const campaign = item as Record<string, unknown>;
+        return typeof campaign.publishedAt === 'string' && !campaign.publishedAt.trim()
+          ? { ...campaign, publishedAt: undefined }
+          : item;
+      }),
+    },
+  };
+}
+
 export function parseContent(input: unknown, mediaBaseUrl: string) {
   const content = GetSiteContentResponse.parse(input);
   function check(value: unknown, key = ''): void {

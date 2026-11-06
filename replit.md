@@ -56,15 +56,16 @@ Site vitrine en français pour la Clinique Sourire Serein, cabinet dentaire situ
 ## Product
 
 - Pages publiques : accueil, soins, équipe, galerie, avis, FAQ, blog, informations et contact.
-- Route d’administration non liée dans la navigation : `/admin`.
+- Route d’administration non liée dans la navigation : `/arm` ; `/admin` n’existe plus.
 - L’administrateur peut mettre à jour les coordonnées, le contenu de l’accueil, les collections, les articles, les campagnes, ainsi que les URL de logo, photos et vidéos.
 
 ## User preferences
 
 - Utiliser les coordonnées et visuels fournis par le cabinet ; ne jamais inventer les identités de praticiens, qualifications, témoignages ou mentions légales manquants.
 - Reprendre fidèlement la présentation et la structure de base de cabinetdentairegloria.com, tout en gardant notre logique de base, nos contenus, Supabase et l’administration. Ne pas reprendre son code, ses textes, son logo ni ses photos.
-- Les couleurs doivent être plus vives et éclatantes : garder le bleu et le doré, avec un rendu plus lumineux et des fonds blancs nets.
-- Supabase doit s'occuper entièrement du backend ; le passage sur Cloudflare est différé.
+- Palette souhaitée : bleu, violet de nuit et blanc, avec des transparences et des animations respectant la réduction des mouvements.
+- Supabase gère le backend ; Cloudflare Pages héberge le site et Cloudflare gère le DNS. Le domaine public est `https://dentiste-sourireserein.cm`.
+- Le dépôt GitHub effectif est `Djoufoarmand2/Dentiste-dakar`. Les commits sur `main` déclenchent une publication Cloudflare, selon le choix explicite de l’utilisateur.
 
 ## Gotchas
 
@@ -72,7 +73,7 @@ Site vitrine en français pour la Clinique Sourire Serein, cabinet dentaire situ
 - L'adresse de l'administrateur doit être confirmée via Supabase Auth. Ne pas désactiver cette vérification pour contourner un problème d'e-mail.
 - Sans SMTP propre, l'envoi Supabase de démonstration est limité et n'offre pas de garantie de livraison ; invitations et récupération doivent être validées avant de considérer la migration terminée.
 - Le site reste `noindex` et sans sitemap tant que l’identité, les coordonnées, le domaine officiel et l’image de partage ne sont pas confirmés. Le build n’active l’indexation et ne génère le sitemap qu’avec l’ensemble des paramètres SEO publics ci-dessus.
-- C’est une SPA Vite : les titres, URL canoniques et balises de partage par page sont mis à jour après le chargement JavaScript. Si les moteurs ciblés exigent ces balises dans le HTML initial, ajouter du rendu serveur ou du pré-rendu avant d’ouvrir l’indexation.
+- Le build Vite génère le HTML initial, les métadonnées, les URL canoniques et le sitemap depuis le contenu public Supabase. Après une publication admin, un hook Cloudflare régénère ces fichiers ; l’actualisation du site ne signifie pas que Google a déjà réindexé ses pages.
 - Le catalogue React du workspace reste inchangé pour préserver la compatibilité des autres packages.
 
 ## Pointers

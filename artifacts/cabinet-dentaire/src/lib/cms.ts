@@ -6,10 +6,26 @@ import { useCabinetSession } from '@/components/auth-provider';
 export const publicContentKey = ['cabinet', 'public-content'] as const;
 export const adminContentKey = ['cabinet', 'admin-content'] as const;
 export const adminAccessKey = ['cabinet', 'admin-access'] as const;
+function readPrerenderedContent(): SiteContent | undefined {
+  const snapshot = document.getElementById('cabinet-public-content')?.textContent;
+  if (!snapshot) return undefined;
+  try {
+    const content = JSON.parse(snapshot) as SiteContent;
+    if (!content.clinic || !content.hero || !Array.isArray(content.services) || !Array.isArray(content.blogPosts)) throw new Error('Invalid public snapshot');
+    return content;
+  } catch {
+    console.warn('Public page snapshot unavailable; requesting the current content.');
+    return undefined;
+  }
+}
+const prerenderedContent = readPrerenderedContent();
 export function usePublicContent() {
   return useQuery({
     queryKey: publicContentKey,
     queryFn: () => cmsRequest<SiteContent>('/site-content', {}, false),
+    initialData: prerenderedContent,
+    // Show the public build snapshot immediately, but always refresh it.
+    initialDataUpdatedAt: 0,
     staleTime: 5_000,
     refetchInterval: 5_000,
     refetchOnWindowFocus: true,
@@ -29,7 +45,16 @@ export function useAdminContent(enabled: boolean) {
   return useQuery({ queryKey: [...adminContentKey, session?.user.id], queryFn: () => cmsRequest<ContentDocument>('/admin/site-content'), enabled, retry: false });
 }
 export function usePublishContent() {
-  return useMutation({ mutationFn: (publication: ContentPublication) => cmsRequest<ContentDocument>('/admin/site-content', { method: 'PUT', body: JSON.stringify(publication) }) });
+  return useMutation({ mutationFn: (publication: ContentPublication) => {
+    const content = {
+      ...publication.content,
+      campaigns: publication.content.campaigns.map((campaign) => ({
+        ...campaign,
+        publishedAt: campaign.publishedAt?.trim() || undefined,
+      })),
+    };
+    return cmsRequest<ContentDocument>('/admin/site-content', { method: 'PUT', body: JSON.stringify({ ...publication, content }) });
+  } });
 }
 
 export function collectMediaUrls(value: unknown): string[] {

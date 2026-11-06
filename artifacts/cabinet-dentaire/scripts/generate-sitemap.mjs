@@ -798,13 +798,22 @@ function renderPublicMarkup(route, meta) {
 
 const baseTemplate = await readFile(indexPath, 'utf8');
 const routesToRender = [...routes];
+// Public API output only: never embed the private administrator document.
+const publicSnapshot = publicContent
+  ? JSON.stringify(publicContent).replaceAll('<', '\\u003c').replaceAll('\u2028', '\\u2028').replaceAll('\u2029', '\\u2029')
+  : null;
 for (const route of routesToRender) {
   const metadata = pageMetadata(route);
   const localRoute = route.replace(/^\/en(?=\/|$)/, '') || '/';
-  const body = localRoute.replace(/\/+$/, '') === '/blog' || localRoute.startsWith('/blog/')
+  const markup = localRoute.replace(/\/+$/, '') === '/blog' || localRoute.startsWith('/blog/')
     ? renderBlogMarkup(route)
     : renderPublicMarkup(route, metadata);
-  const prerendered = withPageMetadata(baseTemplate, route).replace(
+  // Reserve image space before downloads to avoid large layout shifts.
+  const body = markup.replace(/<img(?![^>]*\bwidth=)/g, '<img width="1200" height="800" style="max-width:100%;height:auto"');
+  const template = publicSnapshot
+    ? baseTemplate.replace('</head>', `<script id="cabinet-public-content" type="application/json">${publicSnapshot}</script></head>`)
+    : baseTemplate;
+  const prerendered = withPageMetadata(template, route).replace(
     /<div id="root"><\/div>/i,
     `<div id="root" data-seo-prerender="${escapeAttribute(route)}">${body}</div>`,
   );

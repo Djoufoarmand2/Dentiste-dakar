@@ -121,7 +121,7 @@ const hoursLabel = (clinic: SiteContent['clinic'], locale: 'fr' | 'en') => {
 export function LogoWordmark({ clinic, inverse = false }: { clinic?: SiteContent['clinic']; inverse?: boolean }) {
   const locale = useSiteLocale();
   const homeHref = locale === 'en' ? '/en' : '/';
-  return <Link href={homeHref} aria-label={`${safeName(clinic?.name)} — ${uiText(locale, 'accueil', 'home')}`} className={`brand-wordmark inline-flex shrink-0 items-center gap-3 ${inverse ? 'text-[#ffffff]' : 'text-foreground'}`} data-testid="link-home-brand">
+  return <Link href={homeHref} aria-label={`${safeName(clinic?.name)} ${safeCity(clinic?.city)} — ${uiText(locale, 'accueil', 'home')}`} className={`brand-wordmark inline-flex shrink-0 items-center gap-3 ${inverse ? 'text-[#ffffff]' : 'text-foreground'}`} data-testid="link-home-brand">
     <span className="brand-mark-frame" aria-hidden="true">
       <img src={clinic?.logoUrl?.trim() || brandMarkUrl} alt="" width="64" height="48" className="brand-mark-image" data-testid="img-clinic-logo" />
     </span>
@@ -134,7 +134,7 @@ export function LogoWordmark({ clinic, inverse = false }: { clinic?: SiteContent
 
 function BrandLockup({ clinic }: { clinic?: SiteContent['clinic'] }) {
   const locale = useSiteLocale();
-  return <Link href={locale === 'en' ? '/en' : '/'} aria-label={`${safeName(clinic?.name)} — ${uiText(locale, 'accueil', 'home')}`} className="brand-wordmark inline-flex shrink-0 items-center gap-3 text-white" data-testid="link-footer-brand">
+  return <Link href={locale === 'en' ? '/en' : '/'} aria-label={`${safeName(clinic?.name)} ${uiText(locale, 'Cabinet dentaire', 'Dental practice')} ${safeCity(clinic?.city)} — ${uiText(locale, 'accueil', 'home')}`} className="brand-wordmark inline-flex shrink-0 items-center gap-3 text-white" data-testid="link-footer-brand">
     <span className="brand-mark-frame" aria-hidden="true">
       <img src={clinic?.logoUrl?.trim() || brandMarkUrl} alt="" width="64" height="48" className="brand-mark-image" />
     </span>

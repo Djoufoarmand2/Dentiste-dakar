@@ -4,7 +4,7 @@ import {
   FinalizeAdminMediaBody, DeleteAdminMediaBody, SubmitReviewBody,
   SubmitContactAppointmentBody, SubmitContactAppointmentResponse,
 } from '../../../lib/api-zod/src/generated/api';
-import { mimeExtensions, parseContent, publicContent, signatureMatches } from './validation';
+import { mimeExtensions, normalizePublicationInput, parseContent, publicContent, signatureMatches } from './validation';
 
 declare const Deno: { env: { get(key: string): string | undefined }; serve(handler: (request: Request) => Promise<Response>): void };
 const env = (key: string) => {
@@ -244,7 +244,7 @@ export async function handleRequest(request: Request): Promise<Response> {
       return respond(data);
     }
     if (path === '/admin/site-content' && request.method === 'PUT') {
-      const parsed = PublishAdminContentBody.safeParse(await body(request));
+      const parsed = PublishAdminContentBody.safeParse(normalizePublicationInput(await body(request)));
       if (!parsed.success) throw new HttpError(400, 'Vérifiez les champs du contenu et la version de publication.');
       let content;
       try { content = parseContent(parsed.data.content, mediaBaseUrl); }
