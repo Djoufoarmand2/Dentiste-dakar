@@ -29,12 +29,12 @@ function useInView<T extends HTMLElement>() {
   return [ref, seen] as const;
 }
 
-function RatingStars({ value, size = 22 }: { value: number; size?: number }) {
+function RatingStars({ value, size = 22, countUp = false }: { value: number; size?: number; countUp?: boolean }) {
   const pct = Math.max(0, Math.min(100, (value / 5) * 100));
   const row = (cls: string) => <span className={cls} style={{ fontSize: size }}>{'★★★★★'}</span>;
   return <span className="trust-stars" aria-hidden="true">
     {row('trust-stars-base')}
-    <span className="trust-stars-fill" style={{ width: `${pct}%` }}>{row('')}</span>
+    <span className="trust-stars-fill" style={{ width: `${pct}%`, transition: countUp ? 'none' : undefined }}>{row('')}</span>
   </span>;
 }
 
@@ -42,6 +42,27 @@ export function useCombinedReviewSummary(testimonials: SiteContent['testimonials
   const query = usePublicReviews();
   const combined: Testimonial[] = combinePublicReviews(query.data ?? [], testimonials);
   return { query, combined, summary: summarizePublishedReviews(combined) };
+}
+
+function useRatingCountUp(target: number, active: boolean) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (!active || prefersReducedMotion()) {
+      setDisplay(target);
+      return;
+    }
+    const start = performance.now();
+    const duration = 850;
+    let frame = 0;
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / duration);
+      setDisplay(target * (1 - Math.pow(1 - progress, 3)));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [active, target]);
+  return display;
 }
 
 /** Reference-inspired "they trust us" band, based only on published reviews. */
@@ -52,6 +73,7 @@ export function ReviewTrustPanel({ testimonials, ctaHref, ctaLabel, variant = 'p
   const { query, summary } = useCombinedReviewSummary(testimonials);
   const [ref, seen] = useInView<HTMLDivElement>();
   const average = summary.average ?? 0;
+  const animatedAverage = useRatingCountUp(average, seen && summary.average !== null);
   const fmt = new Intl.NumberFormat(locale === 'en' ? 'en' : 'fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   const isAnchor = ctaHref.startsWith('#');
   const ctaClass = 'trust-cta';
@@ -74,9 +96,9 @@ export function ReviewTrustPanel({ testimonials, ctaHref, ctaLabel, variant = 'p
           : <div className="trust-score-inner">
             <p className="trust-average" data-testid="text-review-average">
               <span className="sr-only">{t(locale, `Note moyenne ${fmt.format(average)} sur 5`, `Average rating ${fmt.format(average)} out of 5`)}</span>
-              <span aria-hidden="true"><span className="tabular-nums">{fmt.format(average)}</span><span className="trust-out-of">/5</span></span>
+              <span aria-hidden="true"><span className="tabular-nums">{fmt.format(animatedAverage)}</span><span className="trust-out-of">/5</span></span>
             </p>
-            <RatingStars value={seen ? average : 0} />
+            <RatingStars value={seen ? animatedAverage : 0} countUp={seen} />
             <p className="trust-count" data-testid="text-review-count">
               {t(locale, 'Basée sur', 'Based on')} <b className="tabular-nums">{summary.count}</b> {summary.count > 1 ? t(locale, 'avis publiés', 'published reviews') : t(locale, 'avis publié', 'published review')}
             </p>

@@ -12,6 +12,7 @@ import { VideoPlayer } from './video-player';
 import { getYouTubeThumbnailUrl } from '@/lib/video-url';
 import { ServiceDetailContent as ServiceDetailBody, WhyChooseContent as WhyChooseBody } from './patient-content-pages';
 import { combinePublicReviews, usePublicReviews } from '@/lib/reviews';
+import { summarizePublishedReviews } from '@/lib/review-summary';
 import heroIllustration from '@/lib/hero-illustration.json';
 import { supabaseUrl } from '@/lib/supabase';
 import { localizedPath, useSiteLocale } from '@/lib/site-locale';
@@ -480,6 +481,11 @@ export function HomePage({ content }: { content: SiteContent }) {
   const testimonials = combinePublicReviews(publicReviews.data ?? [], content.testimonials);
   const lead = visibleTeamMembers(content.team)[0];
   const photos = visibleGallery(content.gallery);
+  const reviewCount = summarizePublishedReviews(testimonials).count;
+  const faqCount = content.faqs.length;
+  const publishedPostCount = content.blogPosts.filter((post) => post.published).length;
+  const activeInformationCount = content.campaigns.filter((campaign) => campaign.active).length;
+  const whyChooseCount = content.whyChoose?.values.length ?? 0;
   const partnerLogo = content.gallery.find((item) => item.id === partnerLogoId);
   const partnerPhoto = content.gallery.find((item) => item.id === partnerPhotoId);
   const heroImg = hero.imageUrl?.trim();
@@ -507,11 +513,16 @@ export function HomePage({ content }: { content: SiteContent }) {
           {isIllustrativeHero && <p className="absolute bottom-4 left-5 z-10 max-w-[calc(100%-6rem)] text-[10px] leading-4 text-white/75 md:left-8">{uiText(locale, 'Illustration générée par IA — ne représente pas les locaux ni l’équipe réelle.', 'AI-generated illustration — it does not depict the actual premises or team.')}</p>}
         </section>
 
-        {[content.services.length, visibleTeamMembers(content.team).length, photos.length].some((count) => count > 0) && <section className="border-b border-[#073e53]/10 bg-[#f3f1f5] py-8 md:py-10" aria-label={uiText(locale, 'Le cabinet en quelques repères', 'The practice at a glance')}>
+        {[content.services.length, visibleTeamMembers(content.team).length, photos.length, reviewCount, faqCount, publishedPostCount, activeInformationCount, whyChooseCount].some((count) => count > 0) && <section className="border-b border-[#073e53]/10 bg-[#f3f1f5] py-8 md:py-10" aria-label={uiText(locale, 'Le cabinet en quelques repères', 'The practice at a glance')}>
           <div className="wrap flex flex-wrap items-center justify-center gap-x-10 gap-y-6 sm:justify-start">
             {content.services.length > 0 && <MetricCounter value={content.services.length} label={uiText(locale, 'Soins présentés', 'Services listed')} href={routeFor('/soins/', locale, content)} />}
             {visibleTeamMembers(content.team).length > 0 && <MetricCounter value={visibleTeamMembers(content.team).length} label={uiText(locale, 'Membres de l’équipe', 'Team members')} href={routeFor('/equipe/', locale, content)} />}
             {photos.length > 0 && <MetricCounter value={photos.length} label={uiText(locale, 'Images en galerie', 'Gallery images')} href={routeFor('/galerie/', locale, content)} />}
+            {whyChooseCount > 0 && <MetricCounter value={whyChooseCount} label={uiText(locale, 'Raisons de nous choisir', 'Reasons to choose us')} href={routeFor('/pourquoi-nous-choisir', locale, content)} />}
+            {reviewCount > 0 && <MetricCounter value={reviewCount} label={uiText(locale, 'Avis publiés', 'Published reviews')} href={routeFor('/avis', locale, content)} />}
+            {faqCount > 0 && <MetricCounter value={faqCount} label={uiText(locale, 'Questions fréquentes', 'Frequently asked questions')} href={routeFor('/faq', locale, content)} />}
+            {publishedPostCount > 0 && <MetricCounter value={publishedPostCount} label={uiText(locale, 'Articles publiés', 'Published articles')} href={routeFor('/blog/', locale, content)} />}
+            {activeInformationCount > 0 && <MetricCounter value={activeInformationCount} label={uiText(locale, 'Informations actives', 'Active updates')} href={routeFor('/informations', locale, content)} />}
           </div>
         </section>}
 
