@@ -28,3 +28,17 @@ mtime_ms = 1793962007804
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/bab012bd-6e3e-4558-a128-84f5499fd57f/b883b952-03fc-4602-900d-54a5f38289e9"
 storage_version_token = "1793962077059517"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "haDO1wmfDHLQ7IA74rBLj"
+uri = "file://generated-artifacts/client-messages/messages-personnalises-cabinet-sourire-serein.pdf"
+type = "pdf"
+title = "Messages personnalisés pour les patients"
+description = "Fiche PDF de 4 pages contenant 12 modèles de réponse pour les demandes du formulaire, WhatsApp, les rendez-vous, le suivi et les avis."
+logical_id = "6e13a5e2-83d2-4a64-8f92-19f859732795"
+content_hash = "sha256:c7782cd15bf0994a079cb0651f95183dbbd058e6c1ee9f517fb9bd5530dbcf6d"
+size = 97619
+mtime_ms = 1794043307094
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/6e13a5e2-83d2-4a64-8f92-19f859732795/01c448a7-1d71-4905-804d-8e77bafd61b6"
+storage_version_token = "1794043333386358"
+content_type = "application/pdf"
