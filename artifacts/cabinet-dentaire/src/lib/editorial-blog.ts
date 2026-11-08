@@ -4,7 +4,18 @@ import sourceRelations from './editorial-blog-relations.json';
 
 const baseUrl = import.meta.env.BASE_URL;
 
-export const editorialBlogPosts = sourcePosts as BlogPost[];
+function replaceLegacyContactEmail(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return value.replace(/bienveillanceclinique4@gmail\.com/gi, 'bienveillanceclinique4@dentiste-sourireserein.cm');
+  }
+  if (Array.isArray(value)) return value.map(replaceLegacyContactEmail);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, replaceLegacyContactEmail(entry)]));
+  }
+  return value;
+}
+
+export const editorialBlogPosts = replaceLegacyContactEmail(sourcePosts) as BlogPost[];
 export const editorialBlogRelations = sourceRelations as Record<string, Pick<BlogPost, 'relatedServiceSlugs' | 'relatedArticleSlugs'>>;
 
 export function withEditorialBlogPosts(content: SiteContent): SiteContent {

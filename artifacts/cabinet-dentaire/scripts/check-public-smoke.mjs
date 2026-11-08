@@ -190,7 +190,7 @@ for (const route of routes) {
     assert.ok(service, `${route} should correspond to a CMS service`);
     assert.match(html, /<h1>[^<]+<\/h1>/i, `${route} should expose a service heading`);
     if (html.includes('data-seo-prerender=')) {
-      assert.ok(html.includes('bienveillanceclinique4@gmail.com'), `${route} should expose the clinic email in its static snapshot`);
+      assert.ok(html.includes('bienveillanceclinique4@dentiste-sourireserein.cm'), `${route} should expose the clinic email in its static snapshot`);
       assert.ok(html.includes('677873442'), `${route} should expose the WhatsApp contact in its static snapshot`);
     }
   }

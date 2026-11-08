@@ -717,7 +717,7 @@ export function WhyChoosePage({ content }: { content: SiteContent }) {
   return <SiteShell clinic={content.clinic} content={content}>
     <WhyChooseBody
       locale={locale}
-      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: 'bienveillanceclinique4@gmail.com' }}
+      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: content.clinic.email || 'bienveillanceclinique4@dentiste-sourireserein.cm' }}
       content={content.whyChoose}
     />
   </SiteShell>;
@@ -741,7 +741,7 @@ export function ServiceDetailPage({ content, slug }: { content: SiteContent; slu
     </div>
     <ServiceDetailBody
       locale={locale}
-      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: 'bienveillanceclinique4@gmail.com' }}
+      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: content.clinic.email || 'bienveillanceclinique4@dentiste-sourireserein.cm' }}
       service={{
         id: service.id,
          title: locale === 'en' ? translated.title : service.title,

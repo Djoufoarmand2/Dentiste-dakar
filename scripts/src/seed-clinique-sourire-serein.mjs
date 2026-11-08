@@ -232,7 +232,7 @@ const clinic = {
   city: 'Douala',
   address: 'Ancienne gare routière, Dakar, Douala, Cameroun',
   phone: '+237 677 87 34 42',
-  email: 'bienveillanceclinique4@gmail.com',
+  email: 'bienveillanceclinique4@dentiste-sourireserein.cm',
   openingHours: '24 h/24 · 7 j/7',
   mapUrl: 'https://www.google.com/maps/place/Clinique+La+Bienveillance/@4.0307524,9.7258638,17z/data=!4m6!3m5!1s0x10610d2ffb339343:0xcc207a6138777c30!8m2!3d4.0307524!4d9.7307347!16s%2Fg%2F11fltnv9l8',
   bookingUrl: 'https://wa.me/237677873442?text=Bonjour%2C%20je%20souhaite%20prendre%20rendez-vous%20au%20Cabinet%20Sourire%20Serein.',

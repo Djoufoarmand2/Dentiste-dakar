@@ -14,7 +14,17 @@ const appPath = (route) => `${basePath}${String(route).replace(/^\/+/, '')}`;
 const viteEnv = loadEnv('production', process.cwd(), 'VITE_');
 const viteSetting = (name) => process.env[name]?.trim() || viteEnv[name]?.trim();
 const cmsTranslations = JSON.parse(await readFile(new URL('../src/lib/cms-translations.json', import.meta.url), 'utf8'));
-const editorialBlogPosts = JSON.parse(await readFile(new URL('../src/lib/editorial-blog.json', import.meta.url), 'utf8'));
+function replaceLegacyContactEmail(value) {
+  if (typeof value === 'string') {
+    return value.replace(/bienveillanceclinique4@gmail\.com/gi, 'bienveillanceclinique4@dentiste-sourireserein.cm');
+  }
+  if (Array.isArray(value)) return value.map(replaceLegacyContactEmail);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, replaceLegacyContactEmail(entry)]));
+  }
+  return value;
+}
+const editorialBlogPosts = replaceLegacyContactEmail(JSON.parse(await readFile(new URL('../src/lib/editorial-blog.json', import.meta.url), 'utf8')));
 const editorialBlogRelations = JSON.parse(await readFile(new URL('../src/lib/editorial-blog-relations.json', import.meta.url), 'utf8'));
 
 function addEditorialPosts(content) {
@@ -729,7 +739,8 @@ function renderPublicMarkup(route, meta) {
     const steps = (english ? translated.procedureSteps : service.procedureSteps)?.split(/\r?\n/).filter(Boolean) || [];
     const image = httpsImageUrl(service.imageUrl);
     const whatsapp = 'https://wa.me/237677873442';
-    return `<main><a href="${escapeAttribute(appPath(english ? '/en/services/' : '/soins/'))}">${english ? 'All services' : 'Tous les soins'}</a><article><h1>${escapeXml(title)}</h1><p>${escapeXml(summary)}</p>${image ? `<img src="${escapeAttribute(image)}" alt="${escapeAttribute(english ? translated.imageAlt : service.imageAlt || title)}" fetchpriority="high" decoding="async" />` : ''}<h2>${english ? 'About this care' : 'À propos de ce soin'}</h2><p>${escapeXml(description)}</p>${purpose ? `<h2>${english ? 'What is this care for?' : 'À quoi sert ce soin ?'}</h2><p>${escapeXml(purpose)}</p>` : ''}<h2>${english ? 'Your visit, step by step' : 'Votre parcours, étape par étape'}</h2>${steps.length ? `<ol>${steps.map((step) => `<li>${escapeXml(step)}</li>`).join('')}</ol>` : `<p>${english ? 'The practice will explain the general steps and options based on your situation.' : 'Le cabinet vous expliquera les étapes générales et les options selon votre situation.'}</p>`}<h2>${english ? 'Questions about this service?' : 'Une question sur ce soin ?'}</h2><p>${english ? 'Contact the practice for information and to discuss your request.' : 'Contactez le cabinet pour obtenir des renseignements et échanger sur votre demande.'}</p><p><a href="${escapeAttribute(whatsapp)}" rel="noopener noreferrer" target="_blank">WhatsApp +237 677 873 442</a> · <a href="mailto:bienveillanceclinique4@gmail.com">bienveillanceclinique4@gmail.com</a></p></article></main>`;
+    const contactEmail = publicContent.clinic?.email || 'bienveillanceclinique4@dentiste-sourireserein.cm';
+    return `<main><a href="${escapeAttribute(appPath(english ? '/en/services/' : '/soins/'))}">${english ? 'All services' : 'Tous les soins'}</a><article><h1>${escapeXml(title)}</h1><p>${escapeXml(summary)}</p>${image ? `<img src="${escapeAttribute(image)}" alt="${escapeAttribute(english ? translated.imageAlt : service.imageAlt || title)}" fetchpriority="high" decoding="async" />` : ''}<h2>${english ? 'About this care' : 'À propos de ce soin'}</h2><p>${escapeXml(description)}</p>${purpose ? `<h2>${english ? 'What is this care for?' : 'À quoi sert ce soin ?'}</h2><p>${escapeXml(purpose)}</p>` : ''}<h2>${english ? 'Your visit, step by step' : 'Votre parcours, étape par étape'}</h2>${steps.length ? `<ol>${steps.map((step) => `<li>${escapeXml(step)}</li>`).join('')}</ol>` : `<p>${english ? 'The practice will explain the general steps and options based on your situation.' : 'Le cabinet vous expliquera les étapes générales et les options selon votre situation.'}</p>`}<h2>${english ? 'Questions about this service?' : 'Une question sur ce soin ?'}</h2><p>${english ? 'Contact the practice for information and to discuss your request.' : 'Contactez le cabinet pour obtenir des renseignements et échanger sur votre demande.'}</p><p><a href="${escapeAttribute(whatsapp)}" rel="noopener noreferrer" target="_blank">WhatsApp +237 677 873 442</a> · <a href="mailto:${escapeAttribute(contactEmail)}">${escapeXml(contactEmail)}</a></p></article></main>`;
   }
   if (normalizedRoute === '/pourquoi-nous-choisir' || normalizedRoute === '/why-choose-us') {
     const page = publicContent.whyChoose ?? {

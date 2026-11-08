@@ -10,7 +10,7 @@ export function PrivacyPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
   const english = locale === 'en';
   const policy = content.privacyPolicy || defaultPrivacyPolicyContent;
-  const privacyEmail = content.clinic.email?.trim() || 'bienveillanceclinique4@gmail.com';
+  const privacyEmail = content.clinic.email?.trim() || 'bienveillanceclinique4@dentiste-sourireserein.cm';
   const phone = content.clinic.phone?.trim() || '+237 677 873 442';
   const contactHref = `mailto:${privacyEmail}`;
   const localized = (fr: string, en?: string) => english ? en?.trim() || 'English translation not yet available.' : fr;
