@@ -1,5 +1,9 @@
 /*
+  Strict-Transport-Security: max-age=31536000
+  X-Frame-Options: SAMEORIGIN
   X-Content-Type-Options: nosniff
+  X-Permitted-Cross-Domain-Policies: none
+  Content-Security-Policy: object-src 'none'; base-uri 'self'; frame-ancestors 'self'
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   Cache-Control: public, max-age=0, must-revalidate

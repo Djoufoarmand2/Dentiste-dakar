@@ -108,11 +108,24 @@ export async function submitQuickContactQuestion(data: {
     );
   }
 
+  const firstName = data.firstName.trim();
+  const email = data.email.trim();
+  const message = data.message.trim();
+  if (
+    firstName.length > 120 ||
+    email.length > 254 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) ||
+    message.length < 5 ||
+    message.length > 2000
+  ) {
+    throw new Error("Vérifiez votre adresse e-mail et la longueur du message.");
+  }
+
   const endpoint = validateFormBoldEndpoint(formBoldEndpoint);
   const formData = new FormData();
-  formData.set("name", data.firstName.trim());
-  formData.set("email", data.email.trim());
-  formData.set("message", data.message.trim());
+  formData.set("name", firstName);
+  formData.set("email", email);
+  formData.set("message", message);
   formData.set("subject", "Question rapide — Cabinet Sourire Serein");
   formData.set("form_type", "Question rapide");
 
@@ -130,10 +143,10 @@ export async function submitQuickContactQuestion(data: {
     );
   }
 
-  if (!response.ok) {
-    const result = (await response.json().catch(() => null)) as
-      | { message?: string }
+  const result = (await response.json().catch(() => null)) as
+    | { success?: boolean; message?: string }
       | null;
+  if (!response.ok || result?.success === false) {
     throw new Error(
       result?.message ||
         "FormBold n’a pas accepté l’envoi. Réessayez ou contactez le cabinet par téléphone.",

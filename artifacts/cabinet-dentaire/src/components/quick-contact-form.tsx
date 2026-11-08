@@ -19,6 +19,13 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
     const email = String(data.get("email") ?? "").trim();
     const message = String(data.get("message") ?? "").trim();
 
+    if (String(data.get("website") ?? "").trim()) {
+      // Quietly absorb bot submissions that fill the visually hidden field.
+      formRef.current?.reset();
+      setStatus("success");
+      return;
+    }
+
     if (!email || !message) return;
 
     setStatus("sending");
@@ -47,6 +54,16 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
       data-testid="form-quick-contact"
     >
       <span aria-hidden="true" className="absolute left-0 top-0 h-[3px] w-10 bg-[#b5965a]" />
+
+      <div
+        aria-hidden="true"
+        className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden"
+      >
+        <label>
+          Website
+          <input name="website" type="text" tabIndex={-1} autoComplete="off" />
+        </label>
+      </div>
 
       <label className="block text-[10px] font-semibold uppercase tracking-[.13em] text-[#536174]">
         {en ? "First name" : "Prénom"}
