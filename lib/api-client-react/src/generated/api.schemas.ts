@@ -63,6 +63,7 @@ export interface ContactAppointmentInput {
 export interface ContactAppointmentAccepted {
   accepted: boolean;
   requestId?: string;
+  formboldDelivered?: boolean;
 }
 
 /**
@@ -145,6 +146,7 @@ export interface ContactQuestionInput {
 export interface ContactQuestionAccepted {
   accepted: boolean;
   requestId: string;
+  formboldDelivered?: boolean;
 }
 
 export type ContactQuestionContactChannel = typeof ContactQuestionContactChannel[keyof typeof ContactQuestionContactChannel];

@@ -9,6 +9,9 @@ export function PrivacyPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
   const english = locale === 'en';
   const policy = content.privacyPolicy || defaultPrivacyPolicyContent;
+  const policySections = policy.sections.some((section) => section.id === 'contact-questions')
+    ? policy.sections
+    : [...policy.sections, defaultPrivacyPolicyContent.sections.find((section) => section.id === 'contact-questions')!];
   const privacyEmail = content.clinic.email?.trim() || 'bienveillanceclinique4@dentiste-sourireserein.cm';
   const phone = content.clinic.phone?.trim() || '+237 677 873 442';
   const contactHref = `mailto:${privacyEmail}`;
@@ -37,7 +40,7 @@ export function PrivacyPage({ content }: { content: SiteContent }) {
             </div>
           </section>
 
-          {policy.sections.map((section) => <section key={section.id} className="rounded-2xl border border-border bg-card p-6 md:p-8" data-testid={`privacy-section-${section.id}`}>
+          {policySections.map((section) => <section key={section.id} className="rounded-2xl border border-border bg-card p-6 md:p-8" data-testid={`privacy-section-${section.id}`}>
             <h2 className="font-display text-2xl text-[#073e53]">{localized(section.title, section.titleEn)}</h2>
             <div className="mt-4 space-y-4 text-sm leading-7 text-muted-foreground">
               {paragraphs(localized(section.body, section.bodyEn)).map((paragraph, index) => <p key={`${section.id}-${index}`}>{paragraph}</p>)}

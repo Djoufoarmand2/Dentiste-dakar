@@ -16,6 +16,7 @@ export function QuickContactForm({
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [formboldWarning, setFormboldWarning] = useState(false);
   const [channel, setChannel] = useState<"email" | "whatsapp" | "both">("email");
   const submissionId = useRef<string | null>(null);
   const phoneLink = phone.replace(/[^\d+]/g, "");
@@ -36,6 +37,7 @@ export function QuickContactForm({
     if (String(data.get("website") ?? "").trim()) {
       // Quietly absorb bot submissions that fill the visually hidden field.
       formRef.current?.reset();
+      setFormboldWarning(false);
       setStatus("success");
       return;
     }
@@ -50,6 +52,7 @@ export function QuickContactForm({
 
     setStatus("sending");
     setErrorMessage("");
+    setFormboldWarning(false);
     try {
       const result = await submitQuickContactQuestion({
         submissionId: submissionId.current ?? (submissionId.current = crypto.randomUUID()),
@@ -63,6 +66,7 @@ export function QuickContactForm({
       formRef.current?.reset();
       submissionId.current = null;
       setChannel("email");
+      setFormboldWarning(result.formboldDelivered === false);
       setStatus("success");
     } catch (error) {
       setErrorMessage(
@@ -194,8 +198,8 @@ export function QuickContactForm({
 
       <p className="text-xs leading-5 text-muted-foreground">
         {en
-          ? "Your request is stored privately by the practice. Please do not include medical records or other sensitive information."
-          : "Votre demande est enregistrée dans l’espace privé du cabinet. N’indiquez pas de dossier médical ni d’information sensible."}
+          ? <>Your request is stored by the practice and sent to FormBold for processing. See our <a className="font-semibold underline underline-offset-2" href="/en/privacy">privacy policy</a>. Do not include medical records or other sensitive information.</>
+          : <>Votre demande est enregistrée par le cabinet et transmise à FormBold pour traitement. Consultez notre <a className="font-semibold underline underline-offset-2" href="/confidentialite">politique de confidentialité</a>. N’indiquez pas de dossier médical ni d’information sensible.</>}
       </p>
 
       {status === "success" && (
@@ -209,6 +213,17 @@ export function QuickContactForm({
               ? <>We received your question. Please allow up to 24 hours for a reply. For urgent concerns, call <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>
               : <>Nous avons bien reçu votre question. Merci de patienter jusqu’à 24 h pour une réponse. En cas d’urgence, appelez le <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>}
           </p>
+          {formboldWarning && (
+            <p
+              role="status"
+              className="rounded-md border border-amber-700/25 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950"
+              data-testid="status-quick-contact-formbold-warning"
+            >
+              {en
+                ? "Your question is saved, but its FormBold notification could not be confirmed. The practice can still view it in the admin inbox."
+                : "Votre question est bien enregistrée, mais sa notification FormBold n’a pas été confirmée. Le cabinet peut toujours la consulter dans sa boîte admin."}
+            </p>
+          )}
           <ManualContactLinks email={email} phone={phone} />
         </div>
       )}

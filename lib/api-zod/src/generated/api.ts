@@ -578,7 +578,8 @@ export const SubmitContactAppointmentBody = zod.object({
 
 export const SubmitContactAppointmentResponse = zod.object({
   "accepted": zod.boolean(),
-  "requestId": zod.string().uuid().optional()
+  "requestId": zod.string().uuid().optional(),
+  "formboldDelivered": zod.boolean().optional()
 })
 
 
@@ -612,7 +613,8 @@ export const SubmitContactQuestionBody = zod.object({
 
 export const SubmitContactQuestionResponse = zod.object({
   "accepted": zod.boolean(),
-  "requestId": zod.string().uuid()
+  "requestId": zod.string().uuid(),
+  "formboldDelivered": zod.boolean().optional()
 })
 
 

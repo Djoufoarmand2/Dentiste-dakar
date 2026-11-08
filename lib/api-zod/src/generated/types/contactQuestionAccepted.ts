@@ -9,4 +9,5 @@
 export interface ContactQuestionAccepted {
   accepted: boolean;
   requestId: string;
+  formboldDelivered?: boolean;
 }

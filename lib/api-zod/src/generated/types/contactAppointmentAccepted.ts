@@ -9,4 +9,5 @@
 export interface ContactAppointmentAccepted {
   accepted: boolean;
   requestId?: string;
+  formboldDelivered?: boolean;
 }

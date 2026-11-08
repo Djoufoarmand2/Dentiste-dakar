@@ -62,11 +62,20 @@ export async function submitAppointmentRequest(
 ): Promise<ContactAppointmentAccepted> {
   if (data.website?.trim()) return { accepted: true };
 
+  const input: ContactAppointmentInput = {
+    ...data,
+    name: data.name.trim(),
+    phone: data.phone.trim(),
+    email: data.email?.trim() || undefined,
+    preferredDate: data.preferredDate || undefined,
+    preferredWindow: data.preferredWindow || undefined,
+    message: data.message?.trim() || undefined,
+  };
   const saved = await cmsRequest<ContactAppointmentAccepted>(
     "/contact/appointment",
     {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify(input),
       signal: AbortSignal.timeout(25_000),
     },
     false,

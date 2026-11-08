@@ -128,6 +128,52 @@ function whatsappRecipient(phone: string) {
   return null;
 }
 
+async function forwardContactToFormBold(submissionId: string, fields: Record<string, string>): Promise<boolean> {
+  const endpoint = Deno.env.get('FORMBOLD_ENDPOINT');
+  if (!endpoint) {
+    console.error(`[FormBold] forwarding is not configured for submission ${submissionId}.`);
+    return false;
+  }
+
+  let destination: URL;
+  try {
+    destination = new URL(endpoint);
+  } catch {
+    console.error(`[FormBold] invalid endpoint configuration for submission ${submissionId}.`);
+    return false;
+  }
+  if (
+    destination.protocol !== 'https:'
+    || destination.hostname !== 'formbold.com'
+    || !/^\/s\/[A-Za-z0-9]+$/.test(destination.pathname)
+    || destination.search
+    || destination.hash
+  ) {
+    console.error(`[FormBold] rejected endpoint configuration for submission ${submissionId}.`);
+    return false;
+  }
+
+  try {
+    const response = await fetch(destination, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ ...fields, submission_id: submissionId }),
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!response.ok) {
+      console.error(`[FormBold] forwarding failed with HTTP ${response.status} for submission ${submissionId}.`);
+      await response.body?.cancel().catch(() => undefined);
+      return false;
+    }
+    await response.body?.cancel().catch(() => undefined);
+    return true;
+  } catch (error) {
+    const kind = error instanceof Error ? error.name : 'unknown';
+    console.error(`[FormBold] forwarding failed (${kind}) for submission ${submissionId}.`);
+    return false;
+  }
+}
+
 async function getAsset(path: string) {
   if (!/^uploads\/[a-f0-9-]+\.(jpg|png|webp|gif|mp4|webm)$/.test(path)) throw new HttpError(400, 'Chemin de média invalide.');
   const { data, error } = await db.from('cabinet_media').select('*').eq('path', path).maybeSingle();
@@ -177,7 +223,7 @@ export async function handleRequest(request: Request): Promise<Response> {
       }
       await checkReviewRate(request); // Shared anti-abuse quota for public submissions.
       const id = parsed.data.submissionId ?? crypto.randomUUID();
-      const { error } = await db.from('cabinet_appointments').upsert({
+      const { data: stored, error } = await db.from('cabinet_appointments').upsert({
         id, name, phone, email,
         service: parsed.data.service, preferred_date: parsed.data.preferredDate || null,
         preferred_window: parsed.data.preferredWindow || null,
@@ -186,9 +232,28 @@ export async function handleRequest(request: Request): Promise<Response> {
         whatsapp_consent: usesWhatsApp(channel) && parsed.data.whatsappConsent,
         email_status: 'not_requested',
         whatsapp_status: 'not_requested',
-      }, { onConflict: 'id', ignoreDuplicates: true });
+      }, { onConflict: 'id', ignoreDuplicates: true }).select('id').maybeSingle();
       if (error) throw new HttpError(503, 'Impossible d’enregistrer votre demande. Réessayez ou contactez le cabinet.');
-      return respond(SubmitContactAppointmentResponse.parse({ accepted: true, requestId: id }));
+      const formboldDelivered = stored ? await forwardContactToFormBold(id, {
+        request_type: 'Demande de rendez-vous',
+        subject: `Nouvelle demande de rendez-vous — ${name}`,
+        name,
+        phone,
+        email: email ?? '',
+        service: parsed.data.service,
+        preferred_date: parsed.data.preferredDate?.toISOString().slice(0, 10) ?? '',
+        preferred_window: parsed.data.preferredWindow === 'weekdays'
+          ? 'Du lundi au vendredi, 16h00–19h00'
+          : parsed.data.preferredWindow === 'saturday'
+            ? 'Samedi, 10h00–14h00'
+            : '',
+        message: parsed.data.message?.trim() ?? '',
+        contact_channel: channel,
+        whatsapp_consent: parsed.data.whatsappConsent ? 'Oui' : 'Non',
+      }) : false;
+      return respond(SubmitContactAppointmentResponse.parse({
+        accepted: true, requestId: id, formboldDelivered,
+      }));
     }
     if (request.method === 'POST' && path === '/contact/question') {
       const parsed = SubmitContactQuestionBody.safeParse(await body(request));
@@ -211,14 +276,24 @@ export async function handleRequest(request: Request): Promise<Response> {
       }
       await checkReviewRate(request);
       const id = parsed.data.submissionId;
-      const { error } = await db.from('cabinet_contact_questions').upsert({
+      const { data: stored, error } = await db.from('cabinet_contact_questions').upsert({
         id, submission_id: id, name, email, phone, message, contact_channel: channel,
         whatsapp_consent: usesWhatsApp(channel) && parsed.data.whatsappConsent,
         email_status: 'not_requested', whatsapp_status: 'not_requested',
-      }, { onConflict: 'submission_id', ignoreDuplicates: true });
+      }, { onConflict: 'submission_id', ignoreDuplicates: true }).select('id').maybeSingle();
       if (error) throw new HttpError(503, 'Impossible d’enregistrer votre question. Réessayez ou contactez le cabinet.');
+      const formboldDelivered = stored ? await forwardContactToFormBold(id, {
+        request_type: 'Question rapide',
+        subject: 'Nouvelle question — Cabinet Sourire Serein',
+        name,
+        email: email ?? '',
+        phone: phone ?? '',
+        message,
+        contact_channel: channel,
+        whatsapp_consent: parsed.data.whatsappConsent ? 'Oui' : 'Non',
+      }) : false;
       return respond(SubmitContactQuestionResponse.parse({
-        accepted: true, requestId: id,
+        accepted: true, requestId: id, formboldDelivered,
       }), 201);
     }
     if (request.method === 'GET' && path === '/reviews') {

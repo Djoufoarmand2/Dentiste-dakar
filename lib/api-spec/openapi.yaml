@@ -416,6 +416,7 @@ components:
       properties:
         accepted: { type: boolean }
         requestId: { type: string, format: uuid }
+        formboldDelivered: { type: boolean }
     AppointmentRequest:
       type: object
       required: [id, name, phone, service, createdAt, contactChannel, whatsappConsent, contactValidated, replyStatus]
@@ -453,6 +454,7 @@ components:
       properties:
         accepted: { type: boolean }
         requestId: { type: string, format: uuid }
+        formboldDelivered: { type: boolean }
     ContactQuestion:
       type: object
       required: [id, name, email, phone, message, contactChannel, whatsappConsent, contactValidated, replyStatus, createdAt]

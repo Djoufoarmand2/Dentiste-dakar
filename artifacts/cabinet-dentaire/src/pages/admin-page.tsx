@@ -106,7 +106,14 @@ const fieldLabels: Record<string, string> = {
 
 function ensureTranslationFields(content: SiteContent): SiteContent {
   const whyChoose = { ...defaultWhyChooseContent, ...content.whyChoose, values: content.whyChoose?.values ?? defaultWhyChooseContent.values };
-  const privacyPolicy = { ...defaultPrivacyPolicyContent, ...content.privacyPolicy, sections: content.privacyPolicy?.sections ?? defaultPrivacyPolicyContent.sections };
+  const privacySections = content.privacyPolicy?.sections ?? defaultPrivacyPolicyContent.sections;
+  const privacyPolicy = {
+    ...defaultPrivacyPolicyContent,
+    ...content.privacyPolicy,
+    sections: privacySections.some((section) => section.id === 'contact-questions')
+      ? privacySections
+      : [...privacySections, defaultPrivacyPolicyContent.sections.find((section) => section.id === 'contact-questions')!],
+  };
   const existingBlogSlugs = new Set(content.blogPosts.map((post) => post.slug));
   const editorialSeedsBySlug = editorialBlogRelations;
   const blogPosts = [

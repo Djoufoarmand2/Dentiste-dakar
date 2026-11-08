@@ -76,6 +76,7 @@ export function AppointmentRequestForm({
   });
   const [submissionAccepted, setSubmissionAccepted] = useState<boolean | null>(null);
   const [requestReceived, setRequestReceived] = useState(false);
+  const [formboldWarning, setFormboldWarning] = useState(false);
   const submissionId = useRef<string | null>(null);
   const phoneValue = form.watch("phone");
   const emailValue = form.watch("email");
@@ -91,6 +92,7 @@ export function AppointmentRequestForm({
     request.reset();
     setSubmissionAccepted(null);
     setRequestReceived(false);
+    setFormboldWarning(false);
     if (!values.service) {
       form.setError("service", {
         type: "required",
@@ -116,6 +118,7 @@ export function AppointmentRequestForm({
       setSubmissionAccepted(result.accepted === true);
       if (result.accepted === true) {
         setRequestReceived(true);
+        setFormboldWarning(result.formboldDelivered === false);
         form.reset(defaultValues);
         submissionId.current = null;
       }
@@ -127,15 +130,28 @@ export function AppointmentRequestForm({
   return (
     <>
     {requestReceived && (
-      <p
-        role="status"
-        className="mb-5 rounded-md border border-emerald-700/20 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900"
-        data-testid="status-appointment-received-inline"
-      >
-        {en
-          ? <>We received your request. Please allow up to 24 hours for a reply and appointment confirmation. This request does not reserve a time slot. For urgent concerns, call <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>
-          : <>Nous avons bien reçu votre demande. Merci de patienter jusqu’à 24 h pour une réponse et la confirmation d’un créneau. Cette demande ne réserve pas de rendez-vous. En cas d’urgence, appelez le <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>}
-      </p>
+      <div className="mb-5 space-y-3">
+        <p
+          role="status"
+          className="rounded-md border border-emerald-700/20 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900"
+          data-testid="status-appointment-received-inline"
+        >
+          {en
+            ? <>We received your request. Please allow up to 24 hours for a reply and appointment confirmation. This request does not reserve a time slot. For urgent concerns, call <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>
+            : <>Nous avons bien reçu votre demande. Merci de patienter jusqu’à 24 h pour une réponse et la confirmation d’un créneau. Cette demande ne réserve pas de rendez-vous. En cas d’urgence, appelez le <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>}
+        </p>
+        {formboldWarning && (
+          <p
+            role="status"
+            className="rounded-md border border-amber-700/25 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950"
+            data-testid="status-appointment-formbold-warning"
+          >
+            {en
+              ? "Your request is saved, but its FormBold notification could not be confirmed. The practice can still view it in the admin inbox."
+              : "Votre demande est bien enregistrée, mais sa notification FormBold n’a pas été confirmée. Le cabinet peut toujours la consulter dans sa boîte admin."}
+          </p>
+        )}
+      </div>
     )}
     <Form {...form}>
       <form
@@ -532,8 +548,8 @@ export function AppointmentRequestForm({
           </Button>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
             {en
-              ? "Your request is stored in the practice’s private inbox. The team will contact you manually using your selected preference."
-              : "Votre demande est enregistrée dans l’espace privé du cabinet. L’équipe vous recontactera manuellement selon votre préférence."}{" "}
+              ? <>Your request is stored by the practice and sent to FormBold for processing. The team will contact you manually using your selected preference. <a className="font-semibold underline underline-offset-2" href="/en/privacy">Privacy policy</a>.</>
+              : <>Votre demande est enregistrée par le cabinet et transmise à FormBold pour traitement. L’équipe vous recontactera manuellement selon votre préférence. <a className="font-semibold underline underline-offset-2" href="/confidentialite">Politique de confidentialité</a>.</>}{" "}
             {en ? "This does not confirm an appointment." : "Elle ne confirme pas encore un rendez-vous."}
           </p>
         </div>
