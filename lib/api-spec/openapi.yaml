@@ -106,21 +106,6 @@ paths:
         "403": { description: Origin not allowed }
         "429": { description: Submission rate exceeded }
         "503": { description: Storage unavailable }
-  /contact/notification-status:
-    post:
-      operationId: updateContactNotificationStatus
-      tags: [site]
-      summary: Record a provider acceptance or failure for a saved request
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/ContactNotificationStatusInput" }
-      responses:
-        "204": { description: Notification status recorded }
-        "400": { description: Invalid request or status token }
-        "403": { description: Origin not allowed }
-        "404": { description: Request not found }
   /admin/appointments:
     get:
       operationId: getAdminAppointments
@@ -211,60 +196,6 @@ paths:
           schema: { type: string, format: uuid }
       responses:
         "204": { description: Contact question deleted }
-        "401": { description: Sign-in required }
-        "403": { description: Administrator required }
-  /admin/messaging-settings:
-    get:
-      operationId: getAdminMessagingSettings
-      tags: [admin]
-      responses:
-        "200":
-          description: Private notification channel settings
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/MessagingSettings" }
-        "401": { description: Sign-in required }
-        "403": { description: Administrator required }
-    put:
-      operationId: updateAdminMessagingSettings
-      tags: [admin]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/MessagingSettingsInput" }
-      responses:
-        "200":
-          description: Notification channel settings saved
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/MessagingSettings" }
-        "400": { description: Invalid settings or channel not validated }
-        "401": { description: Sign-in required }
-        "403": { description: Administrator required }
-  /admin/messaging-settings/validate-whatsapp:
-    post:
-      operationId: validateAdminWhatsAppSettings
-      tags: [admin]
-      responses:
-        "200":
-          description: WhatsApp number and approved template validation result
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/MessagingValidationResponse" }
-        "401": { description: Sign-in required }
-        "403": { description: Administrator required }
-        "503": { description: WhatsApp API configuration unavailable }
-  /admin/messaging-settings/validate-gmail:
-    post:
-      operationId: validateAdminGmailSettings
-      tags: [admin]
-      responses:
-        "200":
-          description: Gmail OAuth configuration validation result
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/MessagingValidationResponse" }
         "401": { description: Sign-in required }
         "403": { description: Administrator required }
   /reviews:
@@ -485,12 +416,9 @@ components:
       properties:
         accepted: { type: boolean }
         requestId: { type: string, format: uuid }
-        statusToken: { type: string }
-        emailStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
-        whatsappStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
     AppointmentRequest:
       type: object
-      required: [id, name, phone, service, createdAt, contactChannel, whatsappConsent, emailStatus, whatsappStatus, contactValidated, replyStatus]
+      required: [id, name, phone, service, createdAt, contactChannel, whatsappConsent, contactValidated, replyStatus]
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
@@ -504,8 +432,6 @@ components:
         message: { type: string, nullable: true }
         contactChannel: { type: string, enum: [email, whatsapp, both] }
         whatsappConsent: { type: boolean }
-        emailStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
-        whatsappStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
         contactValidated: { type: boolean }
         replyStatus: { type: string, enum: [not_replied, draft_opened, replied] }
         createdAt: { type: string, format: date-time }
@@ -523,16 +449,13 @@ components:
         website: { type: string, maxLength: 200 }
     ContactQuestionAccepted:
       type: object
-      required: [accepted, requestId, statusToken]
+      required: [accepted, requestId]
       properties:
         accepted: { type: boolean }
         requestId: { type: string, format: uuid }
-        statusToken: { type: string }
-        emailStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
-        whatsappStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
     ContactQuestion:
       type: object
-      required: [id, name, email, phone, message, contactChannel, whatsappConsent, emailStatus, whatsappStatus, contactValidated, replyStatus, createdAt]
+      required: [id, name, email, phone, message, contactChannel, whatsappConsent, contactValidated, replyStatus, createdAt]
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
@@ -541,55 +464,15 @@ components:
         message: { type: string }
         contactChannel: { type: string, enum: [email, whatsapp, both] }
         whatsappConsent: { type: boolean }
-        emailStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
-        whatsappStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
         contactValidated: { type: boolean }
         replyStatus: { type: string, enum: [not_replied, draft_opened, replied] }
         createdAt: { type: string, format: date-time }
-    ContactNotificationStatusInput:
-      type: object
-      required: [requestId, requestType, statusToken, emailStatus]
-      properties:
-        requestId: { type: string, format: uuid }
-        requestType: { type: string, enum: [appointment, question] }
-        statusToken: { type: string, minLength: 32, maxLength: 128 }
-        emailStatus: { type: string, enum: [accepted, failed] }
     ContactRequestAdminUpdate:
       type: object
       minProperties: 1
       properties:
         contactValidated: { type: boolean }
         replyStatus: { type: string, enum: [not_replied, draft_opened, replied] }
-    MessagingSettings:
-      type: object
-      required: [gmailEnabled, gmailCredentialsReady, gmailValidated, whatsappEnabled, whatsappWabaId, whatsappPhoneNumberId, whatsappTemplateName, whatsappTemplateLanguage, whatsappValidated, whatsappCredentialsReady]
-      properties:
-        gmailEnabled: { type: boolean }
-        gmailCredentialsReady: { type: boolean }
-        gmailValidated: { type: boolean }
-        whatsappEnabled: { type: boolean }
-        whatsappWabaId: { type: ["string", "null"] }
-        whatsappPhoneNumberId: { type: ["string", "null"] }
-        whatsappTemplateName: { type: ["string", "null"] }
-        whatsappTemplateLanguage: { type: string }
-        whatsappValidated: { type: boolean }
-        whatsappCredentialsReady: { type: boolean }
-    MessagingSettingsInput:
-      type: object
-      required: [gmailEnabled, whatsappEnabled, whatsappWabaId, whatsappPhoneNumberId, whatsappTemplateName, whatsappTemplateLanguage]
-      properties:
-        gmailEnabled: { type: boolean }
-        whatsappEnabled: { type: boolean }
-        whatsappWabaId: { type: ["string", "null"], maxLength: 100 }
-        whatsappPhoneNumberId: { type: ["string", "null"], maxLength: 100 }
-        whatsappTemplateName: { type: ["string", "null"], maxLength: 120 }
-        whatsappTemplateLanguage: { type: string, minLength: 2, maxLength: 20 }
-    MessagingValidationResponse:
-      type: object
-      required: [valid, message]
-      properties:
-        valid: { type: boolean }
-        message: { type: string }
     Review:
       type: object
       required: [id, name, service, quote, rating, createdAt, source]

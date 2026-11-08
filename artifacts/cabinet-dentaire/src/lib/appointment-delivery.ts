@@ -14,9 +14,6 @@ const includesWhatsApp = (
   channel: ContactAppointmentInput["contactChannel"] | ContactQuestionInput["contactChannel"],
 ) => channel !== "email";
 
-export const appointmentProviderDisclosure =
-  "Lorsque les confirmations sont activées, elles sont envoyées directement par l’API Gmail et/ou l’API WhatsApp Business de Meta, sans outil d’automatisation externe.";
-
 export async function submitQuickContactQuestion(
   data: Omit<ContactQuestionInput, "submissionId"> & { submissionId?: string },
 ): Promise<ContactQuestionAccepted> {

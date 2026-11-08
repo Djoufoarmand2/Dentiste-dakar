@@ -5,13 +5,8 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import type { ContactQuestionAcceptedEmailStatus } from './contactQuestionAcceptedEmailStatus';
-import type { ContactQuestionAcceptedWhatsappStatus } from './contactQuestionAcceptedWhatsappStatus';
 
 export interface ContactQuestionAccepted {
   accepted: boolean;
   requestId: string;
-  statusToken: string;
-  emailStatus?: ContactQuestionAcceptedEmailStatus;
-  whatsappStatus?: ContactQuestionAcceptedWhatsappStatus;
 }

@@ -10,13 +10,12 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [channel, setChannel] = useState<"email" | "whatsapp" | "both">("email");
-  const [confirmationWarning, setConfirmationWarning] = useState("");
   const submissionId = useRef<string | null>(null);
   const phoneLink = phone.replace(/[^\d+]/g, "");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     // The submit event covers both the button click and Enter; the backend saves
-    // first, then makes the selected provider API calls in this same request.
+    // the request for the practice to review and answer manually.
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
@@ -44,7 +43,6 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
 
     setStatus("sending");
     setErrorMessage("");
-    setConfirmationWarning("");
     try {
       const result = await submitQuickContactQuestion({
         submissionId: submissionId.current ?? (submissionId.current = crypto.randomUUID()),
@@ -55,15 +53,6 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
         contactChannel,
         whatsappConsent,
       });
-      if (result.emailStatus === "not_configured" || result.emailStatus === "failed") {
-        setConfirmationWarning(en
-          ? "Automatic email confirmation is not active. The practice has your request and can reply from its private inbox."
-          : "La confirmation automatique par e-mail n’est pas active. Le cabinet a reçu votre demande dans son espace privé et pourra vous répondre.");
-      } else if (result.whatsappStatus === "not_configured" || result.whatsappStatus === "failed") {
-        setConfirmationWarning(en
-          ? "Automatic WhatsApp confirmation is not active yet. The practice has your request and can reply from its private inbox."
-          : "La confirmation automatique par WhatsApp n’est pas encore active. Le cabinet a reçu votre demande dans son espace privé et pourra vous répondre.");
-      }
       formRef.current?.reset();
       submissionId.current = null;
       setChannel("email");
@@ -128,7 +117,7 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
 
       <fieldset>
         <legend className="text-[10px] font-semibold uppercase tracking-[.13em] text-[#536174]">
-          {en ? "How should we reply?" : "Comment souhaitez-vous recevoir une réponse ?"}
+          {en ? "How may the practice contact you?" : "Comment le cabinet peut-il vous recontacter ?"}
         </legend>
         <div className="mt-2 grid gap-2 sm:grid-cols-3">
           {([
@@ -171,8 +160,8 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
             <input name="whatsappConsent" type="checkbox" required className="mt-1 accent-[#18365f]" />
             <span>
               {en
-                ? "I agree to receive one WhatsApp confirmation about this request. No marketing messages."
-                : "J’accepte de recevoir un message WhatsApp de confirmation au sujet de cette demande. Aucun message publicitaire."}
+                ? "I agree to be contacted on WhatsApp about this request. No marketing messages."
+                : "J’accepte d’être recontacté sur WhatsApp au sujet de cette demande. Aucun message publicitaire."}
             </span>
           </label>
         </>
@@ -211,7 +200,6 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
           {en
             ? <>We received your question. Please allow up to 24 hours for a reply. For urgent concerns, call <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>
             : <>Nous avons bien reçu votre question. Merci de patienter jusqu’à 24 h pour une réponse. En cas d’urgence, appelez le <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>}
-          {confirmationWarning && <span className="mt-2 block font-medium">{confirmationWarning}</span>}
         </p>
       )}
 

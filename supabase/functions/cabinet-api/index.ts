@@ -3,12 +3,10 @@ import {
   CreateAdminReviewBody, DeleteAdminReviewParams, PublishAdminContentBody, PrepareAdminMediaBody,
   FinalizeAdminMediaBody, DeleteAdminMediaBody, SubmitReviewBody,
   SubmitContactAppointmentBody, SubmitContactAppointmentResponse,
-  SubmitContactQuestionBody, SubmitContactQuestionResponse, UpdateContactNotificationStatusBody,
+  SubmitContactQuestionBody, SubmitContactQuestionResponse,
   UpdateAdminAppointmentParams, UpdateAdminAppointmentBody,
   GetAdminContactQuestionsResponse, UpdateAdminContactQuestionParams,
   UpdateAdminContactQuestionBody, DeleteAdminContactQuestionParams,
-  GetAdminMessagingSettingsResponse, UpdateAdminMessagingSettingsBody,
-  ValidateAdminGmailSettingsResponse, ValidateAdminWhatsAppSettingsResponse,
 } from './api.ts';
 import { mimeExtensions, normalizePublicationInput, parseContent, publicContent, signatureMatches } from './validation.ts';
 
@@ -117,236 +115,10 @@ async function checkReviewRate(request: Request) {
   }
 }
 
-type ContactType = 'appointment' | 'question';
 type ContactChannel = 'email' | 'whatsapp' | 'both';
-type NotificationStatus = 'pending' | 'sending' | 'accepted' | 'failed' | 'not_requested' | 'not_configured';
 
 function usesEmail(channel: ContactChannel) { return channel === 'email' || channel === 'both'; }
 function usesWhatsApp(channel: ContactChannel) { return channel === 'whatsapp' || channel === 'both'; }
-
-function encodeBase64Url(bytes: Uint8Array) {
-  let binary = '';
-  for (const byte of bytes) binary += String.fromCharCode(byte);
-  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
-}
-
-function decodeBase64Url(value: string) {
-  const base64 = value.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - value.length % 4) % 4);
-  return Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
-}
-
-async function contactStatusToken(type: ContactType, id: string) {
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    await reviewRateLimitKey,
-    new TextEncoder().encode(`contact-email-status:${type}:${id}`),
-  );
-  return encodeBase64Url(new Uint8Array(signature));
-}
-
-async function validContactStatusToken(type: ContactType, id: string, token: string) {
-  try {
-    return await crypto.subtle.verify(
-      'HMAC',
-      await reviewRateLimitKey,
-      decodeBase64Url(token),
-      new TextEncoder().encode(`contact-email-status:${type}:${id}`),
-    );
-  } catch {
-    return false;
-  }
-}
-
-async function readMessagingSettings() {
-  const { data, error } = await db.from('cabinet_messaging_settings').select('*').eq('id', true).maybeSingle();
-  if (error) throw new HttpError(503, 'Les réglages de messagerie sont indisponibles.');
-  return data ?? {
-    gmail_enabled: false,
-    gmail_validated_at: null,
-    whatsapp_enabled: false,
-    whatsapp_waba_id: null,
-    whatsapp_phone_number_id: null,
-    whatsapp_template_name: null,
-    whatsapp_template_language: 'fr',
-    whatsapp_validated_at: null,
-  };
-}
-
-function publicMessagingSettings(row: Record<string, unknown>) {
-  return GetAdminMessagingSettingsResponse.parse({
-    gmailEnabled: row.gmail_enabled === true,
-    gmailCredentialsReady: gmailCredentialsReady(),
-    gmailValidated: typeof row.gmail_validated_at === 'string' && !!row.gmail_validated_at,
-    whatsappEnabled: row.whatsapp_enabled === true,
-    whatsappWabaId: typeof row.whatsapp_waba_id === 'string' ? row.whatsapp_waba_id : null,
-    whatsappPhoneNumberId: typeof row.whatsapp_phone_number_id === 'string' ? row.whatsapp_phone_number_id : null,
-    whatsappTemplateName: typeof row.whatsapp_template_name === 'string' ? row.whatsapp_template_name : null,
-    whatsappTemplateLanguage: typeof row.whatsapp_template_language === 'string' ? row.whatsapp_template_language : 'fr',
-    whatsappValidated: typeof row.whatsapp_validated_at === 'string' && !!row.whatsapp_validated_at,
-    whatsappCredentialsReady: !!Deno.env.get('WHATSAPP_ACCESS_TOKEN'),
-  });
-}
-
-function gmailCredentialsReady() {
-  return !!Deno.env.get('GMAIL_OAUTH_CLIENT_ID')
-    && !!Deno.env.get('GMAIL_OAUTH_CLIENT_SECRET')
-    && !!Deno.env.get('GMAIL_OAUTH_REFRESH_TOKEN');
-}
-
-async function refreshGmailAccessToken() {
-  if (!gmailCredentialsReady()) return null;
-  const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: Deno.env.get('GMAIL_OAUTH_CLIENT_ID')!,
-      client_secret: Deno.env.get('GMAIL_OAUTH_CLIENT_SECRET')!,
-      refresh_token: Deno.env.get('GMAIL_OAUTH_REFRESH_TOKEN')!,
-      grant_type: 'refresh_token',
-    }),
-    signal: AbortSignal.timeout(8000),
-  });
-  const result = await response.json().catch(() => null) as {
-    access_token?: unknown;
-    scope?: unknown;
-  } | null;
-  if (!response.ok || typeof result?.access_token !== 'string') return null;
-  return {
-    accessToken: result.access_token,
-    scope: typeof result.scope === 'string' ? result.scope : '',
-  };
-}
-
-function base64(bytes: Uint8Array) {
-  let binary = '';
-  for (let offset = 0; offset < bytes.length; offset += 0x8000) {
-    binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-  }
-  return btoa(binary);
-}
-
-function wrapBase64(value: string) {
-  return value.match(/.{1,76}/g)?.join('\r\n') ?? '';
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  })[character] ?? character);
-}
-
-function gmailMessageRaw(to: string, name: string, type: ContactType) {
-  const subject = type === 'appointment'
-    ? 'Demande de rendez-vous bien reçue — Cabinet Sourire Serein'
-    : 'Votre question a bien été reçue — Cabinet Sourire Serein';
-  const body = type === 'appointment'
-    ? `Nous avons bien reçu votre demande de rendez-vous. Notre équipe vous répondra sous 24 h pour confirmer un créneau. Cette demande ne réserve pas encore de rendez-vous.`
-    : 'Nous avons bien reçu votre question. Notre équipe vous répondra sous 24 h.';
-  const safeName = name.trim() || 'et bienvenue';
-  const greeting = `Bonjour ${escapeHtml(safeName)},`;
-  const plainText = `Bonjour ${safeName},\n\n${body}\n\nCabinet Sourire Serein\nDouala · +237 677 873 442\nhttps://dentiste-sourireserein.cm`;
-  const html = `<!doctype html><html><body style="margin:0;background:#f7f6f1;font-family:Arial,sans-serif;color:#18365f"><div style="max-width:600px;margin:24px auto;padding:32px;background:#fff;border:1px solid #e6e0d2;border-radius:12px"><div style="text-align:center;margin-bottom:24px"><img src="https://dentiste-sourireserein.cm/favicon-logo-v2.png" alt="Cabinet Sourire Serein" width="64" height="64" style="display:inline-block;object-fit:contain"></div><h1 style="margin:0 0 20px;font-family:Georgia,serif;font-size:26px;font-weight:600;text-align:center;color:#18365f">Demande bien reçue</h1><p style="font-size:16px;line-height:1.7">${greeting}</p><p style="font-size:16px;line-height:1.7">${body}</p><p style="font-size:14px;line-height:1.7;color:#536174">Pour toute urgence, appelez le <a href="tel:+237677873442" style="color:#18365f">+237 677 873 442</a>.</p><p style="margin-top:28px;font-size:14px;line-height:1.7">Cordialement,<br><strong>Cabinet Sourire Serein</strong><br>Douala</p><div style="margin-top:24px;text-align:center"><a href="https://dentiste-sourireserein.cm" style="display:inline-block;padding:12px 20px;border-radius:6px;background:#18365f;color:#fff;text-decoration:none;font-weight:600">Visiter notre site</a></div></div></body></html>`;
-  const boundary = `=_cabinet_${crypto.randomUUID().replaceAll('-', '')}`;
-  const subjectHeader = `=?UTF-8?B?${base64(new TextEncoder().encode(subject))}?=`;
-  const plainPart = wrapBase64(base64(new TextEncoder().encode(plainText)));
-  const htmlPart = wrapBase64(base64(new TextEncoder().encode(html)));
-  const mime = [
-    `To: <${to}>`,
-    `Subject: ${subjectHeader}`,
-    'MIME-Version: 1.0',
-    `Content-Type: multipart/alternative; boundary="${boundary}"`,
-    '',
-    `--${boundary}`,
-    'Content-Type: text/plain; charset="UTF-8"',
-    'Content-Transfer-Encoding: base64',
-    '',
-    plainPart,
-    `--${boundary}`,
-    'Content-Type: text/html; charset="UTF-8"',
-    'Content-Transfer-Encoding: base64',
-    '',
-    htmlPart,
-    `--${boundary}--`,
-    '',
-  ].join('\r\n');
-  return encodeBase64Url(new TextEncoder().encode(mime));
-}
-
-async function sendGmailConfirmation(email: string, name: string, type: ContactType) {
-  if (!/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]{2,}$/.test(email) || /[\r\n]/.test(email)) return false;
-  const oauth = await refreshGmailAccessToken();
-  if (!oauth) return false;
-  const expectedScope = 'https://www.googleapis.com/auth/gmail.send';
-  if (oauth.scope && !oauth.scope.split(/\s+/).includes(expectedScope)) return false;
-  const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${oauth.accessToken}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ raw: gmailMessageRaw(email, name, type) }),
-    signal: AbortSignal.timeout(12000),
-  });
-  return response.ok;
-}
-
-async function deliverGmailOnce(
-  type: ContactType,
-  id: string,
-  channel: ContactChannel,
-  email: string | null,
-  name: string,
-  settings: Record<string, unknown>,
-) {
-  const table = type === 'appointment' ? 'cabinet_appointments' : 'cabinet_contact_questions';
-  if (!usesEmail(channel)) return 'not_requested' as NotificationStatus;
-  if (
-    settings.gmail_enabled !== true
-    || !settings.gmail_validated_at
-    || !gmailCredentialsReady()
-    || !email
-  ) {
-    await db.from(table).update({ email_status: 'not_configured' }).eq('id', id).eq('email_status', 'pending');
-    return 'not_configured' as NotificationStatus;
-  }
-
-  const claim = await db.from(table).update({ email_status: 'sending' })
-    .eq('id', id).eq('email_status', 'pending').select('id').maybeSingle();
-  if (claim.error) return 'failed' as NotificationStatus;
-  if (!claim.data) {
-    const existing = await db.from(table).select('email_status').eq('id', id).maybeSingle();
-    return (existing.data?.email_status ?? 'sending') as NotificationStatus;
-  }
-
-  let status: NotificationStatus = 'failed';
-  try {
-    status = await sendGmailConfirmation(email, name, type) ? 'accepted' : 'failed';
-  } catch {
-    status = 'failed';
-  }
-  await db.from(table).update({ email_status: status }).eq('id', id).eq('email_status', 'sending');
-  return status;
-}
-
-async function validateGmailSettings() {
-  if (!gmailCredentialsReady()) {
-    return {
-      valid: false,
-      message: 'Ajoutez GMAIL_OAUTH_CLIENT_ID, GMAIL_OAUTH_CLIENT_SECRET et GMAIL_OAUTH_REFRESH_TOKEN dans les secrets de la fonction Supabase.',
-    };
-  }
-  try {
-    const token = await refreshGmailAccessToken();
-    if (!token) return { valid: false, message: 'Google n’a pas accepté le renouvellement du jeton OAuth Gmail.' };
-    const expectedScope = 'https://www.googleapis.com/auth/gmail.send';
-    if (token.scope && !token.scope.split(/\s+/).includes(expectedScope)) {
-      return { valid: false, message: 'Le jeton OAuth doit inclure l’autorisation gmail.send.' };
-    }
-    return { valid: true, message: 'Accès Gmail API validé. Aucun courriel de test n’a été envoyé.' };
-  } catch {
-    return { valid: false, message: 'Google OAuth est temporairement inaccessible. Réessayez plus tard.' };
-  }
-}
 
 function whatsappRecipient(phone: string) {
   const digits = phone.replace(/\D/g, '');
@@ -354,121 +126,6 @@ function whatsappRecipient(phone: string) {
   if (digits.startsWith('237') && digits.length === 12) return digits;
   if (digits.length >= 8 && digits.length <= 15) return digits;
   return null;
-}
-
-async function sendWhatsAppConfirmation(settings: Record<string, unknown>, phone: string, name: string) {
-  const token = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
-  const phoneNumberId = typeof settings.whatsapp_phone_number_id === 'string' ? settings.whatsapp_phone_number_id : '';
-  const templateName = typeof settings.whatsapp_template_name === 'string' ? settings.whatsapp_template_name : '';
-  const language = typeof settings.whatsapp_template_language === 'string' ? settings.whatsapp_template_language : 'fr';
-  const recipient = whatsappRecipient(phone);
-  if (settings.whatsapp_enabled !== true || !token || !phoneNumberId || !templateName || !recipient) {
-    return { status: 'not_configured' as NotificationStatus, providerMessageId: null };
-  }
-
-  try {
-    const response = await fetch(`https://graph.facebook.com/v23.0/${encodeURIComponent(phoneNumberId)}/messages`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: recipient,
-        type: 'template',
-        template: {
-          name: templateName,
-          language: { code: language },
-          components: [{ type: 'body', parameters: [{ type: 'text', text: name.trim().slice(0, 120) || 'Bonjour' }] }],
-        },
-      }),
-      signal: AbortSignal.timeout(8000),
-    });
-    const result = await response.json().catch(() => null) as { messages?: Array<{ id?: string }> } | null;
-    if (!response.ok) return { status: 'failed' as NotificationStatus, providerMessageId: null };
-    return { status: 'accepted' as NotificationStatus, providerMessageId: result?.messages?.[0]?.id ?? null };
-  } catch {
-    return { status: 'failed' as NotificationStatus, providerMessageId: null };
-  }
-}
-
-async function deliverWhatsAppOnce(type: ContactType, id: string, channel: ContactChannel, consent: boolean, phone: string, name: string, settings: Record<string, unknown>) {
-  const table = type === 'appointment' ? 'cabinet_appointments' : 'cabinet_contact_questions';
-  if (!usesWhatsApp(channel)) return 'not_requested' as NotificationStatus;
-  if (!consent) return 'not_configured' as NotificationStatus;
-  if (settings.whatsapp_enabled !== true || !Deno.env.get('WHATSAPP_ACCESS_TOKEN')) {
-    await db.from(table).update({ whatsapp_status: 'not_configured' }).eq('id', id);
-    return 'not_configured' as NotificationStatus;
-  }
-
-  const claim = await db.from(table).update({ whatsapp_status: 'sending' })
-    .eq('id', id).eq('whatsapp_status', 'pending').select('id').maybeSingle();
-  if (claim.error) throw new HttpError(503, 'Le suivi de la notification WhatsApp est indisponible.');
-  if (!claim.data) {
-    const existing = await db.from(table).select('whatsapp_status').eq('id', id).maybeSingle();
-    if (existing.error) throw new HttpError(503, 'Le suivi de la notification WhatsApp est indisponible.');
-    return (existing.data?.whatsapp_status ?? 'not_configured') as NotificationStatus;
-  }
-
-  const sent = await sendWhatsAppConfirmation(settings, phone, name);
-  const update = await db.from(table).update({
-    whatsapp_status: sent.status,
-    whatsapp_provider_message_id: sent.providerMessageId,
-  }).eq('id', id).eq('whatsapp_status', 'sending');
-  if (update.error) throw new HttpError(503, 'Le suivi de la notification WhatsApp est indisponible.');
-  return sent.status;
-}
-
-async function validateWhatsAppSettings(settings: Record<string, unknown>) {
-  const token = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
-  const wabaId = typeof settings.whatsapp_waba_id === 'string' ? settings.whatsapp_waba_id : '';
-  const phoneNumberId = typeof settings.whatsapp_phone_number_id === 'string' ? settings.whatsapp_phone_number_id : '';
-  const templateName = typeof settings.whatsapp_template_name === 'string' ? settings.whatsapp_template_name : '';
-  const language = typeof settings.whatsapp_template_language === 'string' ? settings.whatsapp_template_language : 'fr';
-  if (!token) throw new HttpError(503, 'La clé WhatsApp Cloud API doit être configurée comme secret de la fonction Supabase.');
-  if (!/^\d{5,100}$/.test(wabaId) || !/^\d{5,100}$/.test(phoneNumberId) || !/^[a-z0-9_]{2,120}$/.test(templateName)) {
-    return { valid: false, message: 'Renseignez un WABA ID, un Phone Number ID et le nom exact du modèle approuvé.' };
-  }
-
-  try {
-    const headers = { Authorization: `Bearer ${token}` };
-    const numbersUrl = new URL(`https://graph.facebook.com/v23.0/${encodeURIComponent(wabaId)}/phone_numbers`);
-    numbersUrl.searchParams.set('fields', 'id');
-    numbersUrl.searchParams.set('limit', '100');
-    const numbersResponse = await fetch(numbersUrl, { headers, signal: AbortSignal.timeout(8000) });
-    if (!numbersResponse.ok) return { valid: false, message: 'Meta n’a pas validé le WABA ID ou l’accès aux numéros WhatsApp.' };
-    const numbersData = await numbersResponse.json().catch(() => null) as { data?: Array<{ id?: string }> } | null;
-    if (!numbersData?.data?.some((item) => item.id === phoneNumberId)) {
-      return { valid: false, message: 'Le Phone Number ID ne fait pas partie du WABA ID indiqué.' };
-    }
-
-    const phoneResponse = await fetch(`https://graph.facebook.com/v23.0/${encodeURIComponent(phoneNumberId)}?fields=id`, {
-      headers, signal: AbortSignal.timeout(8000),
-    });
-    if (!phoneResponse.ok) return { valid: false, message: 'Meta n’a pas validé le Phone Number ID. Vérifiez le compte et les autorisations.' };
-    const phoneData = await phoneResponse.json().catch(() => null) as { id?: string } | null;
-    if (phoneData?.id !== phoneNumberId) return { valid: false, message: 'Le Phone Number ID ne correspond pas au compte configuré.' };
-
-    const templateUrl = new URL(`https://graph.facebook.com/v23.0/${encodeURIComponent(wabaId)}/message_templates`);
-    templateUrl.searchParams.set('name', templateName);
-    templateUrl.searchParams.set('fields', 'name,status,language,components');
-    const templateResponse = await fetch(templateUrl, { headers, signal: AbortSignal.timeout(8000) });
-    if (!templateResponse.ok) return { valid: false, message: 'Meta n’a pas validé le WABA ID ou l’accès aux modèles WhatsApp.' };
-    const templateData = await templateResponse.json().catch(() => null) as {
-      data?: Array<{ name?: string; status?: string; language?: string; components?: Array<{ type?: string; text?: string }> }>
-    } | null;
-    const template = templateData?.data?.find((item) => item.name === templateName && item.language === language);
-    if (!template || template.status !== 'APPROVED') {
-      return { valid: false, message: 'Le modèle doit exister, avoir cette langue et être approuvé par Meta.' };
-    }
-    const bodyComponent = template.components?.find((component) => component.type === 'BODY');
-    const placeholders = bodyComponent?.text?.match(/\{\{\s*\d+\s*\}\}/g) ?? [];
-    if (placeholders.length !== 1 || !/\{\{\s*1\s*\}\}/.test(placeholders[0])) {
-      return { valid: false, message: 'Le modèle doit avoir exactement une variable, {{1}}, dans son corps.' };
-    }
-    return { valid: true, message: 'Numéro et modèle WhatsApp approuvé validés.' };
-  } catch {
-    return { valid: false, message: 'Meta est temporairement inaccessible. Réessayez plus tard.' };
-  }
 }
 
 async function getAsset(path: string) {
@@ -514,19 +171,12 @@ export async function handleRequest(request: Request): Promise<Response> {
       const email = parsed.data.email?.trim().toLowerCase() || null;
       const channel = parsed.data.contactChannel as ContactChannel;
       if (!name || !phone) throw new HttpError(400, 'Le nom et le numéro de téléphone sont obligatoires.');
-      if (usesEmail(channel) && !email) throw new HttpError(400, 'Une adresse e-mail est requise pour la confirmation par e-mail.');
+      if (usesEmail(channel) && !email) throw new HttpError(400, 'Une adresse e-mail est requise pour vous recontacter par e-mail.');
       if (usesWhatsApp(channel) && (!parsed.data.whatsappConsent || !whatsappRecipient(phone))) {
-        throw new HttpError(400, 'Un numéro WhatsApp valide et votre accord sont requis pour recevoir une confirmation.');
+        throw new HttpError(400, 'Un numéro WhatsApp valide et votre accord sont requis pour vous recontacter par WhatsApp.');
       }
       await checkReviewRate(request); // Shared anti-abuse quota for public submissions.
       const id = parsed.data.submissionId ?? crypto.randomUUID();
-      const settings = await readMessagingSettings();
-      const emailStatus: NotificationStatus = usesEmail(channel)
-        ? settings.gmail_enabled === true && !!settings.gmail_validated_at && gmailCredentialsReady() ? 'pending' : 'not_configured'
-        : 'not_requested';
-      const whatsappStatus: NotificationStatus = usesWhatsApp(channel)
-        ? settings.whatsapp_enabled === true && !!Deno.env.get('WHATSAPP_ACCESS_TOKEN') ? 'pending' : 'not_configured'
-        : 'not_requested';
       const { error } = await db.from('cabinet_appointments').upsert({
         id, name, phone, email,
         service: parsed.data.service, preferred_date: parsed.data.preferredDate || null,
@@ -534,24 +184,11 @@ export async function handleRequest(request: Request): Promise<Response> {
         message: parsed.data.message?.trim() || null,
         contact_channel: channel,
         whatsapp_consent: usesWhatsApp(channel) && parsed.data.whatsappConsent,
-        email_status: emailStatus,
-        whatsapp_status: whatsappStatus,
+        email_status: 'not_requested',
+        whatsapp_status: 'not_requested',
       }, { onConflict: 'id', ignoreDuplicates: true });
       if (error) throw new HttpError(503, 'Impossible d’enregistrer votre demande. Réessayez ou contactez le cabinet.');
-      const { data: saved, error: readError } = await db.from('cabinet_appointments')
-        .select('email_status,whatsapp_status').eq('id', id).single();
-      if (readError || !saved) throw new HttpError(503, 'La demande est enregistrée, mais son suivi est indisponible.');
-      const [sentEmail, sentWhatsApp] = await Promise.all([
-        deliverGmailOnce('appointment', id, channel, email, name, settings)
-          .catch(() => 'failed' as NotificationStatus),
-        deliverWhatsAppOnce('appointment', id, channel, parsed.data.whatsappConsent, phone, name, settings)
-          .catch(() => 'failed' as NotificationStatus),
-      ]);
-      return respond(SubmitContactAppointmentResponse.parse({
-        accepted: true, requestId: id, statusToken: await contactStatusToken('appointment', id),
-        emailStatus: sentEmail,
-        whatsappStatus: sentWhatsApp,
-      }));
+      return respond(SubmitContactAppointmentResponse.parse({ accepted: true, requestId: id }));
     }
     if (request.method === 'POST' && path === '/contact/question') {
       const parsed = SubmitContactQuestionBody.safeParse(await body(request));
@@ -559,8 +196,7 @@ export async function handleRequest(request: Request): Promise<Response> {
       if (parsed.data.website?.trim()) {
         const requestId = crypto.randomUUID();
         return respond(SubmitContactQuestionResponse.parse({
-          accepted: true, requestId, statusToken: await contactStatusToken('question', requestId),
-          emailStatus: 'not_requested', whatsappStatus: 'not_requested',
+          accepted: true, requestId,
         }), 201);
       }
 
@@ -569,53 +205,21 @@ export async function handleRequest(request: Request): Promise<Response> {
       const email = parsed.data.email?.trim().toLowerCase() || null;
       const phone = parsed.data.phone?.trim() || null;
       const message = parsed.data.message.trim();
-      if (usesEmail(channel) && !email) throw new HttpError(400, 'Une adresse e-mail est requise pour la confirmation par e-mail.');
+      if (usesEmail(channel) && !email) throw new HttpError(400, 'Une adresse e-mail est requise pour vous recontacter par e-mail.');
       if (usesWhatsApp(channel) && (!phone || !whatsappRecipient(phone) || !parsed.data.whatsappConsent)) {
-        throw new HttpError(400, 'Un numéro WhatsApp valide et votre accord sont requis pour recevoir une confirmation.');
+        throw new HttpError(400, 'Un numéro WhatsApp valide et votre accord sont requis pour vous recontacter par WhatsApp.');
       }
       await checkReviewRate(request);
       const id = parsed.data.submissionId;
-      const settings = await readMessagingSettings();
-      const emailStatus: NotificationStatus = usesEmail(channel)
-        ? settings.gmail_enabled === true && !!settings.gmail_validated_at && gmailCredentialsReady() ? 'pending' : 'not_configured'
-        : 'not_requested';
-      const whatsappStatus: NotificationStatus = usesWhatsApp(channel)
-        ? settings.whatsapp_enabled === true && !!Deno.env.get('WHATSAPP_ACCESS_TOKEN') ? 'pending' : 'not_configured'
-        : 'not_requested';
       const { error } = await db.from('cabinet_contact_questions').upsert({
         id, submission_id: id, name, email, phone, message, contact_channel: channel,
         whatsapp_consent: usesWhatsApp(channel) && parsed.data.whatsappConsent,
-        email_status: emailStatus, whatsapp_status: whatsappStatus,
+        email_status: 'not_requested', whatsapp_status: 'not_requested',
       }, { onConflict: 'submission_id', ignoreDuplicates: true });
       if (error) throw new HttpError(503, 'Impossible d’enregistrer votre question. Réessayez ou contactez le cabinet.');
-      const { data: saved, error: readError } = await db.from('cabinet_contact_questions')
-        .select('id,email_status,whatsapp_status').eq('submission_id', id).single();
-      if (readError || !saved) throw new HttpError(503, 'La question est enregistrée, mais son suivi est indisponible.');
-      const [sentEmail, sentWhatsApp] = await Promise.all([
-        deliverGmailOnce('question', saved.id, channel, email, name, settings)
-          .catch(() => 'failed' as NotificationStatus),
-        deliverWhatsAppOnce('question', saved.id, channel, parsed.data.whatsappConsent, phone ?? '', name, settings)
-          .catch(() => 'failed' as NotificationStatus),
-      ]);
       return respond(SubmitContactQuestionResponse.parse({
-        accepted: true, requestId: saved.id, statusToken: await contactStatusToken('question', saved.id),
-        emailStatus: sentEmail, whatsappStatus: sentWhatsApp,
+        accepted: true, requestId: id,
       }), 201);
-    }
-    if (request.method === 'POST' && path === '/contact/notification-status') {
-      const parsed = UpdateContactNotificationStatusBody.safeParse(await body(request));
-      if (!parsed.success) throw new HttpError(400, 'Le suivi de cette notification n’a pas pu être vérifié.');
-      const validToken = await validContactStatusToken(
-        parsed.data.requestType, parsed.data.requestId, parsed.data.statusToken,
-      );
-      if (!validToken) {
-        throw new HttpError(400, 'Le suivi de cette notification n’a pas pu être vérifié.');
-      }
-      const table = parsed.data.requestType === 'appointment' ? 'cabinet_appointments' : 'cabinet_contact_questions';
-      const { error } = await db.from(table).update({ email_status: parsed.data.emailStatus })
-        .eq('id', parsed.data.requestId).eq('email_status', 'pending');
-      if (error) throw new HttpError(503, 'Impossible de mettre à jour le suivi de la confirmation.');
-      return respond(null, 204);
     }
     if (request.method === 'GET' && path === '/reviews') {
       const { data, error } = await db.from('cabinet_reviews').select('*').order('created_at', { ascending: false }).limit(100);
@@ -655,7 +259,6 @@ export async function handleRequest(request: Request): Promise<Response> {
         service: row.service, preferredDate: row.preferred_date,
         preferredWindow: row.preferred_window, message: row.message,
         contactChannel: row.contact_channel, whatsappConsent: row.whatsapp_consent,
-        emailStatus: row.email_status, whatsappStatus: row.whatsapp_status,
         contactValidated: row.contact_validated, replyStatus: row.reply_status,
         createdAt: row.created_at,
       })));
@@ -681,7 +284,6 @@ export async function handleRequest(request: Request): Promise<Response> {
       return respond(GetAdminContactQuestionsResponse.parse((data ?? []).map((row) => ({
         id: row.id, name: row.name, email: row.email, phone: row.phone, message: row.message,
         contactChannel: row.contact_channel, whatsappConsent: row.whatsapp_consent,
-        emailStatus: row.email_status, whatsappStatus: row.whatsapp_status,
         contactValidated: row.contact_validated, replyStatus: row.reply_status, createdAt: row.created_at,
       }))));
     }
@@ -708,67 +310,6 @@ export async function handleRequest(request: Request): Promise<Response> {
       if (error) throw new HttpError(503, 'Impossible de supprimer la question.');
       if (!data) throw new HttpError(404, 'Question introuvable.');
       return respond(null, 204);
-    }
-    if (request.method === 'GET' && path === '/admin/messaging-settings') {
-      return respond(publicMessagingSettings(await readMessagingSettings()));
-    }
-    if (request.method === 'PUT' && path === '/admin/messaging-settings') {
-      const parsed = UpdateAdminMessagingSettingsBody.safeParse(await body(request));
-      if (!parsed.success) throw new HttpError(400, 'Vérifiez les réglages des canaux de confirmation.');
-      const current = await readMessagingSettings();
-      const next = parsed.data;
-      const changedWhatsAppConfig =
-        next.whatsappWabaId !== (current.whatsapp_waba_id ?? null)
-        || next.whatsappPhoneNumberId !== (current.whatsapp_phone_number_id ?? null)
-        || next.whatsappTemplateName !== (current.whatsapp_template_name ?? null)
-        || next.whatsappTemplateLanguage !== (current.whatsapp_template_language ?? 'fr');
-      if (next.gmailEnabled && (!gmailCredentialsReady() || !current.gmail_validated_at)) {
-        throw new HttpError(400, 'Validez d’abord l’accès Gmail API avant de l’activer.');
-      }
-      if (next.whatsappEnabled && (changedWhatsAppConfig || !current.whatsapp_validated_at)) {
-        throw new HttpError(400, 'Validez d’abord le numéro et le modèle WhatsApp avant de l’activer.');
-      }
-      const { data, error } = await db.from('cabinet_messaging_settings').upsert({
-        id: true,
-        email_auto_responder_active: false,
-        gmail_enabled: next.gmailEnabled,
-        whatsapp_enabled: changedWhatsAppConfig ? false : next.whatsappEnabled,
-        whatsapp_waba_id: next.whatsappWabaId,
-        whatsapp_phone_number_id: next.whatsappPhoneNumberId,
-        whatsapp_template_name: next.whatsappTemplateName,
-        whatsapp_template_language: next.whatsappTemplateLanguage,
-        whatsapp_validated_at: changedWhatsAppConfig ? null : current.whatsapp_validated_at,
-        updated_at: new Date().toISOString(),
-        updated_by: admin.userId,
-      }, { onConflict: 'id' }).select('*').single();
-      if (error || !data) throw new HttpError(503, 'Impossible d’enregistrer les réglages de messagerie.');
-      return respond(publicMessagingSettings(data));
-    }
-    if (request.method === 'POST' && path === '/admin/messaging-settings/validate-gmail') {
-      const result = ValidateAdminGmailSettingsResponse.parse(await validateGmailSettings());
-      if (result.valid) {
-        const { error } = await db.from('cabinet_messaging_settings')
-          .update({ gmail_validated_at: new Date().toISOString(), gmail_enabled: false, updated_at: new Date().toISOString() })
-          .eq('id', true);
-        if (error) throw new HttpError(503, 'La validation Gmail a réussi, mais son état n’a pas été enregistré.');
-      } else {
-        const { error } = await db.from('cabinet_messaging_settings')
-          .update({ gmail_validated_at: null, gmail_enabled: false, updated_at: new Date().toISOString() })
-          .eq('id', true);
-        if (error) throw new HttpError(503, 'Impossible de désactiver la configuration Gmail invalide.');
-      }
-      return respond(result);
-    }
-    if (request.method === 'POST' && path === '/admin/messaging-settings/validate-whatsapp') {
-      const settings = await readMessagingSettings();
-      const result = ValidateAdminWhatsAppSettingsResponse.parse(await validateWhatsAppSettings(settings));
-      if (result.valid) {
-        const { error } = await db.from('cabinet_messaging_settings')
-          .update({ whatsapp_validated_at: new Date().toISOString(), whatsapp_enabled: false, updated_at: new Date().toISOString() })
-          .eq('id', true);
-        if (error) throw new HttpError(503, 'La validation a réussi, mais son état n’a pas été enregistré.');
-      }
-      return respond(result);
     }
     if (request.method === 'DELETE' && path.startsWith('/admin/appointments/')) {
       const id = path.slice('/admin/appointments/'.length);

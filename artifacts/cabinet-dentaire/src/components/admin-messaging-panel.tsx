@@ -1,32 +1,12 @@
-import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type {
-  ContactQuestion,
-  ContactRequestAdminUpdate,
-  MessagingSettings,
-  MessagingSettingsInput,
-} from "@workspace/api-client-react";
-import { Check, Mail, MessageCircle, ShieldCheck, Trash2 } from "lucide-react";
+import type { ContactQuestion, ContactRequestAdminUpdate } from "@workspace/api-client-react";
+import { Check, Mail, MessageCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCabinetSession } from "@/components/auth-provider";
 import { cmsRequest } from "@/lib/supabase";
 
-const settingsKey = ["cabinet", "messaging-settings"] as const;
 const questionsKey = ["cabinet", "contact-questions"] as const;
 const appointmentsKey = ["cabinet", "appointments"] as const;
-
-const emptySettings: MessagingSettings = {
-  gmailEnabled: false,
-  gmailCredentialsReady: false,
-  gmailValidated: false,
-  whatsappEnabled: false,
-  whatsappWabaId: null,
-  whatsappPhoneNumberId: null,
-  whatsappTemplateName: null,
-  whatsappTemplateLanguage: "fr",
-  whatsappValidated: false,
-  whatsappCredentialsReady: false,
-};
 
 function includesEmail(channel: "email" | "whatsapp" | "both") {
   return channel !== "whatsapp";
@@ -34,18 +14,6 @@ function includesEmail(channel: "email" | "whatsapp" | "both") {
 
 function includesWhatsApp(channel: "email" | "whatsapp" | "both") {
   return channel !== "email";
-}
-
-function statusLabel(status: string, kind: "email" | "whatsapp") {
-  const labels: Record<string, string> = {
-    pending: "En attente",
-    sending: "Envoi en cours",
-    accepted: "Accepté par le fournisseur",
-    failed: "Échec",
-    not_requested: "Non demandé",
-    not_configured: "Canal non activé",
-  };
-  return `${kind === "email" ? "E-mail" : "WhatsApp"} : ${labels[status] ?? status}`;
 }
 
 export function ContactReplyActions({
@@ -108,10 +76,10 @@ export function ContactReplyActions({
       <p className="mt-2 text-xs leading-5 text-muted-foreground">
         {contactValidated
           ? replyStatus === "replied"
-            ? "Réponse marquée comme envoyée. Vérifiez l’envoi dans votre boîte ou WhatsApp."
+            ? "Réponse marquée comme envoyée. Vérifiez-la dans votre boîte mail ou WhatsApp."
             : replyStatus === "draft_opened"
-              ? "Un brouillon a été ouvert. Envoyez-le dans Gmail ou WhatsApp, puis marquez la demande comme répondue."
-              : "Choisissez un canal pour ouvrir un brouillon prérempli. L’envoi doit être confirmé dans l’application."
+              ? "Un brouillon a été ouvert. Envoyez-le dans l’application choisie, puis marquez la demande comme répondue."
+              : "Choisissez un canal pour ouvrir un brouillon. La réponse est toujours envoyée manuellement."
           : "Les liens de réponse restent désactivés jusqu’à la vérification des coordonnées."}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
@@ -157,245 +125,7 @@ export function ContactReplyActions({
   );
 }
 
-function AdminMessagingSettingsPanel() {
-  const { session } = useCabinetSession();
-  const client = useQueryClient();
-  const settings = useQuery({
-    queryKey: [...settingsKey, session?.user.id],
-    queryFn: () => cmsRequest<MessagingSettings>("/admin/messaging-settings"),
-    enabled: !!session,
-    retry: false,
-  });
-  const [draft, setDraft] = useState<MessagingSettingsInput>({
-    gmailEnabled: emptySettings.gmailEnabled,
-    whatsappEnabled: emptySettings.whatsappEnabled,
-    whatsappWabaId: null,
-    whatsappPhoneNumberId: null,
-    whatsappTemplateName: null,
-    whatsappTemplateLanguage: "fr",
-  });
-  const [validationMessage, setValidationMessage] = useState("");
-  const [gmailValidationMessage, setGmailValidationMessage] = useState("");
-
-  useEffect(() => {
-    if (!settings.data) return;
-    setDraft({
-      gmailEnabled: settings.data.gmailEnabled,
-      whatsappEnabled: settings.data.whatsappEnabled,
-      whatsappWabaId: settings.data.whatsappWabaId,
-      whatsappPhoneNumberId: settings.data.whatsappPhoneNumberId,
-      whatsappTemplateName: settings.data.whatsappTemplateName,
-      whatsappTemplateLanguage: settings.data.whatsappTemplateLanguage,
-    });
-  }, [settings.data]);
-
-  const save = useMutation({
-    mutationFn: (payload: MessagingSettingsInput) =>
-      cmsRequest<MessagingSettings>("/admin/messaging-settings", {
-        method: "PUT",
-        body: JSON.stringify(payload),
-      }),
-    onSuccess: (result) => {
-      setValidationMessage("");
-      setDraft({
-        gmailEnabled: result.gmailEnabled,
-        whatsappEnabled: result.whatsappEnabled,
-        whatsappWabaId: result.whatsappWabaId,
-        whatsappPhoneNumberId: result.whatsappPhoneNumberId,
-        whatsappTemplateName: result.whatsappTemplateName,
-        whatsappTemplateLanguage: result.whatsappTemplateLanguage,
-      });
-      void client.invalidateQueries({ queryKey: settingsKey });
-    },
-  });
-  const validateWhatsApp = useMutation({
-    mutationFn: () => cmsRequest<{ valid: boolean; message: string }>(
-      "/admin/messaging-settings/validate-whatsapp",
-      { method: "POST" },
-    ),
-    onSuccess: (result) => {
-      setValidationMessage(result.message);
-      void client.invalidateQueries({ queryKey: settingsKey });
-    },
-  });
-  const validateGmail = useMutation({
-    mutationFn: () => cmsRequest<{ valid: boolean; message: string }>(
-      "/admin/messaging-settings/validate-gmail",
-      { method: "POST" },
-    ),
-    onSuccess: (result) => {
-      setGmailValidationMessage(result.message);
-      void client.invalidateQueries({ queryKey: settingsKey });
-    },
-  });
-
-  const saved = settings.data ?? emptySettings;
-  const configChanged =
-    draft.whatsappWabaId !== saved.whatsappWabaId
-    || draft.whatsappPhoneNumberId !== saved.whatsappPhoneNumberId
-    || draft.whatsappTemplateName !== saved.whatsappTemplateName
-    || draft.whatsappTemplateLanguage !== saved.whatsappTemplateLanguage;
-  const whatsappValidated = saved.whatsappValidated && !configChanged;
-  const setField = <K extends keyof MessagingSettingsInput>(key: K, value: MessagingSettingsInput[K]) =>
-    setDraft((current) => ({ ...current, [key]: value }));
-
-  return (
-    <section className="mb-8 rounded-2xl border bg-white p-6" aria-labelledby="messaging-settings-title">
-      <h2 id="messaging-settings-title" className="font-display text-xl text-[#18365f]">Confirmations automatiques</h2>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-        Les canaux restent inactifs tant qu’ils n’ont pas été configurés et vérifiés. Les confirmations ne reprennent jamais le contenu médical du message.
-      </p>
-      {settings.isLoading && <p role="status" className="mt-4 text-sm">Chargement des réglages…</p>}
-      {settings.error && <p role="alert" className="mt-4 text-sm text-red-700">{settings.error.message}</p>}
-
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <div className="rounded-xl border border-[#18365f]/10 bg-[#fbfaf7] p-5">
-          <h3 className="font-semibold text-[#18365f]">Confirmation directe par Gmail</h3>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Après l’enregistrement de la demande, le backend appelle directement l’API Gmail. Aucun scénario Make, webhook d’automatisation ou envoi depuis le navigateur n’est utilisé.
-          </p>
-          <p className={`mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${saved.gmailCredentialsReady ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}>
-            <ShieldCheck size={14} aria-hidden="true" />
-            {saved.gmailCredentialsReady ? "Secrets Gmail détectés" : "Secrets Gmail manquants dans Supabase"}
-          </p>
-          {!saved.gmailCredentialsReady && (
-            <div className="mt-3 rounded-lg bg-white p-3 text-xs leading-5 text-[#536174]">
-              <p>Activez Gmail API dans Google Cloud, créez un identifiant OAuth et générez un jeton d’actualisation avec l’autorisation `gmail.send`. Ajoutez ensuite ces secrets dans Supabase → Edge Functions → Secrets :</p>
-              <ul className="mt-2 list-disc pl-5 font-mono">
-                <li>GMAIL_OAUTH_CLIENT_ID</li>
-                <li>GMAIL_OAUTH_CLIENT_SECRET</li>
-                <li>GMAIL_OAUTH_REFRESH_TOKEN</li>
-              </ul>
-              <p className="mt-2">Le jeton doit appartenir à la boîte qui enverra les confirmations. Dans OAuth Playground, utilisez votre propre identifiant OAuth et ajoutez son URL de redirection autorisée.</p>
-              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
-                <a className="font-semibold text-[#18365f] underline underline-offset-2" href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noreferrer">Activer Gmail API</a>
-                <a className="font-semibold text-[#18365f] underline underline-offset-2" href="https://developers.google.com/oauthplayground/" target="_blank" rel="noreferrer">OAuth Playground</a>
-                <a className="font-semibold text-[#18365f] underline underline-offset-2" href="https://developers.google.com/gmail/api/auth/scopes" target="_blank" rel="noreferrer">Autorisation gmail.send</a>
-              </div>
-            </div>
-          )}
-          <p className={`mt-3 text-xs font-semibold ${saved.gmailValidated ? "text-emerald-800" : "text-amber-800"}`}>
-            {saved.gmailValidated ? "Connexion Gmail vérifiée" : "Connexion Gmail non vérifiée"}
-          </p>
-          <p className="mt-3 rounded-lg bg-white p-3 text-xs leading-5 text-[#18365f]">
-            « Bonjour, nous avons bien reçu votre demande auprès du Cabinet Sourire Serein. Notre équipe vous répondra sous 24 h. Une demande de rendez-vous ne réserve pas encore un créneau. »
-          </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={validateGmail.isPending || !saved.gmailCredentialsReady}
-              onClick={() => validateGmail.mutate()}
-              data-testid="button-validate-gmail"
-            >
-              {validateGmail.isPending ? "Vérification…" : "Vérifier l’accès Gmail"}
-            </Button>
-            <label className={`inline-flex items-center gap-2 text-sm ${saved.gmailValidated ? "text-[#18365f]" : "text-muted-foreground"}`}>
-              <input
-                type="checkbox"
-                checked={draft.gmailEnabled}
-                disabled={!saved.gmailValidated || !saved.gmailCredentialsReady}
-                onChange={(event) => setField("gmailEnabled", event.target.checked)}
-                className="accent-[#18365f]"
-                data-testid="checkbox-gmail-enabled"
-              />
-              Activer après validation
-            </label>
-          </div>
-          {(gmailValidationMessage || validateGmail.error) && (
-            <p role={validateGmail.error ? "alert" : "status"} className={`mt-3 text-xs leading-5 ${validateGmail.error ? "text-red-700" : "text-[#18365f]"}`}>
-              {validateGmail.error?.message ?? gmailValidationMessage}
-            </p>
-          )}
-        </div>
-
-        <div className="rounded-xl border border-[#18365f]/10 bg-[#fbfaf7] p-5">
-          <h3 className="font-semibold text-[#18365f]">Confirmation WhatsApp</h3>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Créez dans Meta un modèle de message approuvé, en français ou en anglais, avec une seule variable {"{{1}}"} dans le corps. Les demandes WhatsApp sont envoyées uniquement après consentement.
-          </p>
-          <p className={`mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${saved.whatsappCredentialsReady ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}>
-            <ShieldCheck size={14} aria-hidden="true" />
-            {saved.whatsappCredentialsReady ? "Secret Supabase détecté" : "Clé Meta absente du backend Supabase"}
-          </p>
-          {!saved.whatsappCredentialsReady && (
-            <p className="mt-2 text-xs leading-5 text-muted-foreground">
-              Ajoutez `WHATSAPP_ACCESS_TOKEN` dans Supabase → Edge Functions → Secrets. Ne saisissez jamais cette clé dans ce formulaire ni dans le code du site. La connexion WhatsApp de Replit ne peut pas être utilisée par le backend public Supabase.
-            </p>
-          )}
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {([
-              ["whatsappWabaId", "WABA ID", "Identifiant du compte WhatsApp"],
-              ["whatsappPhoneNumberId", "Phone Number ID", "Identifiant du numéro expéditeur"],
-              ["whatsappTemplateName", "Nom du modèle", "ex. confirmation_demande"],
-              ["whatsappTemplateLanguage", "Langue du modèle", "fr ou en"],
-            ] as const).map(([key, label, placeholder]) => (
-              <label key={key} className="block text-xs font-medium text-[#18365f]">
-                {label}
-                <input
-                  value={draft[key] ?? ""}
-                  onChange={(event) => setField(key, event.target.value || null)}
-                  placeholder={placeholder}
-                  maxLength={key === "whatsappTemplateName" ? 120 : 100}
-                  className="editor-input mt-1"
-                  data-testid={`input-${key}`}
-                />
-              </label>
-            ))}
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={save.isPending || !draft.whatsappWabaId || !draft.whatsappPhoneNumberId || !draft.whatsappTemplateName || !saved.whatsappCredentialsReady}
-              onClick={async () => {
-                if (configChanged) await save.mutateAsync(draft);
-                validateWhatsApp.mutate();
-              }}
-              data-testid="button-validate-whatsapp"
-            >
-              Vérifier avec Meta
-            </Button>
-            <label className={`inline-flex items-center gap-2 text-sm ${whatsappValidated ? "text-[#18365f]" : "text-muted-foreground"}`}>
-              <input
-                type="checkbox"
-                checked={draft.whatsappEnabled}
-                disabled={!whatsappValidated}
-                onChange={(event) => setField("whatsappEnabled", event.target.checked)}
-                className="accent-[#18365f]"
-                data-testid="checkbox-whatsapp-enabled"
-              />
-              Activer après validation
-            </label>
-          </div>
-          {(validationMessage || validateWhatsApp.error) && (
-            <p role={validateWhatsApp.error ? "alert" : "status"} className={`mt-3 text-xs leading-5 ${validateWhatsApp.error ? "text-red-700" : "text-[#18365f]"}`}>
-              {validateWhatsApp.error?.message ?? validationMessage}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <Button
-          type="button"
-          disabled={save.isPending || settings.isLoading}
-          onClick={() => save.mutate(draft)}
-          data-testid="button-save-messaging-settings"
-        >
-          {save.isPending ? "Enregistrement…" : "Enregistrer les réglages"}
-        </Button>
-        {save.error && <p role="alert" className="text-sm text-red-700">{save.error.message}</p>}
-        {save.isSuccess && <p role="status" className="text-sm text-emerald-800">Réglages enregistrés.</p>}
-      </div>
-      <p className="mt-3 text-xs leading-5 text-muted-foreground">
-        Les demandes déjà reçues ne déclenchent pas de nouvel envoi lorsque vous activez un canal. Pour WhatsApp, « accepté » signifie que Meta a pris en charge le message; seul un webhook de statut peut confirmer sa livraison.
-      </p>
-    </section>
-  );
-}
-
-function AdminContactQuestionsPanel() {
+export function AdminMessagingPanel() {
   const { session } = useCabinetSession();
   const client = useQueryClient();
   const requests = useQuery({
@@ -414,7 +144,10 @@ function AdminContactQuestionsPanel() {
   return (
     <section className="mb-8 rounded-2xl border bg-white p-6" aria-labelledby="contact-questions-title">
       <h2 id="contact-questions-title" className="text-xl font-semibold">Questions rapides reçues</h2>
-      <p className="mt-2 text-sm text-muted-foreground">Boîte privée du cabinet. Vérifiez les coordonnées avant d’ouvrir un brouillon; la réponse doit être envoyée dans Gmail ou WhatsApp.</p>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Boîte privée du cabinet. Les demandes sont enregistrées ici; aucune confirmation automatique n’est envoyée.
+        Après vérification des coordonnées, l’administrateur peut répondre manuellement par e-mail ou WhatsApp.
+      </p>
       {requests.isLoading && <p role="status" className="mt-4">Chargement des questions…</p>}
       {requests.error && <p role="alert" className="mt-4 text-red-700">{requests.error.message}</p>}
       {remove.error && <p role="alert" className="mt-4 text-red-700">{remove.error.message}</p>}
@@ -426,11 +159,8 @@ function AdminContactQuestionsPanel() {
               <div className="min-w-0">
                 <h3 className="font-semibold">{item.name || "Visiteur"} · Question rapide</h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {new Date(item.createdAt).toLocaleString("fr-FR")} · Canal choisi : {item.contactChannel === "both" ? "E-mail et WhatsApp" : item.contactChannel === "whatsapp" ? "WhatsApp" : "E-mail"}
-                </p>
-                <p className="mt-2 flex flex-wrap gap-2">
-                  <span className="rounded-full bg-[#edf2ff] px-2.5 py-1 text-[11px]">{statusLabel(item.emailStatus, "email")}</span>
-                  <span className="rounded-full bg-[#edf2ff] px-2.5 py-1 text-[11px]">{statusLabel(item.whatsappStatus, "whatsapp")}</span>
+                  {new Date(item.createdAt).toLocaleString("fr-FR")} · Contact préféré : {item.contactChannel === "both" ? "E-mail et WhatsApp" : item.contactChannel === "whatsapp" ? "WhatsApp" : "E-mail"}
+                  {item.contactChannel !== "email" && item.whatsappConsent ? " · Accord WhatsApp donné" : ""}
                 </p>
                 <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                   {item.email && <a className="underline underline-offset-2" href={`mailto:${item.email}`}>{item.email}</a>}
@@ -467,14 +197,5 @@ function AdminContactQuestionsPanel() {
         ))}
       </div>
     </section>
-  );
-}
-
-export function AdminMessagingPanel() {
-  return (
-    <>
-      <AdminMessagingSettingsPanel />
-      <AdminContactQuestionsPanel />
-    </>
   );
 }

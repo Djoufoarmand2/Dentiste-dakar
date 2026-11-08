@@ -96,10 +96,10 @@ export const defaultSiteContent = GetSiteContentResponse.parse({
       {
         id: "appointment-requests",
         title: "Demandes de rendez-vous",
-        body: "Le formulaire demande un nom, un numéro de téléphone, une adresse e-mail et un soin souhaité ; la date, la plage horaire souhaitée et le message sont facultatifs. La plage sélectionnée exprime une préférence et ne réserve pas un rendez-vous. Les demandes sont conservées dans Supabase et une notification peut être envoyée par le prestataire configuré. Évitez d’indiquer des informations médicales sensibles.",
+        body: "Le formulaire demande un nom, un numéro de téléphone, une adresse e-mail et un soin souhaité ; la date, la plage horaire souhaitée et le message sont facultatifs. La plage sélectionnée exprime une préférence et ne réserve pas un rendez-vous. Les demandes sont conservées dans Supabase pour que l’équipe du cabinet puisse les consulter et y répondre manuellement. Aucun message automatique n’est envoyé par e-mail ou WhatsApp. Évitez d’indiquer des informations médicales sensibles.",
         titleEn: "Appointment requests",
         bodyEn:
-          "The form asks for your name, phone number, email address and the service you are interested in; the preferred date, opening period and message are optional. The selected period is a preference and does not reserve an appointment. Requests are stored in Supabase and a notification may be sent through the configured provider. Please avoid sensitive medical details.",
+          "The form asks for your name, phone number, email address and the service you are interested in; the preferred date, opening period and message are optional. The selected period is a preference and does not reserve an appointment. Requests are stored in Supabase so the practice team can review and answer them manually. No automatic email or WhatsApp message is sent. Please avoid sensitive medical details.",
         required: true,
       },
       {

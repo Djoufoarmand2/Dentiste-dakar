@@ -6,9 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { ContactQuestionContactChannel } from './contactQuestionContactChannel';
-import type { ContactQuestionEmailStatus } from './contactQuestionEmailStatus';
 import type { ContactQuestionReplyStatus } from './contactQuestionReplyStatus';
-import type { ContactQuestionWhatsappStatus } from './contactQuestionWhatsappStatus';
 
 export interface ContactQuestion {
   id: string;
@@ -20,8 +18,6 @@ export interface ContactQuestion {
   message: string;
   contactChannel: ContactQuestionContactChannel;
   whatsappConsent: boolean;
-  emailStatus: ContactQuestionEmailStatus;
-  whatsappStatus: ContactQuestionWhatsappStatus;
   contactValidated: boolean;
   replyStatus: ContactQuestionReplyStatus;
   createdAt: Date;

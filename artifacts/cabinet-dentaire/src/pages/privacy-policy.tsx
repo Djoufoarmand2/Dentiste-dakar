@@ -2,7 +2,6 @@ import type { SiteContent } from '@workspace/api-client-react';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { Link } from 'wouter';
 import { SiteShell } from '@/components/public-site';
-import { appointmentProviderDisclosure } from '@/lib/appointment-delivery';
 import { defaultPrivacyPolicyContent } from '@/lib/site-page-defaults';
 import { useSiteLocale } from '@/lib/site-locale';
 
@@ -42,7 +41,6 @@ export function PrivacyPage({ content }: { content: SiteContent }) {
             <h2 className="font-display text-2xl text-[#073e53]">{localized(section.title, section.titleEn)}</h2>
             <div className="mt-4 space-y-4 text-sm leading-7 text-muted-foreground">
               {paragraphs(localized(section.body, section.bodyEn)).map((paragraph, index) => <p key={`${section.id}-${index}`}>{paragraph}</p>)}
-              {!english && section.id === 'appointment-requests' && <p>{appointmentProviderDisclosure}</p>}
             </div>
           </section>)}
 

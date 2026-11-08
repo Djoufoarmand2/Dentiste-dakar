@@ -40,9 +40,8 @@ export function AdminAppointmentsPanel() {
               {item.email && <> · <a className="underline" href={`mailto:${item.email}`}>{item.email}</a></>}
             </p>
             <p className="mt-2 flex flex-wrap gap-2 text-[11px]">
-              <span className="rounded-full bg-[#edf2ff] px-2.5 py-1">Canal : {item.contactChannel === 'both' ? 'E-mail et WhatsApp' : item.contactChannel === 'whatsapp' ? 'WhatsApp' : 'E-mail'}</span>
-              <span className="rounded-full bg-[#edf2ff] px-2.5 py-1">E-mail : {item.emailStatus}</span>
-              <span className="rounded-full bg-[#edf2ff] px-2.5 py-1">WhatsApp : {item.whatsappStatus}</span>
+              <span className="rounded-full bg-[#edf2ff] px-2.5 py-1">Contact préféré : {item.contactChannel === 'both' ? 'E-mail et WhatsApp' : item.contactChannel === 'whatsapp' ? 'WhatsApp' : 'E-mail'}</span>
+              {item.contactChannel !== 'email' && item.whatsappConsent && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-800">Contact WhatsApp autorisé</span>}
             </p>
             {item.message && <p className="mt-2 whitespace-pre-wrap text-sm">{item.message}</p>}
           </div>

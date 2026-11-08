@@ -80,7 +80,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
 
   const submit = async (values: AppointmentFormValues) => {
     // React Hook Form invokes this from the submit button or keyboard submit;
-    // the API persists the request before calling the selected provider APIs.
+    // the API stores the request for the practice to review and answer manually.
     request.reset();
     setSubmissionAccepted(null);
     setRequestReceived(false);
@@ -209,8 +209,8 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
                 </legend>
                 <FormDescription>
                   {en
-                    ? "Choose email, WhatsApp, or both. We use WhatsApp only with your consent."
-                    : "Choisissez l’e-mail, WhatsApp ou les deux. WhatsApp est utilisé uniquement avec votre accord."}
+                    ? "Choose how the practice may contact you. WhatsApp requires your consent."
+                    : "Choisissez comment le cabinet peut vous recontacter. WhatsApp nécessite votre accord."}
                 </FormDescription>
                 <div className="mt-3 grid gap-3 sm:grid-cols-3">
                   {([
@@ -273,8 +273,8 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
                   />
                   <span>
                     {en
-                      ? "I agree to receive one WhatsApp confirmation about this request. No marketing messages."
-                      : "J’accepte de recevoir un message WhatsApp de confirmation au sujet de cette demande. Aucun message publicitaire."}
+                      ? "I agree to be contacted on WhatsApp about this request. No marketing messages."
+                      : "J’accepte d’être recontacté sur WhatsApp au sujet de cette demande. Aucun message publicitaire."}
                   </span>
                 </label>
                 <FormMessage />
@@ -525,8 +525,8 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           </Button>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
             {en
-              ? "Your request is saved in the practice’s private inbox. Automatic confirmations depend on the selected channel being activated by the administrator."
-              : "Votre demande est enregistrée dans l’espace privé du cabinet. Les confirmations automatiques dépendent de l’activation du canal choisi par l’administrateur."}{" "}
+              ? "Your request is stored in the practice’s private inbox. The team will contact you manually using your selected preference."
+              : "Votre demande est enregistrée dans l’espace privé du cabinet. L’équipe vous recontactera manuellement selon votre préférence."}{" "}
             {en ? "This does not confirm an appointment." : "Elle ne confirme pas encore un rendez-vous."}
           </p>
         </div>
@@ -554,27 +554,6 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             {en
               ? "We received your request. Please allow up to 24 hours for a reply and appointment confirmation. This request does not reserve a time slot."
               : "Nous avons bien reçu votre demande. Merci de patienter jusqu’à 24 h pour une réponse et la confirmation d’un créneau. Cette demande ne réserve pas de rendez-vous."}
-            {request.data?.emailStatus === "not_configured" && (
-              <span className="mt-2 block font-medium">
-                {en
-                  ? "Automatic email confirmation is not active. The practice can still see and answer your request."
-                  : "La confirmation automatique par e-mail n’est pas active. Le cabinet peut tout de même voir votre demande et y répondre."}
-              </span>
-            )}
-            {request.data?.emailStatus === "failed" && (
-              <span className="mt-2 block font-medium">
-                {en
-                  ? "The email confirmation could not be sent, but your request is saved. The practice can still reply."
-                  : "La confirmation par e-mail n’a pas pu être envoyée, mais votre demande est enregistrée. Le cabinet peut vous répondre."}
-              </span>
-            )}
-            {(request.data?.whatsappStatus === "not_configured" || request.data?.whatsappStatus === "failed") && (
-              <span className="mt-2 block font-medium">
-                {en
-                  ? "Automatic WhatsApp confirmation is not active. The practice can still see and answer your request."
-                  : "La confirmation automatique par WhatsApp n’est pas active. Le cabinet peut tout de même voir votre demande et y répondre."}
-              </span>
-            )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="sm:justify-center">
