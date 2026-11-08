@@ -7,7 +7,9 @@
  */
 
 export interface MessagingSettings {
-  emailAutoResponderActive: boolean;
+  gmailEnabled: boolean;
+  gmailCredentialsReady: boolean;
+  gmailValidated: boolean;
   whatsappEnabled: boolean;
   /** @nullable */
   whatsappWabaId: string | null;

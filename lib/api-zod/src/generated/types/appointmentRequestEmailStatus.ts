@@ -11,6 +11,7 @@ export type AppointmentRequestEmailStatus = typeof AppointmentRequestEmailStatus
 
 export const AppointmentRequestEmailStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',

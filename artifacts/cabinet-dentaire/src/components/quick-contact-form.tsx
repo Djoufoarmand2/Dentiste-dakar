@@ -15,6 +15,8 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
   const phoneLink = phone.replace(/[^\d+]/g, "");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    // The submit event covers both the button click and Enter; the backend saves
+    // first, then makes the selected provider API calls in this same request.
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
@@ -196,8 +198,8 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
 
       <p className="text-xs leading-5 text-muted-foreground">
         {en
-          ? "Your details are sent through FormBold so the practice can reply. Please do not include medical records or sensitive information."
-          : "Vos coordonnées sont transmises via FormBold afin que le cabinet puisse vous répondre. N’indiquez pas de dossier médical ni d’information sensible."}
+          ? "Your request is stored privately by the practice. Please do not include medical records or other sensitive information."
+          : "Votre demande est enregistrée dans l’espace privé du cabinet. N’indiquez pas de dossier médical ni d’information sensible."}
       </p>
 
       {status === "success" && (

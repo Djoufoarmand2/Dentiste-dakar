@@ -11,7 +11,6 @@ import type { ContactAppointmentAcceptedWhatsappStatus } from './contactAppointm
 export interface ContactAppointmentAccepted {
   accepted: boolean;
   requestId?: string;
-  notificationSent?: boolean;
   statusToken?: string;
   emailStatus?: ContactAppointmentAcceptedEmailStatus;
   whatsappStatus?: ContactAppointmentAcceptedWhatsappStatus;

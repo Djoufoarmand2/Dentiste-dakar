@@ -68,7 +68,6 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
     mutationFn: submitAppointmentRequest,
   });
   const [submissionAccepted, setSubmissionAccepted] = useState<boolean | null>(null);
-  const [notificationSent, setNotificationSent] = useState<boolean | null>(null);
   const [requestReceived, setRequestReceived] = useState(false);
   const submissionId = useRef<string | null>(null);
   const phoneValue = form.watch("phone");
@@ -80,9 +79,10 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
   const phoneLink = phone.replace(/[^\d+]/g, "");
 
   const submit = async (values: AppointmentFormValues) => {
+    // React Hook Form invokes this from the submit button or keyboard submit;
+    // the API persists the request before calling the selected provider APIs.
     request.reset();
     setSubmissionAccepted(null);
-    setNotificationSent(null);
     setRequestReceived(false);
     if (!values.service) {
       form.setError("service", {
@@ -106,7 +106,6 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           message: values.message?.trim() || undefined,
           website: values.website,
       });
-      setNotificationSent(result.notificationSent ?? null);
       setSubmissionAccepted(result.accepted === true);
       if (result.accepted === true) {
         setRequestReceived(true);
@@ -555,18 +554,18 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             {en
               ? "We received your request. Please allow up to 24 hours for a reply and appointment confirmation. This request does not reserve a time slot."
               : "Nous avons bien reçu votre demande. Merci de patienter jusqu’à 24 h pour une réponse et la confirmation d’un créneau. Cette demande ne réserve pas de rendez-vous."}
-            {notificationSent === false && (
-              <span className="mt-2 block font-medium">
-                {en
-                  ? "The practice’s email notification could not be sent. Your request is still in its private inbox; there is no need to send it again."
-                  : "La notification au cabinet n’a pas pu être envoyée. Votre demande reste dans son espace privé; inutile de la renvoyer."}
-              </span>
-            )}
-            {(request.data?.emailStatus === "not_configured" || request.data?.emailStatus === "failed") && (
+            {request.data?.emailStatus === "not_configured" && (
               <span className="mt-2 block font-medium">
                 {en
                   ? "Automatic email confirmation is not active. The practice can still see and answer your request."
                   : "La confirmation automatique par e-mail n’est pas active. Le cabinet peut tout de même voir votre demande et y répondre."}
+              </span>
+            )}
+            {request.data?.emailStatus === "failed" && (
+              <span className="mt-2 block font-medium">
+                {en
+                  ? "The email confirmation could not be sent, but your request is saved. The practice can still reply."
+                  : "La confirmation par e-mail n’a pas pu être envoyée, mais votre demande est enregistrée. Le cabinet peut vous répondre."}
               </span>
             )}
             {(request.data?.whatsappStatus === "not_configured" || request.data?.whatsappStatus === "failed") && (

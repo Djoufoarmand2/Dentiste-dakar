@@ -11,6 +11,7 @@ export type ContactQuestionEmailStatus = typeof ContactQuestionEmailStatus[keyof
 
 export const ContactQuestionEmailStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',

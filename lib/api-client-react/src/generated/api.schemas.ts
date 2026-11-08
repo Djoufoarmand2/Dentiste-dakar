@@ -65,6 +65,7 @@ export type ContactAppointmentAcceptedEmailStatus = typeof ContactAppointmentAcc
 
 export const ContactAppointmentAcceptedEmailStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',
@@ -86,7 +87,6 @@ export const ContactAppointmentAcceptedWhatsappStatus = {
 export interface ContactAppointmentAccepted {
   accepted: boolean;
   requestId?: string;
-  notificationSent?: boolean;
   statusToken?: string;
   emailStatus?: ContactAppointmentAcceptedEmailStatus;
   whatsappStatus?: ContactAppointmentAcceptedWhatsappStatus;
@@ -117,6 +117,7 @@ export type AppointmentRequestEmailStatus = typeof AppointmentRequestEmailStatus
 
 export const AppointmentRequestEmailStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',
@@ -199,6 +200,7 @@ export type ContactQuestionAcceptedEmailStatus = typeof ContactQuestionAcceptedE
 
 export const ContactQuestionAcceptedEmailStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',
@@ -239,6 +241,7 @@ export type ContactQuestionEmailStatus = typeof ContactQuestionEmailStatus[keyof
 
 export const ContactQuestionEmailStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',
@@ -325,7 +328,9 @@ export interface ContactRequestAdminUpdate {
 }
 
 export interface MessagingSettings {
-  emailAutoResponderActive: boolean;
+  gmailEnabled: boolean;
+  gmailCredentialsReady: boolean;
+  gmailValidated: boolean;
   whatsappEnabled: boolean;
   /** @nullable */
   whatsappWabaId: string | null;
@@ -339,7 +344,7 @@ export interface MessagingSettings {
 }
 
 export interface MessagingSettingsInput {
-  emailAutoResponderActive: boolean;
+  gmailEnabled: boolean;
   whatsappEnabled: boolean;
   /**
      * @maxLength 100

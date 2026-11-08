@@ -1371,6 +1371,74 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getValidateAdminWhatsAppSettingsMutationOptions(options), queryClient);
     }
 
+export const getValidateAdminGmailSettingsUrl = () => {
+
+
+
+
+  return `/api/admin/messaging-settings/validate-gmail`
+}
+
+export const validateAdminGmailSettings = async ( options?: Parameters<typeof customFetch>[1]): Promise<MessagingValidationResponse> => {
+
+  return customFetch<MessagingValidationResponse>(getValidateAdminGmailSettingsUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getValidateAdminGmailSettingsMutationKey = () => ['validateAdminGmailSettings'] as const;
+
+export const getValidateAdminGmailSettingsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateAdminGmailSettings>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof validateAdminGmailSettings>>, TError,void, TContext> => {
+
+const mutationKey = getValidateAdminGmailSettingsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof validateAdminGmailSettings>>, void> = () => {
+
+
+          return  validateAdminGmailSettings(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ValidateAdminGmailSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof validateAdminGmailSettings>>>
+
+    export type ValidateAdminGmailSettingsMutationError = ErrorType<void>
+
+
+    export const useValidateAdminGmailSettings = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof validateAdminGmailSettings>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof validateAdminGmailSettings>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getValidateAdminGmailSettingsMutationOptions(options), queryClient);
+    }
+
 export const getGetPublicReviewsUrl = () => {
 
 

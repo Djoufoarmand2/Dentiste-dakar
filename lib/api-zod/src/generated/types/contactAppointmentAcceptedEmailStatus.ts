@@ -11,6 +11,7 @@ export type ContactAppointmentAcceptedEmailStatus = typeof ContactAppointmentAcc
 
 export const ContactAppointmentAcceptedEmailStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',

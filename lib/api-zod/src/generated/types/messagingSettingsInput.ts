@@ -7,7 +7,7 @@
  */
 
 export interface MessagingSettingsInput {
-  emailAutoResponderActive: boolean;
+  gmailEnabled: boolean;
   whatsappEnabled: boolean;
   /**
      * @maxLength 100

@@ -579,9 +579,8 @@ export const SubmitContactAppointmentBody = zod.object({
 export const SubmitContactAppointmentResponse = zod.object({
   "accepted": zod.boolean(),
   "requestId": zod.string().uuid().optional(),
-  "notificationSent": zod.boolean().optional(),
   "statusToken": zod.string().optional(),
-  "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional(),
+  "emailStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional(),
   "whatsappStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional()
 })
 
@@ -618,7 +617,7 @@ export const SubmitContactQuestionResponse = zod.object({
   "accepted": zod.boolean(),
   "requestId": zod.string().uuid(),
   "statusToken": zod.string(),
-  "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional(),
+  "emailStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional(),
   "whatsappStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional()
 })
 
@@ -652,7 +651,7 @@ export const GetAdminAppointmentsResponseItem = zod.object({
   "message": zod.string().nullish(),
   "contactChannel": zod.enum(['email', 'whatsapp', 'both']),
   "whatsappConsent": zod.boolean(),
-  "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']),
+  "emailStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']),
   "whatsappStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']),
   "contactValidated": zod.boolean(),
   "replyStatus": zod.enum(['not_replied', 'draft_opened', 'replied']),
@@ -688,7 +687,7 @@ export const GetAdminContactQuestionsResponseItem = zod.object({
   "message": zod.string(),
   "contactChannel": zod.enum(['email', 'whatsapp', 'both']),
   "whatsappConsent": zod.boolean(),
-  "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']),
+  "emailStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']),
   "whatsappStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']),
   "contactValidated": zod.boolean(),
   "replyStatus": zod.enum(['not_replied', 'draft_opened', 'replied']),
@@ -717,7 +716,9 @@ export const DeleteAdminContactQuestionResponse = zod.void()
 
 
 export const GetAdminMessagingSettingsResponse = zod.object({
-  "emailAutoResponderActive": zod.boolean(),
+  "gmailEnabled": zod.boolean(),
+  "gmailCredentialsReady": zod.boolean(),
+  "gmailValidated": zod.boolean(),
   "whatsappEnabled": zod.boolean(),
   "whatsappWabaId": zod.string().nullable(),
   "whatsappPhoneNumberId": zod.string().nullable(),
@@ -740,7 +741,7 @@ export const updateAdminMessagingSettingsBodyWhatsappTemplateLanguageMax = 20;
 
 
 export const UpdateAdminMessagingSettingsBody = zod.object({
-  "emailAutoResponderActive": zod.boolean(),
+  "gmailEnabled": zod.boolean(),
   "whatsappEnabled": zod.boolean(),
   "whatsappWabaId": zod.string().max(updateAdminMessagingSettingsBodyWhatsappWabaIdMax).nullable(),
   "whatsappPhoneNumberId": zod.string().max(updateAdminMessagingSettingsBodyWhatsappPhoneNumberIdMax).nullable(),
@@ -749,7 +750,9 @@ export const UpdateAdminMessagingSettingsBody = zod.object({
 })
 
 export const UpdateAdminMessagingSettingsResponse = zod.object({
-  "emailAutoResponderActive": zod.boolean(),
+  "gmailEnabled": zod.boolean(),
+  "gmailCredentialsReady": zod.boolean(),
+  "gmailValidated": zod.boolean(),
   "whatsappEnabled": zod.boolean(),
   "whatsappWabaId": zod.string().nullable(),
   "whatsappPhoneNumberId": zod.string().nullable(),
@@ -761,6 +764,12 @@ export const UpdateAdminMessagingSettingsResponse = zod.object({
 
 
 export const ValidateAdminWhatsAppSettingsResponse = zod.object({
+  "valid": zod.boolean(),
+  "message": zod.string()
+})
+
+
+export const ValidateAdminGmailSettingsResponse = zod.object({
   "valid": zod.boolean(),
   "message": zod.string()
 })

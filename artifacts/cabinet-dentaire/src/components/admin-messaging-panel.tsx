@@ -16,7 +16,9 @@ const questionsKey = ["cabinet", "contact-questions"] as const;
 const appointmentsKey = ["cabinet", "appointments"] as const;
 
 const emptySettings: MessagingSettings = {
-  emailAutoResponderActive: false,
+  gmailEnabled: false,
+  gmailCredentialsReady: false,
+  gmailValidated: false,
   whatsappEnabled: false,
   whatsappWabaId: null,
   whatsappPhoneNumberId: null,
@@ -165,7 +167,7 @@ function AdminMessagingSettingsPanel() {
     retry: false,
   });
   const [draft, setDraft] = useState<MessagingSettingsInput>({
-    emailAutoResponderActive: emptySettings.emailAutoResponderActive,
+    gmailEnabled: emptySettings.gmailEnabled,
     whatsappEnabled: emptySettings.whatsappEnabled,
     whatsappWabaId: null,
     whatsappPhoneNumberId: null,
@@ -173,11 +175,12 @@ function AdminMessagingSettingsPanel() {
     whatsappTemplateLanguage: "fr",
   });
   const [validationMessage, setValidationMessage] = useState("");
+  const [gmailValidationMessage, setGmailValidationMessage] = useState("");
 
   useEffect(() => {
     if (!settings.data) return;
     setDraft({
-      emailAutoResponderActive: settings.data.emailAutoResponderActive,
+      gmailEnabled: settings.data.gmailEnabled,
       whatsappEnabled: settings.data.whatsappEnabled,
       whatsappWabaId: settings.data.whatsappWabaId,
       whatsappPhoneNumberId: settings.data.whatsappPhoneNumberId,
@@ -195,7 +198,7 @@ function AdminMessagingSettingsPanel() {
     onSuccess: (result) => {
       setValidationMessage("");
       setDraft({
-        emailAutoResponderActive: result.emailAutoResponderActive,
+        gmailEnabled: result.gmailEnabled,
         whatsappEnabled: result.whatsappEnabled,
         whatsappWabaId: result.whatsappWabaId,
         whatsappPhoneNumberId: result.whatsappPhoneNumberId,
@@ -212,6 +215,16 @@ function AdminMessagingSettingsPanel() {
     ),
     onSuccess: (result) => {
       setValidationMessage(result.message);
+      void client.invalidateQueries({ queryKey: settingsKey });
+    },
+  });
+  const validateGmail = useMutation({
+    mutationFn: () => cmsRequest<{ valid: boolean; message: string }>(
+      "/admin/messaging-settings/validate-gmail",
+      { method: "POST" },
+    ),
+    onSuccess: (result) => {
+      setGmailValidationMessage(result.message);
       void client.invalidateQueries({ queryKey: settingsKey });
     },
   });
@@ -237,26 +250,63 @@ function AdminMessagingSettingsPanel() {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <div className="rounded-xl border border-[#18365f]/10 bg-[#fbfaf7] p-5">
-          <h3 className="font-semibold text-[#18365f]">Confirmation par e-mail</h3>
+          <h3 className="font-semibold text-[#18365f]">Confirmation directe par Gmail</h3>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            Dans FormBold, activez « Auto Responder » (Premium ou Business), utilisez un champ `email`, ajoutez le texte ci-dessous et téléversez le logo dans Email Branding. Cochez ensuite cette option et enregistrez.
+            Après l’enregistrement de la demande, le backend appelle directement l’API Gmail. Aucun scénario Make, webhook d’automatisation ou envoi depuis le navigateur n’est utilisé.
           </p>
-          <label className="mt-4 flex items-start gap-3 text-sm">
-            <input
-              type="checkbox"
-              checked={draft.emailAutoResponderActive}
-              onChange={(event) => setField("emailAutoResponderActive", event.target.checked)}
-              className="mt-1 accent-[#18365f]"
-              data-testid="checkbox-email-autoresponder-active"
-            />
-            <span>J’ai activé et vérifié l’auto-répondeur FormBold.</span>
-          </label>
+          <p className={`mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${saved.gmailCredentialsReady ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-900"}`}>
+            <ShieldCheck size={14} aria-hidden="true" />
+            {saved.gmailCredentialsReady ? "Secrets Gmail détectés" : "Secrets Gmail manquants dans Supabase"}
+          </p>
+          {!saved.gmailCredentialsReady && (
+            <div className="mt-3 rounded-lg bg-white p-3 text-xs leading-5 text-[#536174]">
+              <p>Activez Gmail API dans Google Cloud, créez un identifiant OAuth et générez un jeton d’actualisation avec l’autorisation `gmail.send`. Ajoutez ensuite ces secrets dans Supabase → Edge Functions → Secrets :</p>
+              <ul className="mt-2 list-disc pl-5 font-mono">
+                <li>GMAIL_OAUTH_CLIENT_ID</li>
+                <li>GMAIL_OAUTH_CLIENT_SECRET</li>
+                <li>GMAIL_OAUTH_REFRESH_TOKEN</li>
+              </ul>
+              <p className="mt-2">Le jeton doit appartenir à la boîte qui enverra les confirmations. Dans OAuth Playground, utilisez votre propre identifiant OAuth et ajoutez son URL de redirection autorisée.</p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                <a className="font-semibold text-[#18365f] underline underline-offset-2" href="https://console.cloud.google.com/apis/library/gmail.googleapis.com" target="_blank" rel="noreferrer">Activer Gmail API</a>
+                <a className="font-semibold text-[#18365f] underline underline-offset-2" href="https://developers.google.com/oauthplayground/" target="_blank" rel="noreferrer">OAuth Playground</a>
+                <a className="font-semibold text-[#18365f] underline underline-offset-2" href="https://developers.google.com/gmail/api/auth/scopes" target="_blank" rel="noreferrer">Autorisation gmail.send</a>
+              </div>
+            </div>
+          )}
+          <p className={`mt-3 text-xs font-semibold ${saved.gmailValidated ? "text-emerald-800" : "text-amber-800"}`}>
+            {saved.gmailValidated ? "Connexion Gmail vérifiée" : "Connexion Gmail non vérifiée"}
+          </p>
           <p className="mt-3 rounded-lg bg-white p-3 text-xs leading-5 text-[#18365f]">
-            « Bonjour, nous avons bien reçu votre demande auprès du Cabinet Sourire Serein. Notre équipe vous répondra sous 24 h. Ce message ne confirme pas un rendez-vous. »
+            « Bonjour, nous avons bien reçu votre demande auprès du Cabinet Sourire Serein. Notre équipe vous répondra sous 24 h. Une demande de rendez-vous ne réserve pas encore un créneau. »
           </p>
-          <a className="mt-3 inline-flex text-xs font-semibold text-[#18365f] underline underline-offset-4" href="https://formbold.com" target="_blank" rel="noreferrer">
-            Ouvrir FormBold
-          </a>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={validateGmail.isPending || !saved.gmailCredentialsReady}
+              onClick={() => validateGmail.mutate()}
+              data-testid="button-validate-gmail"
+            >
+              {validateGmail.isPending ? "Vérification…" : "Vérifier l’accès Gmail"}
+            </Button>
+            <label className={`inline-flex items-center gap-2 text-sm ${saved.gmailValidated ? "text-[#18365f]" : "text-muted-foreground"}`}>
+              <input
+                type="checkbox"
+                checked={draft.gmailEnabled}
+                disabled={!saved.gmailValidated || !saved.gmailCredentialsReady}
+                onChange={(event) => setField("gmailEnabled", event.target.checked)}
+                className="accent-[#18365f]"
+                data-testid="checkbox-gmail-enabled"
+              />
+              Activer après validation
+            </label>
+          </div>
+          {(gmailValidationMessage || validateGmail.error) && (
+            <p role={validateGmail.error ? "alert" : "status"} className={`mt-3 text-xs leading-5 ${validateGmail.error ? "text-red-700" : "text-[#18365f]"}`}>
+              {validateGmail.error?.message ?? gmailValidationMessage}
+            </p>
+          )}
         </div>
 
         <div className="rounded-xl border border-[#18365f]/10 bg-[#fbfaf7] p-5">

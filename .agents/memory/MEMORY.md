@@ -5,7 +5,7 @@
 - [Durées de conservation](data-retention.md) — l’administrateur du cabinet décide des durées; ne pas inventer une purge automatique.
 - [Domaine public](cabinet-domain.md) — Cloudflare est l’hébergeur/DNS choisi; vérifier zone, délégation et HTTPS avant publication.
 - [Prérendu des routes Vite](seo-prerender-vite.md) — les pages statiques dans des sous-dossiers doivent garder leur barre oblique finale, sinon l’aperçu peut servir l’accueil SPA à la place.
-- [Formulaire de rendez-vous](web3forms-delivery.md) — FormBold est le fournisseur cible; conserver Web3Forms côté navigateur jusqu’à la configuration de l’endpoint.
+- [Envoi des formulaires](direct-contact-messaging.md) — enregistrer dans Supabase, puis envoyer directement via Gmail API ou WhatsApp Business API; aucun relais d’automatisation.
 - [Export GitHub depuis Replit](replit-github-export.md) — vérifier le remote effectif après sélection du dépôt; l’interface Git peut en relier un autre que celui demandé.
 - [Schéma Supabase déployé](supabase-schema-roundtrip.md) — une API ancienne peut accepter une publication tout en éliminant ses nouveaux champs; vérifier l’aller-retour réel.
 - [Vérification des fichiers Cloudflare](cloudflare-static-assets.md) — vérifier la taille d’un fichier statique avec les octets reçus, pas seulement l’en-tête `Content-Length`.
