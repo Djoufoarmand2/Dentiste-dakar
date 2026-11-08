@@ -89,9 +89,11 @@ if (!isDeepStrictEqual(currentRow.content, nextContent)) {
   if (!isDeepStrictEqual(originalWithoutFaqs, finalWithoutFaqs)) {
     throw new Error('Unexpected content changed outside the FAQ section.');
   }
-  if (!officialFaqs.every((faq) => finalRow.content.faqs?.some((item) =>
-    item.id === faq.id && item.question === faq.question && item.answer === faq.answer
-  ))) {
+  const finalFaqsById = new Map((finalRow.content.faqs ?? []).map((faq) => [faq.id, faq]));
+  if (
+    finalRow.content.faqs?.length !== nextFaqs.length
+    || !nextFaqs.every((faq) => isDeepStrictEqual(finalFaqsById.get(faq.id), faq))
+  ) {
     throw new Error('The database FAQ round-trip did not match the requested content.');
   }
 
@@ -99,9 +101,12 @@ if (!isDeepStrictEqual(currentRow.content, nextContent)) {
     headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY },
   });
   const publicContent = await response.json();
-  if (!response.ok || !officialFaqs.every((faq) => publicContent.faqs?.some((item) =>
-    item.id === faq.id && item.question === faq.question && item.answer === faq.answer
-  ))) {
+  const publicFaqsById = new Map((publicContent?.faqs ?? []).map((faq) => [faq.id, faq]));
+  if (
+    !response.ok
+    || publicContent?.faqs?.length !== nextFaqs.length
+    || !nextFaqs.every((faq) => isDeepStrictEqual(publicFaqsById.get(faq.id), faq))
+  ) {
     throw new Error('The public API is not serving the new FAQ content.');
   }
 
@@ -113,5 +118,17 @@ if (!isDeepStrictEqual(currentRow.content, nextContent)) {
     publicApiVerified: true,
   }));
 } else {
-  console.log(JSON.stringify({ result: 'already-current', faqCount: previousFaqs.length }));
+  const response = await fetch(`${supabaseUrl}/functions/v1/cabinet-api/site-content`, {
+    headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY },
+  });
+  const publicContent = await response.json().catch(() => null);
+  const publicFaqsById = new Map((publicContent?.faqs ?? []).map((faq) => [faq.id, faq]));
+  if (
+    !response.ok
+    || publicContent?.faqs?.length !== nextFaqs.length
+    || !nextFaqs.every((faq) => isDeepStrictEqual(publicFaqsById.get(faq.id), faq))
+  ) {
+    throw new Error('The public API is not serving the current FAQ content.');
+  }
+  console.log(JSON.stringify({ result: 'already-current', faqCount: previousFaqs.length, publicApiVerified: true }));
 }
