@@ -42,3 +42,73 @@ mtime_ms = 1794043307094
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/6e13a5e2-83d2-4a64-8f92-19f859732795/01c448a7-1d71-4905-804d-8e77bafd61b6"
 storage_version_token = "1794043333386358"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "S6TB4-O8FVzIngOAdhIlm"
+uri = "file://generated-artifacts/cabinet-dentaire-dossier/01_parcours_et_bilan.pdf"
+type = "pdf"
+title = "Fiche 1 — Le parcours du projet"
+description = "Chronique des étapes, obstacles, décisions, succès et dernières vérifications, du domaine à la publication du 8 novembre 2026."
+logical_id = "4152086c-aba4-4b38-871a-d4ba0fb2cc98"
+content_hash = "sha256:14eb4f929bc219dde1f2066558accc4656afd11e4fc9efd5183f08755c4f3949"
+size = 144756
+mtime_ms = 1794155636330
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/4152086c-aba4-4b38-871a-d4ba0fb2cc98/a0752cfa-8eb5-4268-89e3-63eefceacbf6"
+storage_version_token = "1794155754084390"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "HhH0bfC3m9I56wzpXC2Cx"
+uri = "file://generated-artifacts/cabinet-dentaire-dossier/02_cartographie_technique_et_flux.pdf"
+type = "pdf"
+title = "Fiche 2 — Cartographie technique"
+description = "Schémas des rôles et flux entre Camoo, Cloudflare, GitHub, Supabase, FormBold, Google Search Console et l’environnement de développement."
+logical_id = "2757cf73-5a88-42a1-896a-e5b14150997c"
+content_hash = "sha256:e04aa0da4b4ebafb5955c1b61f7f62d1571cf683764d83105c39b4f28bd60ade"
+size = 127133
+mtime_ms = 1794155640890
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/2757cf73-5a88-42a1-896a-e5b14150997c/22d94963-b25a-4f78-b305-3377928103a2"
+storage_version_token = "1794155754763687"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "OgD9_HMZyKvuwpoJcEIzj"
+uri = "file://generated-artifacts/cabinet-dentaire-dossier/03_google_search_console_seo.pdf"
+type = "pdf"
+title = "Fiche 3 — Google Search Console et SEO"
+description = "Vérification du domaine, sitemap, preuves d’indexation, alertes vidéo et routine de suivi SEO."
+logical_id = "a2bbb113-250b-47fa-b7c6-85f6bbc10687"
+content_hash = "sha256:f7b080a52546b73d7eef3ff67824b867051d63fb10823e0e091ad7bc2ba6a9c2"
+size = 112681
+mtime_ms = 1794155645494
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/a2bbb113-250b-47fa-b7c6-85f6bbc10687/0b285006-fc3a-43fd-8952-a5218c5513de"
+storage_version_token = "1794155755353692"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "fUqxALFSqFtzsUF9lM5MD"
+uri = "file://generated-artifacts/cabinet-dentaire-dossier/04_supabase_formbold_demandes.pdf"
+type = "pdf"
+title = "Fiche 4 — Supabase, FormBold et formulaires"
+description = "Enregistrement et transmission des demandes, décisions sur les réponses manuelles, confidentialité et contrôles encore à faire."
+logical_id = "134c3fd7-80a7-442d-9473-6c3fc7c45c59"
+content_hash = "sha256:9edd18c8d96f5eb9f5bd757709d9fedd866176cc4966d810bf6a9d93924a8389"
+size = 117375
+mtime_ms = 1794155650006
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/134c3fd7-80a7-442d-9473-6c3fc7c45c59/a6832c89-ea22-4ad8-83b8-d215fc17ece7"
+storage_version_token = "1794155755946301"
+content_type = "application/pdf"
+
+[[outputs]]
+id = "1rz8N5t7xriexDekpFsse"
+uri = "file://generated-artifacts/cabinet-dentaire-dossier/05_cloudflare_github_publication.pdf"
+type = "pdf"
+title = "Fiche 5 — Cloudflare, GitHub et publication"
+description = "Domaine, DNS, build Pages, dernier déploiement et guide de continuité après la fin de Replit Core."
+logical_id = "03948dc5-a1f4-40ec-ba20-0b9ce62fab2b"
+content_hash = "sha256:0ffa7f217ce96303516f531c1bea426ee58c48f6ce47c09e9572ce7162b9a6c2"
+size = 111397
+mtime_ms = 1794155654622
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/03948dc5-a1f4-40ec-ba20-0b9ce62fab2b/4f6cff32-6449-498f-84e2-282366bbe6ce"
+storage_version_token = "1794155756516108"
+content_type = "application/pdf"
