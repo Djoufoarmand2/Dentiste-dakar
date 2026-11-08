@@ -84,6 +84,52 @@ async function submitToFormBold(
     );
   }
 
+  const result = (await response.json().catch(() => null)) as
+    | { success?: boolean; message?: string }
+    | null;
+  if (!response.ok || result?.success === false) {
+    throw new Error(
+      result?.message ||
+        "FormBold n’a pas accepté l’envoi. Réessayez ou contactez le cabinet par téléphone.",
+    );
+  }
+
+  return { accepted: true };
+}
+
+export async function submitQuickContactQuestion(data: {
+  firstName: string;
+  email: string;
+  message: string;
+}): Promise<void> {
+  if (!formBoldEndpoint) {
+    throw new Error(
+      "Le formulaire de question rapide n’est pas configuré. Contactez le cabinet par téléphone.",
+    );
+  }
+
+  const endpoint = validateFormBoldEndpoint(formBoldEndpoint);
+  const formData = new FormData();
+  formData.set("name", data.firstName.trim());
+  formData.set("email", data.email.trim());
+  formData.set("message", data.message.trim());
+  formData.set("subject", "Question rapide — Cabinet Sourire Serein");
+  formData.set("form_type", "Question rapide");
+
+  let response: Response;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { Accept: "application/json" },
+      body: formData,
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    throw new Error(
+      "FormBold est temporairement inaccessible. Réessayez ou contactez le cabinet par téléphone.",
+    );
+  }
+
   if (!response.ok) {
     const result = (await response.json().catch(() => null)) as
       | { message?: string }
@@ -93,8 +139,6 @@ async function submitToFormBold(
         "FormBold n’a pas accepté l’envoi. Réessayez ou contactez le cabinet par téléphone.",
     );
   }
-
-  return { accepted: true };
 }
 
 async function submitToWeb3Forms(

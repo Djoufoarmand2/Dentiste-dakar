@@ -68,6 +68,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
   });
   const [submissionAccepted, setSubmissionAccepted] = useState<boolean | null>(null);
   const [notificationSent, setNotificationSent] = useState<boolean | null>(null);
+  const [requestReceived, setRequestReceived] = useState(false);
   const submissionId = useRef<string | null>(null);
   const phoneValue = form.watch("phone");
   const emailValue = form.watch("email");
@@ -80,6 +81,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
     request.reset();
     setSubmissionAccepted(null);
     setNotificationSent(null);
+    setRequestReceived(false);
     if (!values.service) {
       form.setError("service", {
         type: "required",
@@ -103,6 +105,7 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
       setNotificationSent(result.notificationSent ?? null);
       setSubmissionAccepted(result.accepted === true);
       if (result.accepted === true) {
+        setRequestReceived(true);
         form.reset(defaultValues);
         submissionId.current = null;
       }
@@ -113,6 +116,17 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
 
   return (
     <>
+    {requestReceived && (
+      <p
+        role="status"
+        className="mb-5 rounded-md border border-emerald-700/20 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900"
+        data-testid="status-appointment-received-inline"
+      >
+        {en
+          ? <>We received your request. Please allow up to 24 hours for a reply and appointment confirmation. This request does not reserve a time slot. For urgent concerns, call <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>
+          : <>Nous avons bien reçu votre demande. Merci de patienter jusqu’à 24 h pour une réponse et la confirmation d’un créneau. Cette demande ne réserve pas de rendez-vous. En cas d’urgence, appelez le <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>}
+      </p>
+    )}
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(submit)}
@@ -448,8 +462,8 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             data-testid="status-appointment-success"
           >
             {en
-              ? "Your request has been received. The practice will contact you to confirm an appointment. Submitting this form does not reserve a time slot."
-              : "Votre demande a bien été reçue. Le cabinet vous recontactera pour confirmer le rendez-vous. L’envoi de ce formulaire ne réserve pas encore de créneau."}
+              ? "We received your request. Please allow up to 24 hours for a reply and appointment confirmation. This request does not reserve a time slot."
+              : "Nous avons bien reçu votre demande. Merci de patienter jusqu’à 24 h pour une réponse et la confirmation d’un créneau. Cette demande ne réserve pas de rendez-vous."}
             {notificationSent === false && (
               <span className="mt-2 block font-medium">
                 {en

@@ -1,0 +1,86 @@
+[
+  {
+    "id": "faq-rendez-vous-officiel",
+    "question": "Comment prendre rendez-vous au cabinet dentaire ?",
+    "answer": "Appelez ou écrivez sur WhatsApp au +237 677 87 34 42, ou envoyez une demande avec le formulaire du site. Une demande en ligne n’est pas encore un rendez-vous confirmé ; le cabinet vous répondra sous 24 h pour convenir d’un créneau.",
+    "questionEn": "How do I book a dental appointment?",
+    "answerEn": "Call or message the practice on WhatsApp at +237 677 87 34 42, or submit the website form. An online request is not a confirmed appointment; the practice will reply within 24 hours to arrange a time."
+  },
+  {
+    "id": "faq-adresse-officielle",
+    "question": "Où se trouve le Cabinet Sourire Serein à Douala ?",
+    "answer": "Le Cabinet Sourire Serein se trouve au sein de la Clinique La Bienveillance, à l’Ancienne gare routière, Dakar, Douala, Cameroun. Consultez le lien Google Maps de la page Contact pour préparer votre itinéraire.",
+    "questionEn": "Where is Cabinet Sourire Serein in Douala?",
+    "answerEn": "Cabinet Sourire Serein is located within Clinique La Bienveillance, at Ancienne gare routière, Dakar, Douala, Cameroon. Use the Google Maps link on the Contact page to plan your route."
+  },
+  {
+    "id": "faq-horaires-officiels",
+    "question": "Quels sont les horaires du cabinet dentaire ?",
+    "answer": "Le cabinet reçoit sur rendez-vous du lundi au vendredi de 16 h à 19 h, et le samedi de 10 h à 14 h. Envoyez une demande ou appelez avant votre déplacement afin de convenir d’un créneau.",
+    "questionEn": "What are the dental practice’s opening hours?",
+    "answerEn": "The practice sees patients by appointment Monday to Friday from 4 pm to 7 pm, and Saturday from 10 am to 2 pm. Send a request or call before travelling to arrange a time."
+  },
+  {
+    "id": "faq-soins-officiels",
+    "question": "Quels soins dentaires sont proposés ?",
+    "answer": "Les soins présentés comprennent la consultation dentaire, le détartrage et le polissage, le traitement des caries, les restaurations en composite, la kinésithérapie maxillo-faciale, le laboratoire prothétique et la chirurgie dentaire. Le soin adapté est déterminé après évaluation.",
+    "questionEn": "What dental treatments are offered?",
+    "answerEn": "Services described include dental consultations, scaling and polishing, cavity treatment, composite restorations, maxillofacial physiotherapy, prosthetic laboratory services and dental surgery. The appropriate care is determined after an assessment."
+  },
+  {
+    "id": "faq-maternite-officielle",
+    "question": "La maternité fait-elle partie du cabinet dentaire ?",
+    "answer": "Non. La maternité est un service de la Clinique La Bienveillance, l’établissement partenaire qui accueille le cabinet dentaire. Contactez directement la Clinique La Bienveillance pour toute question sur ce service.",
+    "questionEn": "Is the maternity unit part of the dental practice?",
+    "answerEn": "No. The maternity unit is a service of Clinique La Bienveillance, the partner facility that hosts the dental practice. Contact Clinique La Bienveillance directly with questions about that service."
+  },
+  {
+    "id": "faq-premiere-visite",
+    "question": "Comment se déroule une première consultation dentaire ?",
+    "answer": "La première visite commence par un échange sur votre demande et vos antécédents utiles, puis le praticien examine votre bouche. Il vous explique ses observations et les options possibles ; des examens complémentaires ne sont proposés que si nécessaire. Le plan et les coûts sont discutés avant tout soin.",
+    "questionEn": "What happens at a first dental consultation?",
+    "answerEn": "The first visit begins with a discussion of your concern and relevant history, followed by an oral examination. The clinician explains the findings and possible options; additional tests are suggested only when needed. The plan and costs are discussed before treatment."
+  },
+  {
+    "id": "faq-cout-soins",
+    "question": "Combien coûte un soin dentaire à Douala ?",
+    "answer": "Le coût dépend du soin indiqué, de son étendue et de votre situation clinique ; il n’existe pas de tarif unique valable pour tous. Après l’examen, demandez au praticien de vous expliquer le plan proposé et son coût avant de commencer le traitement.",
+    "questionEn": "How much does dental treatment cost in Douala?",
+    "answerEn": "The cost depends on the recommended treatment, its extent and your clinical situation; there is no single price that applies to everyone. After the examination, ask the clinician to explain the proposed plan and its cost before treatment begins."
+  },
+  {
+    "id": "faq-delai-reponse",
+    "question": "Sous quel délai le cabinet répond-il à une demande en ligne ?",
+    "answer": "Après l’envoi d’un formulaire, un message confirme sa réception. Merci de patienter jusqu’à 24 h pour une réponse ; une demande de rendez-vous ne réserve pas automatiquement un créneau. Pour une situation urgente, appelez le +237 677 87 34 42 au lieu d’attendre une réponse en ligne.",
+    "questionEn": "How long does it take to get a reply to an online request?",
+    "answerEn": "After you submit a form, a message confirms it was received. Please allow up to 24 hours for a reply; an appointment request does not automatically reserve a time. For an urgent situation, call +237 677 87 34 42 rather than waiting for an online response."
+  },
+  {
+    "id": "faq-douleur-dentaire",
+    "question": "Que faire en cas de douleur dentaire importante ?",
+    "answer": "Contactez rapidement le cabinet par téléphone au +237 677 87 34 42 afin de demander une orientation. Une douleur qui s’aggrave, un gonflement important, un traumatisme ou une difficulté à respirer ou à avaler justifie une prise en charge urgente ; n’attendez pas une réponse au formulaire. Cette information ne remplace pas un examen médical.",
+    "questionEn": "What should I do if I have severe tooth pain?",
+    "answerEn": "Call the practice promptly at +237 677 87 34 42 for guidance. Worsening pain, significant swelling, trauma, or difficulty breathing or swallowing needs urgent care; do not wait for a form reply. This information does not replace a medical examination."
+  },
+  {
+    "id": "faq-caries",
+    "question": "Comment reconnaître une carie et comment la soigner ?",
+    "answer": "Une carie peut provoquer une sensibilité ou une douleur, mais elle peut aussi évoluer sans signe évident. Seul un examen dentaire permet de l’évaluer. Le traitement dépend de sa profondeur et peut aller d’une restauration à un soin plus approfondi ; le praticien vous expliquera les options adaptées.",
+    "questionEn": "How can a cavity be identified and treated?",
+    "answerEn": "A cavity may cause sensitivity or pain, but it can also develop without obvious symptoms. Only a dental examination can assess it. Treatment depends on its depth and may range from a restoration to more involved care; the clinician will explain suitable options."
+  },
+  {
+    "id": "faq-detartrage",
+    "question": "Comment se passe un détartrage et est-ce douloureux ?",
+    "answer": "Le praticien examine d’abord les dents et les gencives, puis retire les dépôts de tartre avec des instruments adaptés. Une sensibilité peut varier selon les personnes et la situation ; signalez toute gêne afin que le soin puisse être ajusté. Des conseils d’hygiène peuvent compléter la séance.",
+    "questionEn": "What happens during scaling, and does it hurt?",
+    "answerEn": "The clinician first examines the teeth and gums, then removes tartar with suitable instruments. Sensitivity varies from person to person and by situation; mention any discomfort so the care can be adjusted. Oral-hygiene advice may also be provided."
+  },
+  {
+    "id": "faq-blanchiment",
+    "question": "Le blanchiment dentaire convient-il à tout le monde ?",
+    "answer": "Non, le blanchiment ne convient pas à toutes les situations. Un examen préalable permet de vérifier la santé des dents et des gencives, d’expliquer les limites du résultat et de tenir compte des restaurations existantes. Évitez les produits ou méthodes non recommandés par un professionnel.",
+    "questionEn": "Is teeth whitening suitable for everyone?",
+    "answerEn": "No, whitening is not suitable in every situation. A prior examination helps assess tooth and gum health, explain the limits of the result and account for existing restorations. Avoid products or methods that have not been recommended by a dental professional."
+  }
+]

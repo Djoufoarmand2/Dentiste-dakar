@@ -171,7 +171,7 @@ export const GetSiteContentResponse = zod.object({
   "editorialBlogLibraryManaged": zod.boolean().optional(),
   "socialLinks": zod.array(zod.object({
   "id": zod.string().min(1),
-  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'snapchat', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
   "label": zod.string().min(1),
   "url": zod.string().min(1),
   "logoUrl": zod.string().optional(),
@@ -349,7 +349,7 @@ export const UpdateSiteContentBody = zod.object({
   "editorialBlogLibraryManaged": zod.boolean().optional(),
   "socialLinks": zod.array(zod.object({
   "id": zod.string().min(1),
-  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'snapchat', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
   "label": zod.string().min(1),
   "url": zod.string().min(1),
   "logoUrl": zod.string().optional(),
@@ -522,7 +522,7 @@ export const UpdateSiteContentResponse = zod.object({
   "editorialBlogLibraryManaged": zod.boolean().optional(),
   "socialLinks": zod.array(zod.object({
   "id": zod.string().min(1),
-  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'snapchat', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
   "label": zod.string().min(1),
   "url": zod.string().min(1),
   "logoUrl": zod.string().optional(),
@@ -913,7 +913,7 @@ export const GetAdminContentResponse = zod.object({
   "editorialBlogLibraryManaged": zod.boolean().optional(),
   "socialLinks": zod.array(zod.object({
   "id": zod.string().min(1),
-  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'snapchat', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
   "label": zod.string().min(1),
   "url": zod.string().min(1),
   "logoUrl": zod.string().optional(),
@@ -1094,7 +1094,7 @@ export const PublishAdminContentBody = zod.object({
   "editorialBlogLibraryManaged": zod.boolean().optional(),
   "socialLinks": zod.array(zod.object({
   "id": zod.string().min(1),
-  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'snapchat', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
   "label": zod.string().min(1),
   "url": zod.string().min(1),
   "logoUrl": zod.string().optional(),
@@ -1271,7 +1271,7 @@ export const PublishAdminContentResponse = zod.object({
   "editorialBlogLibraryManaged": zod.boolean().optional(),
   "socialLinks": zod.array(zod.object({
   "id": zod.string().min(1),
-  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'snapchat', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
   "label": zod.string().min(1),
   "url": zod.string().min(1),
   "logoUrl": zod.string().optional(),

@@ -22,6 +22,10 @@ const photoId = 'photo-clinique-la-bienveillance';
 const partnerLogoId = 'partner-clinique-la-bienveillance-logo';
 const photoPath = resolve('attached_assets/WhatsApp_Image_2026-11-05_at_04.31.20_1793850490526.jpeg');
 const logoPath = resolve('attached_assets/WhatsApp_Image_2026-11-05_at_04.31.20(1)_1793850481693.jpeg');
+const officialFaqs = JSON.parse(await readFile(
+  new URL('../../artifacts/cabinet-dentaire/src/data/clinic-faqs.json', import.meta.url),
+  'utf8',
+));
 
 function assertJpeg(bytes, label) {
   if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes.at(-2) !== 0xff || bytes.at(-1) !== 0xd9) {
@@ -152,33 +156,7 @@ const officialServices = [
 ];
 const officialServiceIds = new Set(officialServices.map((service) => service.id));
 
-const officialFaqs = [
-  {
-    id: 'faq-rendez-vous-officiel',
-    question: 'Comment prendre rendez-vous ?',
-    answer: 'Appelez ou écrivez sur WhatsApp au +237 677 87 34 42. Vous pouvez également envoyer une demande avec le formulaire de contact lorsque celui-ci est disponible.',
-  },
-  {
-    id: 'faq-adresse-officielle',
-    question: 'Où se trouve le cabinet ?',
-    answer: 'Le Cabinet Sourire Serein se trouve au sein de la Clinique La Bienveillance, à l’Ancienne gare routière, Dakar, Douala, Cameroun. Utilisez le lien Google Maps de la page Contact pour l’itinéraire.',
-  },
-  {
-    id: 'faq-horaires-officiels',
-    question: 'Quels sont les horaires affichés ?',
-    answer: 'Les horaires communiqués pour le cabinet sont 24 h/24 et 7 j/7. Appelez avant de vous déplacer afin de confirmer la disponibilité du service dentaire, notamment en dehors des heures habituelles.',
-  },
-  {
-    id: 'faq-soins-officiels',
-    question: 'Quels soins dentaires sont présentés ?',
-    answer: 'Consultation dentaire, détartrage et polissage, traitement des caries, restaurations en composite, kinésithérapie maxillo-faciale, laboratoire prothétique et chirurgie dentaire. Le soin adapté est déterminé après évaluation.',
-  },
-  {
-    id: 'faq-maternite-officielle',
-    question: 'La maternité fait-elle partie du cabinet dentaire ?',
-    answer: 'Non. La maternité est un service de la Clinique La Bienveillance, l’établissement partenaire qui accueille le cabinet dentaire. Contactez directement l’établissement partenaire pour ce service.',
-  },
-];
+const officialFaqIds = new Set(officialFaqs.map((faq) => faq.id));
 
 const officialBlogPosts = [
   {
@@ -233,7 +211,7 @@ const clinic = {
   address: 'Ancienne gare routière, Dakar, Douala, Cameroun',
   phone: '+237 677 87 34 42',
   email: 'bienveillanceclinique4@dentiste-sourireserein.cm',
-  openingHours: '24 h/24 · 7 j/7',
+  openingHours: 'Lundi–vendredi · 16 h–19 h (sur rendez-vous) ; samedi · 10 h–14 h (sur rendez-vous)',
   mapUrl: 'https://www.google.com/maps/place/Clinique+La+Bienveillance/@4.0307524,9.7258638,17z/data=!4m6!3m5!1s0x10610d2ffb339343:0xcc207a6138777c30!8m2!3d4.0307524!4d9.7307347!16s%2Fg%2F11fltnv9l8',
   bookingUrl: 'https://wa.me/237677873442?text=Bonjour%2C%20je%20souhaite%20prendre%20rendez-vous%20au%20Cabinet%20Sourire%20Serein.',
 };
@@ -315,7 +293,7 @@ async function main() {
     content.testimonials = (content.testimonials || []).filter((item) => !String(item.id).startsWith('avis-demo-'));
     content.faqs = [
       ...officialFaqs,
-      ...(content.faqs || []).filter((item) => !demoFaqIds.has(item.id)),
+      ...(content.faqs || []).filter((item) => !demoFaqIds.has(item.id) && !officialFaqIds.has(item.id)),
     ];
     content.blogPosts = [
       ...officialBlogPosts,

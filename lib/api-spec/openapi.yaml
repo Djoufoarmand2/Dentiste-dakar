@@ -539,7 +539,7 @@ components:
       type: object
       properties:
         id: { type: string, minLength: 1 }
-        platform: { type: string, enum: [facebook, instagram, tiktok, youtube, linkedin, x, whatsapp, other] }
+        platform: { type: string, enum: [facebook, instagram, tiktok, snapchat, youtube, linkedin, x, whatsapp, other] }
         label: { type: string, minLength: 1 }
         url: { type: string, minLength: 1 }
         logoUrl: { type: string }

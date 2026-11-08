@@ -4,9 +4,10 @@ import {
   MessageCircle, Phone, Quote, X,
 } from 'lucide-react';
 import type { BlogPost, Campaign, ServiceItem, SiteContent, SocialLink, Testimonial } from '@workspace/api-client-react';
-import { SiFacebook, SiInstagram, SiTiktok, SiWhatsapp, SiX, SiYoutube } from 'react-icons/si';
+import { SiFacebook, SiInstagram, SiSnapchat, SiTiktok, SiWhatsapp, SiX, SiYoutube } from 'react-icons/si';
 import { Link, useLocation } from 'wouter';
 import { AppointmentRequestForm } from './appointment-request-form';
+import { QuickContactForm } from './quick-contact-form';
 import { ReviewSubmissionForm } from './review-submission-form';
 import { RelatedPages, ReviewTrustPanel } from './review-trust';
 import { VideoPlayer } from './video-player';
@@ -15,6 +16,7 @@ import { ServiceDetailContent as ServiceDetailBody, WhyChooseContent as WhyChoos
 import { combinePublicReviews, usePublicReviews } from '@/lib/reviews';
 import { summarizePublishedReviews } from '@/lib/review-summary';
 import heroIllustration from '@/lib/hero-illustration.json';
+import clinicFaqs from '@/data/clinic-faqs.json';
 import { supabaseUrl } from '@/lib/supabase';
 import { localizedPath, useSiteLocale } from '@/lib/site-locale';
 import { englishBlogPost, englishFaq, englishService } from '@/lib/cms-translations';
@@ -31,6 +33,12 @@ const navItemsEn = [
 const uiText = (locale: 'fr' | 'en', fr: string, en: string) => locale === 'en' ? en : fr;
 const cmsText = (locale: 'fr' | 'en', fr?: string, en?: string) =>
   locale === 'fr' ? fr?.trim() || '' : en?.trim() || 'English translation not yet available.';
+const faqsForDisplay = (faqs: SiteContent['faqs']) => {
+  if (!import.meta.env.DEV) return faqs;
+  const existingIds = new Set(faqs.map((faq) => faq.id));
+  const previewFaqs = clinicFaqs.filter((faq) => !existingIds.has(faq.id));
+  return [...previewFaqs, ...faqs];
+};
 const routeFor = (href: string, locale: 'fr' | 'en', content?: SiteContent) => localizedPath(href, locale, content);
 const confirmedHoursFr = 'Du lundi au vendredi · 16h00–19h00 (sur rendez-vous)\nSamedi · 10h00–14h00 (sur rendez-vous)';
 const confirmedHoursEn = 'Monday to Friday · 4:00–7:00 pm (by appointment)\nSaturday · 10:00 am–2:00 pm (by appointment)';
@@ -47,6 +55,7 @@ function PlatformIcon({ platform, size = 18 }: { platform: SocialLink['platform'
   switch (platform) {
     case 'facebook': return <SiFacebook size={size} aria-hidden="true" />;
     case 'instagram': return <SiInstagram size={size} aria-hidden="true" />;
+    case 'snapchat': return <SiSnapchat size={size} aria-hidden="true" />;
     case 'tiktok': return <SiTiktok size={size} aria-hidden="true" />;
     case 'youtube': return <SiYoutube size={size} aria-hidden="true" />;
     case 'linkedin': return <Linkedin size={size} aria-hidden="true" />;
@@ -76,13 +85,52 @@ function safeLogoUrl(value?: string) {
   }
 }
 
-function SocialLinks({ links, className = '' }: { links?: SocialLink[]; className?: string }) {
+const contactSocialPlatforms = [
+  { platform: 'facebook', label: 'Facebook' },
+  { platform: 'instagram', label: 'Instagram' },
+  { platform: 'tiktok', label: 'TikTok' },
+  { platform: 'snapchat', label: 'Snapchat' },
+] as const;
+
+function SocialLinks({ links, className = '', variant = 'footer' }: { links?: SocialLink[]; className?: string; variant?: 'footer' | 'contact' }) {
   const locale = useSiteLocale();
   const validLinks = (links ?? []).flatMap((link) => {
     const href = safeExternalUrl(link.url);
     return href ? [{ ...link, href }] : [];
   });
-  if (!validLinks.length) return null;
+  if (!validLinks.length && variant !== 'contact') return null;
+  if (variant === 'contact') {
+    const configuredPlatforms = new Set(validLinks.map((link) => link.platform));
+    const placeholders = contactSocialPlatforms.filter((item) => !configuredPlatforms.has(item.platform));
+    return <nav aria-label={uiText(locale, 'Réseaux sociaux', 'Social networks')} className={className} data-testid="social-links-contact">
+    <ul className="grid gap-2">
+      {validLinks.map((link, index) => {
+        const logo = safeLogoUrl(link.logoUrl);
+        return <li key={link.id} style={{ animation: `social-link-in 420ms ${index * 65}ms both` }}>
+          <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={`${link.label} · ${uiText(locale, 'Ouvre dans un nouvel onglet', 'opens in a new tab')}`} title={link.label} className="group flex min-h-12 items-center gap-3 rounded-md border border-[#073e53]/10 bg-[#fbfaf7] px-4 text-sm font-medium text-[#18365f] shadow-[0_3px_12px_rgba(24,54,95,.03)] transition duration-200 hover:-translate-y-0.5 hover:border-[#b5965a]/60 hover:bg-white hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#b5965a] motion-reduce:transform-none motion-reduce:transition-none" data-testid={`link-social-${link.id}`}>
+            <span className="grid h-7 w-7 shrink-0 place-items-center text-[#8b7141] transition-transform duration-200 group-hover:scale-110 motion-reduce:transform-none">
+              {logo ? <img src={logo} alt={link.imageAlt?.trim() || ''} loading="lazy" className="h-5 w-5 object-contain" /> : <PlatformIcon platform={link.platform} size={17} />}
+            </span>
+            <span>{link.label}</span>
+            <ArrowRight size={14} aria-hidden="true" className="ml-auto text-[#8b7141] opacity-0 transition-all duration-200 group-hover:translate-x-1 group-hover:opacity-100 motion-reduce:transform-none motion-reduce:transition-none" />
+          </a>
+        </li>;
+      })}
+      {placeholders.map((item, index) => (
+        <li key={`social-placeholder-${item.platform}`} style={{ animation: `social-link-in 420ms ${(validLinks.length + index) * 65}ms both` }}>
+          <div aria-disabled="true" className="flex min-h-12 items-center gap-3 rounded-md border border-[#073e53]/10 bg-[#fbfaf7] px-4 text-sm font-medium text-[#18365f]" data-testid={`placeholder-social-${item.platform}`}>
+            <span className="grid h-7 w-7 shrink-0 place-items-center text-[#8b7141]">
+              <PlatformIcon platform={item.platform} size={17} />
+            </span>
+            <span>{item.label}</span>
+            <span className="ml-auto text-[10px] font-normal text-muted-foreground">{uiText(locale, 'À configurer', 'To be added')}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+    <style>{`@keyframes social-link-in { from { opacity: 0; transform: translateY(7px) } to { opacity: 1; transform: translateY(0) } } @media (prefers-reduced-motion: reduce) { [data-testid="social-links-contact"] li { animation: none !important; } }`}</style>
+    </nav>;
+  }
   return <nav aria-label={uiText(locale, 'Réseaux sociaux', 'Social networks')} className={className} data-testid="social-links">
     <ul className="flex flex-wrap items-center gap-2">
       {validLinks.map((link) => {
@@ -558,12 +606,13 @@ const visitSteps = [
 export function HomePage({ content }: { content: SiteContent }) {
   const { clinic, hero } = content;
   const locale = useSiteLocale();
+  const displayFaqs = faqsForDisplay(content.faqs);
   const publicReviews = usePublicReviews();
   const testimonials = combinePublicReviews(publicReviews.data ?? [], content.testimonials);
   const lead = visibleTeamMembers(content.team)[0];
   const photos = visibleGallery(content.gallery);
   const reviewCount = summarizePublishedReviews(testimonials).count;
-  const faqCount = content.faqs.length;
+  const faqCount = displayFaqs.length;
   const publishedPostCount = content.blogPosts.filter((post) => post.published).length;
   const activeInformationCount = content.campaigns.filter((campaign) => campaign.active).length;
   const whyChooseCount = content.whyChoose?.values.length ?? 0;
@@ -675,7 +724,7 @@ export function HomePage({ content }: { content: SiteContent }) {
         <section id="faq" className="section-pad bg-background">
           <div className="mx-auto max-w-3xl px-5 md:px-8">
             <SectionHead eyebrow={uiText(locale, 'Questions fréquentes', 'Frequently asked questions')} title={uiText(locale, 'Les réponses, sans détour.', 'Straightforward answers.')} />
-            <div className="mt-10">{content.faqs.length ? <FaqList faqs={content.faqs.slice(0, 5)} /> : <EmptyInline title={uiText(locale, 'Une question particulière ?', 'Have a question?')} text={uiText(locale, 'Contactez-nous, nous serons heureux de vous répondre.', 'Contact us and we will be glad to help.')} />}</div>
+            <div className="mt-10">{displayFaqs.length ? <FaqList faqs={displayFaqs.slice(0, 5)} /> : <EmptyInline title={uiText(locale, 'Une question particulière ?', 'Have a question?')} text={uiText(locale, 'Contactez-nous, nous serons heureux de vous répondre.', 'Contact us and we will be glad to help.')} />}</div>
             <div className="mt-8 text-center"><ActionLink href="/faq" variant="text" testId="link-home-faq">{uiText(locale, 'Toutes les questions', 'All questions')}</ActionLink></div>
           </div>
         </section>
@@ -913,8 +962,9 @@ export function ReviewsPage({ content }: { content: SiteContent }) {
 
 export function FAQPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
+  const displayFaqs = faqsForDisplay(content.faqs);
   return <SiteShell clinic={content.clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Questions fréquentes', 'Frequently asked questions')} title={uiText(locale, 'Les réponses, sans détour.', 'Straightforward answers.')} text={uiText(locale, 'Vous préparer à votre visite, c’est déjà prendre soin de vous. Voici les réponses aux questions que l’on nous pose souvent.', 'Knowing what to expect can help you prepare for a visit. Here are answers to some common questions.')} />
-    <section className="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">{content.faqs.length ? <FaqList faqs={content.faqs} /> : <EmptyInline title={uiText(locale, 'Une question particulière ?', 'Have a specific question?')} text={uiText(locale, 'Contactez-nous, nous serons heureux de vous répondre.', 'Contact us and we will be glad to help.')} />}
+    <section className="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">{displayFaqs.length ? <FaqList faqs={displayFaqs} /> : <EmptyInline title={uiText(locale, 'Une question particulière ?', 'Have a specific question?')} text={uiText(locale, 'Contactez-nous, nous serons heureux de vous répondre.', 'Contact us and we will be glad to help.')} />}
       <div className="mt-12 rounded-md bg-[#073e53] p-8 text-white"><h2 className="font-display text-2xl font-semibold">{uiText(locale, 'Votre question n’est pas ici ?', 'Did not find your answer?')}</h2><p className="mt-2 text-sm text-white/70">{uiText(locale, 'Notre équipe est à votre écoute.', 'Our team is here to listen.')}</p><div className="mt-5"><ActionLink href="/contact" testId="link-faq-contact">{uiText(locale, 'Nous contacter', 'Contact us')}</ActionLink></div></div>
     </section></main></SiteShell>;
 }
@@ -1143,10 +1193,6 @@ export function InformationPage({ content }: { content: SiteContent }) {
 export function ContactPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
   const clinic = content.clinic;
-  const [quickQuestion, setQuickQuestion] = useState('');
-  const whatsappDigits = clinic.phone.replace(/\D/g, '') || '237677873442';
-  const genericQuestion = uiText(locale, 'Bonjour, j’ai une question générale sur le cabinet ou son fonctionnement.', 'Hello, I have a general question about the practice or how it works.');
-  const whatsappQuestionUrl = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(quickQuestion.trim() || genericQuestion)}`;
   const row = (icon: ReactNode, label: string, value: ReactNode) => <><span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/10 text-[#f0a0a6]">{icon}</span><span><b className="block font-semibold">{label}</b><span className="mt-1 block whitespace-pre-line text-white/70">{value}</span></span></>;
   return <SiteShell clinic={clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Prenons le temps d’échanger', 'Let’s talk')} title={uiText(locale, 'Nous sommes tout près.', 'We are here to help.')} text={uiText(locale, 'Un rendez-vous, une question, un besoin d’orientation ? Contactez-nous comme vous le souhaitez.', 'Have a question or need information about an appointment? Contact the practice in the way that suits you.')} />
     <section className="wrap section-pad grid gap-7 md:grid-cols-[.8fr_1.2fr]">
@@ -1155,7 +1201,6 @@ export function ContactPage({ content }: { content: SiteContent }) {
         <a href={`mailto:${clinic.email}`} className="flex items-start gap-4" data-testid="link-contact-email">{row(<MessageCircle size={17} />, uiText(locale, 'Courriel', 'Email'), clinic.email || uiText(locale, 'À renseigner', 'To be added'))}</a>
         <div className="flex items-start gap-4" data-testid="text-contact-address">{row(<MapPin size={17} />, uiText(locale, 'Adresse', 'Address'), clinic.address ? (locale === 'en' ? `Address supplied by the practice (not translated): ${clinic.address}` : clinic.address) : uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon'))}</div>
         <div className="flex items-start gap-4 whitespace-pre-line" data-testid="text-contact-hours">{row(<Clock3 size={17} />, uiText(locale, 'Horaires', 'Hours'), hoursLabel(clinic, locale))}</div>
-         <SocialLinks links={content.socialLinks} className="border-t border-white/15 pt-5" />
       </div><div className="mt-9"><BookButton clinic={clinic} testId="button-contact-book">{uiText(locale, 'Demander un rendez-vous', 'Request an appointment')}</BookButton></div></div>
       <div className="card-ref p-6 md:p-9">
         <p className="eyebrow">{uiText(locale, 'À votre rythme', 'At your pace')}</p>
@@ -1164,31 +1209,17 @@ export function ContactPage({ content }: { content: SiteContent }) {
         <AppointmentRequestForm phone={clinic.phone} />
       </div>
     </section>
-    <section className="wrap pb-14" aria-labelledby="quick-question-title" data-testid="contact-quick-question">
-      <div className="flex flex-col justify-between gap-5 rounded-2xl border border-[#073e53]/10 bg-[#f8f8f2] p-6 md:flex-row md:items-center md:p-8">
-        <div className="max-w-2xl">
-          <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-accent">{uiText(locale, 'Un échange simple', 'A simple conversation')}</p>
-          <h2 id="quick-question-title" className="mt-2 font-display text-2xl font-semibold text-[#073e53]">{uiText(locale, 'Une question rapide ?', 'A quick question?')}</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">{uiText(locale, 'Écrivez-nous sur WhatsApp pour une question générale sur le cabinet ou son fonctionnement. Le message proposé ne demande aucune information personnelle.', 'Message us on WhatsApp with a general question about the practice or how it works. The suggested message does not request personal information.')}</p>
-          <p className="mt-3 text-xs font-medium leading-5 text-[#8a3440]">{uiText(locale, 'Ce canal n’est pas destiné aux urgences. N’envoyez pas d’informations cliniques ou sensibles par WhatsApp.', 'This channel is not for emergencies. Do not send clinical or sensitive information over WhatsApp.')}</p>
-        </div>
-        <div className="w-full max-w-xl shrink-0 space-y-3 md:max-w-sm">
-          <label className="block text-xs font-semibold text-[#073e53]" htmlFor="quick-question-message">{uiText(locale, 'Votre question (facultatif)', 'Your question (optional)')}</label>
-          <textarea
-            id="quick-question-message"
-            value={quickQuestion}
-            onChange={(event) => setQuickQuestion(event.target.value)}
-            maxLength={500}
-            rows={3}
-            placeholder={uiText(locale, 'Écrivez une question générale pour le cabinet…', 'Write a general question for the practice…')}
-            className="w-full resize-y rounded-xl border border-[#073e53]/15 bg-white p-3 text-sm leading-6 text-[#073e53] placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            aria-describedby="quick-question-privacy"
-            data-testid="input-contact-quick-question"
-          />
-          <p id="quick-question-privacy" className="text-[11px] leading-5 text-muted-foreground">{uiText(locale, 'Le texte sera préparé dans WhatsApp; rien n’est envoyé depuis cette page.', 'Your text is prepared in WhatsApp; nothing is sent from this page.')}</p>
-          <a href={whatsappQuestionUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-[#073e53] px-5 text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transform-none motion-reduce:transition-none" aria-label={uiText(locale, `Ouvrir WhatsApp pour une question générale au ${clinic.phone}`, `Open WhatsApp with a general question for ${clinic.phone}`)} data-testid="button-contact-quick-question"><SiWhatsapp size={19} aria-hidden="true" />{uiText(locale, 'Continuer dans WhatsApp', 'Continue in WhatsApp')}<ArrowRight size={15} /></a>
-        </div>
+    <section className="wrap grid gap-8 pb-14 md:grid-cols-[1.2fr_.8fr] md:gap-10" aria-labelledby="quick-question-title" data-testid="contact-quick-question">
+      <div>
+        <h2 id="quick-question-title" className="font-display text-2xl font-semibold text-[#20213e] md:text-3xl">{uiText(locale, 'Une question rapide ?', 'A quick question?')}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{uiText(locale, 'Pas besoin de prendre RDV — écrivez-nous simplement.', 'No appointment needed — simply write to us.')}</p>
+        <QuickContactForm phone={clinic.phone} />
       </div>
+      <aside aria-labelledby="contact-social-title">
+        <h2 id="contact-social-title" className="font-display text-2xl font-semibold text-[#20213e] md:text-3xl">{uiText(locale, 'Suivez-nous', 'Follow us')}</h2>
+        <p className="mt-2 text-sm text-muted-foreground">{uiText(locale, 'Découvrez nos derniers cas, conseils et coulisses.', 'Discover our latest cases, advice and behind-the-scenes moments.')}</p>
+        <div className="mt-5"><SocialLinks links={content.socialLinks} variant="contact" /></div>
+      </aside>
     </section>
     <section className="wrap pb-16">
       <div className="card-ref flex min-h-[280px] flex-col overflow-hidden">

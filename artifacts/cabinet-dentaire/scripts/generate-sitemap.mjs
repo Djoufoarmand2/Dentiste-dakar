@@ -542,6 +542,30 @@ function structuredDataTags(meta) {
     inLanguage: meta.locale === 'en' ? 'en-CM' : 'fr-CM',
   };
   const graph = [website, dentist];
+  if (['/faq', '/faq/', '/en/faq', '/en/faq/'].includes(meta.canonicalRoute) && meta.canonical) {
+    const mainEntity = (publicContent.faqs ?? [])
+      .filter((faq) => faq.question && faq.answer && !isProvisionalCopy(faq.question, faq.answer))
+      .map((faq) => {
+        const translated = englishFaq(faq);
+        return {
+          '@type': 'Question',
+          name: meta.locale === 'en' ? translated.question : faq.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: meta.locale === 'en' ? translated.answer : faq.answer,
+          },
+        };
+      });
+    if (mainEntity.length) {
+      graph.push({
+        '@type': 'FAQPage',
+        '@id': `${meta.canonical}#faq`,
+        url: meta.canonical,
+        mainEntity,
+        inLanguage: meta.locale === 'en' ? 'en-CM' : 'fr-CM',
+      });
+    }
+  }
   if (meta.article && meta.canonical) {
     const translated = englishBlogPost(meta.article);
     graph.push({

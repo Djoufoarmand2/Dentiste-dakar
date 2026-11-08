@@ -154,7 +154,7 @@ export function ReviewSubmissionForm() {
           {retryMessage || (en ? 'Your review could not be published. Please try again shortly.' : submitReview.error.message || 'L’envoi n’a pas abouti. Réessayez dans quelques instants.')}
         </p>}
         {sent && <p role="status" className="review-status review-status-success md:col-span-2" data-testid="status-review-success">
-          {en ? 'Thank you for sharing your feedback. Your review has been published.' : 'Merci pour votre retour. Votre avis est maintenant publié.'}
+          {en ? 'We received your review and it is now published. If you also sent a question, please allow up to 24 hours for a reply.' : 'Nous avons bien reçu votre avis et il est maintenant publié. Si vous avez également posé une question, merci de patienter jusqu’à 24 h pour une réponse.'}
         </p>}
         <div className="md:col-span-2">
           <Button type="submit" disabled={submitReview.isPending || !form.formState.isValid} className="btn-accent min-h-12 w-full sm:w-auto" data-testid="button-submit-review">

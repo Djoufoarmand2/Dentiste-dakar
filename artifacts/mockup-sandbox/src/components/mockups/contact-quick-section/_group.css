@@ -1,0 +1,133 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap");
+
+:root {
+  --button-outline: rgba(0, 0, 0, 0.1);
+  --badge-outline: rgba(0, 0, 0, 0.05);
+  --opaque-button-border-intensity: -8;
+  --elevate-1: rgba(0, 0, 0, 0.03);
+  --elevate-2: rgba(0, 0, 0, 0.08);
+  --background: 210 38% 97%;
+  --foreground: 231 42% 16%;
+  --border: 221 23% 84%;
+  --card: 210 45% 99%;
+  --card-foreground: 231 42% 16%;
+  --card-border: 221 23% 84%;
+  --sidebar: 220 34% 93%;
+  --sidebar-foreground: 231 42% 16%;
+  --sidebar-border: 221 23% 84%;
+  --sidebar-primary: 216 62% 31%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 252 38% 88%;
+  --sidebar-accent-foreground: 231 42% 16%;
+  --sidebar-ring: 216 62% 31%;
+  --popover: 210 45% 99%;
+  --popover-foreground: 231 42% 16%;
+  --popover-border: 221 23% 84%;
+  --primary: 216 62% 31%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 34% 93%;
+  --secondary-foreground: 231 42% 16%;
+  --muted: 220 34% 93%;
+  --muted-foreground: 224 19% 40%;
+  --accent: 252 43% 46%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 58% 48%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 221 23% 84%;
+  --ring: 216 62% 31%;
+  --chart-1: 216 62% 31%;
+  --chart-2: 252 43% 46%;
+  --chart-3: 231 42% 16%;
+  --chart-4: 187 42% 48%;
+  --chart-5: 221 23% 64%;
+  --app-font-sans: "DM Sans", sans-serif;
+  --app-font-serif: "Playfair Display", Georgia, serif;
+  --app-font-mono: "DM Sans", monospace;
+  --radius: 0.375rem;
+  --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-sm: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-md: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0), 0px 2px 4px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-lg: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0), 0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0);
+  --tracking-normal: 0em;
+  --spacing: 0.25rem;
+  --sidebar-primary-border: hsl(var(--sidebar-primary));
+  --sidebar-accent-border: hsl(var(--sidebar-accent));
+  --primary-border: hsl(var(--primary));
+  --secondary-border: hsl(var(--secondary));
+  --muted-border: hsl(var(--muted));
+  --accent-border: hsl(var(--accent));
+  --destructive-border: hsl(var(--destructive));
+  --accent-blue: #315c9a;
+  --accent-soft: #c8c7ff;
+  --ink: #171a35;
+  --navy: #18365f;
+  --lavender: #e4e4f0;
+  --deep-violet: #24234c;
+}
+
+.dark {
+  --button-outline: rgba(255, 255, 255, 0.1);
+  --badge-outline: rgba(255, 255, 255, 0.05);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255, 255, 255, 0.04);
+  --elevate-2: rgba(255, 255, 255, 0.09);
+  --background: 231 42% 10%;
+  --foreground: 225 35% 94%;
+  --border: 221 29% 30%;
+  --card: 224 47% 16%;
+  --card-foreground: 225 35% 94%;
+  --card-border: 221 29% 30%;
+  --sidebar: 231 42% 10%;
+  --sidebar-foreground: 225 35% 94%;
+  --sidebar-border: 221 29% 30%;
+  --sidebar-primary: 252 48% 68%;
+  --sidebar-primary-foreground: 231 42% 10%;
+  --sidebar-accent: 221 29% 30%;
+  --sidebar-accent-foreground: 225 35% 94%;
+  --sidebar-ring: 252 48% 68%;
+  --popover: 224 47% 16%;
+  --popover-foreground: 225 35% 94%;
+  --popover-border: 221 29% 30%;
+  --primary: 252 48% 68%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 221 29% 25%;
+  --secondary-foreground: 225 35% 94%;
+  --muted: 221 29% 25%;
+  --muted-foreground: 225 20% 75%;
+  --accent: 252 48% 68%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 58% 54%;
+  --destructive-foreground: 0 0% 100%;
+  --input: 221 29% 30%;
+  --ring: 252 48% 68%;
+  --chart-1: 252 48% 68%;
+  --chart-2: 187 52% 62%;
+  --chart-3: 225 20% 75%;
+  --chart-4: 252 38% 78%;
+  --chart-5: 216 46% 53%;
+  --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-sm: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-md: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0), 0px 2px 4px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-lg: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0), 0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0);
+  --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0);
+}
+
+html,
+body {
+  min-width: 320px;
+  margin: 0;
+  font-family: var(--app-font-sans);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--app-font-serif);
+}

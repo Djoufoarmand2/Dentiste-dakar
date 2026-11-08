@@ -13,6 +13,7 @@ export const SocialLinkPlatform = {
   facebook: 'facebook',
   instagram: 'instagram',
   tiktok: 'tiktok',
+  snapchat: 'snapchat',
   youtube: 'youtube',
   linkedin: 'linkedin',
   x: 'x',
