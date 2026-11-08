@@ -1,9 +1,9 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import {
   CreateAdminReviewBody, DeleteAdminReviewParams, PublishAdminContentBody, PrepareAdminMediaBody,
   FinalizeAdminMediaBody, DeleteAdminMediaBody, SubmitReviewBody,
   SubmitContactAppointmentBody, SubmitContactAppointmentResponse,
-} from '../../../lib/api-zod/src/generated/api';
+} from './api.ts';
 import { mimeExtensions, normalizePublicationInput, parseContent, publicContent, signatureMatches } from './validation';
 
 declare const Deno: { env: { get(key: string): string | undefined }; serve(handler: (request: Request) => Promise<Response>): void };

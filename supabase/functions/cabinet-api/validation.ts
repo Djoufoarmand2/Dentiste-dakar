@@ -1,4 +1,4 @@
-import { GetSiteContentResponse } from '../../../lib/api-zod/src/generated/api';
+import { GetSiteContentResponse } from './api.ts';
 
 const urlFields = new Set(['imageUrl', 'logoUrl', 'videoUrl', 'mapUrl', 'bookingUrl']);
 // Empty optional dates from older admin clients mean "not supplied", not an
