@@ -19,7 +19,7 @@ import {
 import { CmsError } from '@/lib/supabase';
 import { isValidCampaignPublicationDate } from '@/lib/campaign-dates';
 import { fillEnglishFieldsForAdmin, fillEnglishFieldsForBlogAdmin, fillEnglishFieldsForFaqAdmin } from '@/lib/cms-translations';
-import { editorialBlogPosts } from '@/lib/editorial-blog';
+import { editorialBlogPosts, editorialBlogRelations } from '@/lib/editorial-blog';
 import { defaultPrivacyPolicyContent, defaultWhyChooseContent } from '@/lib/site-page-defaults';
 import { Link } from 'wouter';
 
@@ -103,8 +103,16 @@ function ensureTranslationFields(content: SiteContent): SiteContent {
   const whyChoose = { ...defaultWhyChooseContent, ...content.whyChoose, values: content.whyChoose?.values ?? defaultWhyChooseContent.values };
   const privacyPolicy = { ...defaultPrivacyPolicyContent, ...content.privacyPolicy, sections: content.privacyPolicy?.sections ?? defaultPrivacyPolicyContent.sections };
   const existingBlogSlugs = new Set(content.blogPosts.map((post) => post.slug));
+  const editorialSeedsBySlug = editorialBlogRelations;
   const blogPosts = [
-    ...content.blogPosts,
+    ...content.blogPosts.map((post) => {
+      const seed = editorialSeedsBySlug[post.slug];
+      return {
+        ...post,
+        relatedServiceSlugs: post.relatedServiceSlugs ?? seed?.relatedServiceSlugs ?? '',
+        relatedArticleSlugs: post.relatedArticleSlugs ?? seed?.relatedArticleSlugs ?? '',
+      };
+    }),
     ...editorialBlogPosts.filter((post) => !existingBlogSlugs.has(post.slug)),
   ];
   return {
@@ -152,8 +160,8 @@ function ensureTranslationFields(content: SiteContent): SiteContent {
       authorEn: item.authorEn ?? '',
       imageAlt: item.imageAlt ?? '',
       imageAltEn: item.imageAltEn ?? '',
-      relatedServiceSlugs: item.relatedServiceSlugs ?? '',
-      relatedArticleSlugs: item.relatedArticleSlugs ?? '',
+      relatedServiceSlugs: item.relatedServiceSlugs ?? editorialBlogRelations[source.slug]?.relatedServiceSlugs ?? '',
+      relatedArticleSlugs: item.relatedArticleSlugs ?? editorialBlogRelations[source.slug]?.relatedArticleSlugs ?? '',
     };
     }),
     campaigns: content.campaigns.map((item) => ({ ...item, titleEn: item.titleEn ?? '', descriptionEn: item.descriptionEn ?? '', publishedAt: item.publishedAt ?? '', transcript: item.transcript ?? '', transcriptEn: item.transcriptEn ?? '' })),

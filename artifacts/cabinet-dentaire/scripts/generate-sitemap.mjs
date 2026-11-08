@@ -15,13 +15,33 @@ const viteEnv = loadEnv('production', process.cwd(), 'VITE_');
 const viteSetting = (name) => process.env[name]?.trim() || viteEnv[name]?.trim();
 const cmsTranslations = JSON.parse(await readFile(new URL('../src/lib/cms-translations.json', import.meta.url), 'utf8'));
 const editorialBlogPosts = JSON.parse(await readFile(new URL('../src/lib/editorial-blog.json', import.meta.url), 'utf8'));
+const editorialBlogRelations = JSON.parse(await readFile(new URL('../src/lib/editorial-blog-relations.json', import.meta.url), 'utf8'));
 
 function addEditorialPosts(content) {
   if (!content || !Array.isArray(content.blogPosts)) return content;
-  const existingSlugs = new Set(content.blogPosts.map((post) => post.slug));
+  const existingPosts = content.blogPosts.map((post) => {
+    const relations = editorialBlogRelations[post.slug];
+    if (!relations) return post;
+    return {
+      ...post,
+      relatedServiceSlugs: post.relatedServiceSlugs ?? relations.relatedServiceSlugs,
+      relatedArticleSlugs: post.relatedArticleSlugs ?? relations.relatedArticleSlugs,
+    };
+  });
+  if (content.editorialBlogLibraryManaged === true) {
+    return existingPosts.some((post, index) => post !== content.blogPosts[index])
+      ? { ...content, blogPosts: existingPosts }
+      : content;
+  }
+  const existingSlugs = new Set(existingPosts.map((post) => post.slug));
   return {
     ...content,
-    blogPosts: [...content.blogPosts, ...editorialBlogPosts.filter((post) => !existingSlugs.has(post.slug))],
+    blogPosts: [
+      ...existingPosts,
+      ...editorialBlogPosts
+        .filter((post) => !existingSlugs.has(post.slug))
+        .map((post) => ({ ...post, ...editorialBlogRelations[post.slug] })),
+    ],
   };
 }
 
@@ -631,7 +651,31 @@ function renderBlogMarkup(route) {
   const image = httpsImageUrl(post.imageUrl)
     ? `<img src="${escapeAttribute(httpsImageUrl(post.imageUrl))}" alt="${escapeAttribute(blogImageAlt(post, english ? 'en' : 'fr'))}" fetchpriority="high" decoding="async" />`
     : '';
-  return `<main><a href="${escapeAttribute(appPath(english ? '/en/blog/' : '/blog/'))}">${english ? 'All articles' : 'Tous les articles'}</a><article><time datetime="${escapeAttribute(post.date)}">${escapeXml(post.date)} · ${escapeXml(author)}</time><h1>${escapeXml(title)}</h1><p>${escapeXml(excerpt)}</p>${image}<div>${renderArticleContent(content)}</div></article></main>`;
+  const relatedServiceSlugs = new Set(String(post.relatedServiceSlugs || '').split(/[,\n]+/).map((value) => value.trim()).filter(Boolean));
+  const relatedArticleSlugs = new Set(String(post.relatedArticleSlugs || '').split(/[,\n]+/).map((value) => value.trim()).filter(Boolean));
+  const relatedServices = (publicContent?.services || []).filter((service) => relatedServiceSlugs.has(service.slug));
+  const relatedArticles = posts.filter((article) =>
+    article.slug !== post.slug
+    && (relatedArticleSlugs.has(article.slug) || relatedArticleSlugs.has(article.slugEn || '') || relatedArticleSlugs.has(englishBlogPost(article).slug)),
+  );
+  const relatedServiceMarkup = relatedServices.map((service) => {
+    const translatedService = englishService(service);
+    const serviceSlug = english ? translatedService.slug : service.slug;
+    const serviceTitle = english ? translatedService.title : service.title;
+    const href = appPath(`${english ? '/en/services' : '/soins'}/${serviceSlug}/`);
+    return `<li><a href="${escapeAttribute(href)}">${escapeXml(serviceTitle)}</a></li>`;
+  }).join('');
+  const relatedArticleMarkup = relatedArticles.map((article) => {
+    const translatedArticle = englishBlogPost(article);
+    const articleSlug = english ? translatedArticle.slug : article.slug;
+    const articleTitle = english ? translatedArticle.title : article.title;
+    const href = appPath(`${english ? '/en/blog' : '/blog'}/${articleSlug}/`);
+    return `<li><a href="${escapeAttribute(href)}">${escapeXml(articleTitle)}</a></li>`;
+  }).join('');
+  const relatedMarkup = relatedServiceMarkup || relatedArticleMarkup
+    ? `<section aria-labelledby="related-reading-title"><h2 id="related-reading-title">${english ? 'Related care and advice' : 'Soins et conseils associés'}</h2>${relatedServiceMarkup ? `<h3>${english ? 'Related care' : 'Soins associés'}</h3><ul>${relatedServiceMarkup}</ul>` : ''}${relatedArticleMarkup ? `<h3>${english ? 'Related articles' : 'Articles associés'}</h3><ul>${relatedArticleMarkup}</ul>` : ''}</section>`
+    : '';
+  return `<main><a href="${escapeAttribute(appPath(english ? '/en/blog/' : '/blog/'))}">${english ? 'All articles' : 'Tous les articles'}</a><article><time datetime="${escapeAttribute(post.date)}">${escapeXml(post.date)} · ${escapeXml(author)}</time><h1>${escapeXml(title)}</h1><p>${escapeXml(excerpt)}</p>${image}<div>${renderArticleContent(content)}</div>${relatedMarkup}</article></main>`;
 }
 
 function isProvisionalCopy(...values) {

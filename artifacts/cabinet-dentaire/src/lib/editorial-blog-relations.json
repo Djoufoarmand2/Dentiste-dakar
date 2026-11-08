@@ -1,0 +1,46 @@
+{
+  "urgence-dentaire-douala-que-faire": {
+    "relatedServiceSlugs": "consultation-dentaire,traitement-caries",
+    "relatedArticleSlugs": "mal-de-dent-causes-quand-consulter,carie-dentaire-symptomes-traitement"
+  },
+  "kinesitherapie-maxillo-faciale-informations": {
+    "relatedServiceSlugs": "kinesitherapie-maxillo-faciale,consultation-dentaire",
+    "relatedArticleSlugs": "mal-de-dent-causes-quand-consulter,premiere-visite-dentiste-douala"
+  },
+  "detartrage-polissage-questions": {
+    "relatedServiceSlugs": "detartrage-polissage,consultation-dentaire",
+    "relatedArticleSlugs": "gencives-qui-saignent-au-brossage,premiere-visite-dentiste-douala"
+  },
+  "grossesse-sante-bucco-dentaire": {
+    "relatedServiceSlugs": "consultation-dentaire,detartrage-polissage",
+    "relatedArticleSlugs": "premiere-visite-dentiste-douala,gencives-qui-saignent-au-brossage"
+  },
+  "premiere-visite-dentiste-douala": {
+    "relatedServiceSlugs": "consultation-dentaire",
+    "relatedArticleSlugs": "cout-prix-soin-dentaire-douala,mal-de-dent-causes-quand-consulter"
+  },
+  "cout-prix-soin-dentaire-douala": {
+    "relatedServiceSlugs": "consultation-dentaire,traitement-caries",
+    "relatedArticleSlugs": "premiere-visite-dentiste-douala,carie-dentaire-symptomes-traitement"
+  },
+  "carie-dentaire-symptomes-traitement": {
+    "relatedServiceSlugs": "traitement-caries,plombage-composite",
+    "relatedArticleSlugs": "mal-de-dent-causes-quand-consulter,dents-sensibles-froid-chaud"
+  },
+  "mal-de-dent-causes-quand-consulter": {
+    "relatedServiceSlugs": "consultation-dentaire,chirurgie-dentaire",
+    "relatedArticleSlugs": "urgence-dentaire-douala-que-faire,carie-dentaire-symptomes-traitement"
+  },
+  "blanchiment-dentaire-etapes-precautions": {
+    "relatedServiceSlugs": "consultation-dentaire",
+    "relatedArticleSlugs": "premiere-visite-dentiste-douala,dents-sensibles-froid-chaud"
+  },
+  "gencives-qui-saignent-au-brossage": {
+    "relatedServiceSlugs": "detartrage-polissage,consultation-dentaire",
+    "relatedArticleSlugs": "premiere-visite-dentiste-douala,detartrage-polissage-questions"
+  },
+  "dents-sensibles-froid-chaud": {
+    "relatedServiceSlugs": "consultation-dentaire,traitement-caries",
+    "relatedArticleSlugs": "carie-dentaire-symptomes-traitement,mal-de-dent-causes-quand-consulter"
+  }
+}

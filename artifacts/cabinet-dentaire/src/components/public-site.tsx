@@ -916,6 +916,14 @@ export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?
   const title = cmsText(locale, post.title, translated.title);
   const excerpt = cmsText(locale, post.excerpt, translated.excerpt);
   const author = cmsText(locale, post.author, translated.author);
+  const relatedServiceSlugs = new Set((post.relatedServiceSlugs ?? '').split(/[,\n]+/).map((value) => value.trim()).filter(Boolean));
+  const relatedArticleSlugs = new Set((post.relatedArticleSlugs ?? '').split(/[,\n]+/).map((value) => value.trim()).filter(Boolean));
+  const relatedServices = content.services.filter((service) => relatedServiceSlugs.has(service.slug));
+  const relatedArticles = content.blogPosts.filter((article) =>
+    article.published
+    && article.slug !== post.slug
+    && (relatedArticleSlugs.has(article.slug) || relatedArticleSlugs.has(article.slugEn ?? '') || relatedArticleSlugs.has(englishBlogPost(article).slug)),
+  );
   return <SiteShell clinic={content.clinic} content={content}><main><article className="blog-editorial mx-auto max-w-4xl px-5 pb-24 pt-12 md:px-8 md:pt-16">
     <Link href={routeFor('/blog/', locale, content)} className="inline-flex items-center gap-2 text-xs font-semibold text-accent" data-testid="link-back-blog"><ArrowLeft size={14} /> {uiText(locale, 'Tous les articles', 'All articles')}</Link>
     <header className="blog-editorial-header mt-10">
@@ -931,6 +939,29 @@ export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?
     </header>
     <ImageFrame src={post.imageUrl} alt={articleImageAlt(post, locale)} label={uiText(locale, 'Illustration de l’article', 'Article illustration')} indicator={uiText(locale, 'Conseil dentaire', 'Dental information')} details={title} className="mt-8 h-[280px] rounded-md md:mt-10 md:h-[440px]" priority />
     <div className="blog-article-prose mt-10 max-w-none">{blocks.length ? blocks.map((block, index) => block.type === 'heading' ? <h2 key={`${block.type}-${index}`}>{block.text}</h2> : <p key={`${block.type}-${index}`}>{renderArticleText(block.text)}</p>) : <p>{uiText(locale, 'Le contenu de cet article sera bientôt disponible.', 'English translation not yet available.')}</p>}</div>
+    {(relatedServices.length > 0 || relatedArticles.length > 0) && <section className="mt-12 rounded-2xl border border-[#073e53]/10 bg-[#f8f8f2] p-6 md:p-8" aria-labelledby="related-reading-title" data-testid="blog-related-links">
+      <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-accent">{uiText(locale, 'Pour continuer', 'Continue reading')}</p>
+      <h2 id="related-reading-title" className="mt-2 font-display text-2xl font-medium text-[#073e53]">{uiText(locale, 'Soins et conseils associés', 'Related care and advice')}</h2>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        {relatedServices.map((service) => {
+          const english = englishService(service);
+          const serviceTitle = cmsText(locale, service.title, english.title);
+          return <Link key={`service-${service.id}`} href={routeFor(`/soins/${service.slug}/`, locale, content)} className="group rounded-xl border border-[#073e53]/10 bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md" data-testid={`related-service-${service.slug}`}>
+            <span className="text-[9px] font-semibold uppercase tracking-[.16em] text-accent">{uiText(locale, 'Soin', 'Care')}</span>
+            <span className="mt-2 flex items-center justify-between gap-3 font-display text-lg font-medium text-[#073e53]">{serviceTitle}<ArrowRight size={16} className="shrink-0 transition-transform group-hover:translate-x-1" /></span>
+          </Link>;
+        })}
+        {relatedArticles.map((article) => {
+          const english = englishBlogPost(article);
+          const articleTitle = cmsText(locale, article.title, english.title);
+          const articleSlug = locale === 'en' ? english.slug : article.slug;
+          return <Link key={`article-${article.id}`} href={routeFor(`/blog/${articleSlug}/`, locale, content)} className="group rounded-xl border border-[#073e53]/10 bg-white p-4 transition-all duration-200 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md" data-testid={`related-article-${article.slug}`}>
+            <span className="text-[9px] font-semibold uppercase tracking-[.16em] text-accent">{uiText(locale, 'Conseil associé', 'Related advice')}</span>
+            <span className="mt-2 flex items-center justify-between gap-3 font-display text-lg font-medium text-[#073e53]">{articleTitle}<ArrowRight size={16} className="shrink-0 transition-transform group-hover:translate-x-1" /></span>
+          </Link>;
+        })}
+      </div>
+    </section>}
     <aside className="mt-12 rounded-2xl border border-[#073e53]/10 bg-white p-6 shadow-[0_12px_40px_rgba(7,1,22,.06)] md:p-8">
       <h2 className="font-display text-2xl font-medium text-[#073e53]">{uiText(locale, 'Une question sur votre situation ?', 'Have a question about your situation?')}</h2>
       <p className="mt-2 text-sm leading-6 text-muted-foreground">{uiText(locale, 'Un article ne remplace pas un examen. Contactez le cabinet pour demander un rendez-vous ou poser une question générale.', 'An article cannot replace an examination. Contact the practice to request an appointment or ask a general question.')}</p>
