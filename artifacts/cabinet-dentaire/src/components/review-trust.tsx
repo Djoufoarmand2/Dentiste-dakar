@@ -84,7 +84,7 @@ export function ReviewTrustPanel({ testimonials, ctaHref, ctaLabel, variant = 'p
   return <div ref={ref} className={`trust-panel trust-panel-${variant} ${seen ? 'is-seen' : ''}`} data-testid={`panel-review-summary-${variant}`}>
     <div className="trust-panel-copy">
       <p className="trust-kicker">{t(locale, 'Avis publiés sur ce site', 'Reviews published on this site')}</p>
-      <h2 className="trust-title">{summary.count > 0 ? t(locale, 'Ils nous font confiance', 'They trust us') : t(locale, 'Votre avis compte', 'Your feedback matters')}</h2>
+      <h2 className="trust-title">{t(locale, 'Ils nous font confiance', 'They trust us')}</h2>
       <p className="trust-note">{t(locale, 'Moyenne calculée à partir des avis publiés sur ce site, visiteurs et témoignages du cabinet confondus. Contributions non vérifiées indépendamment.', 'Average calculated from reviews published on this site, visitor reviews and practice testimonials alike. Contributions are not independently verified.')}</p>
     </div>
     <div className="trust-score">

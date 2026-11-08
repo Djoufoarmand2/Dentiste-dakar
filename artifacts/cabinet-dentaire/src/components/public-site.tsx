@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import {
   ArrowLeft, ArrowRight, ChevronDown, Clock3, Image as ImageIcon, Link2, Linkedin, Mail, MapPin, Menu,
-  MessageCircle, Phone, X,
+  MessageCircle, Phone, Quote, X,
 } from 'lucide-react';
 import type { BlogPost, Campaign, ServiceItem, SiteContent, SocialLink, Testimonial } from '@workspace/api-client-react';
 import { SiFacebook, SiInstagram, SiSnapchat, SiTiktok, SiWhatsapp, SiX, SiYoutube } from 'react-icons/si';
@@ -506,41 +506,25 @@ function ServiceCard({ item, href }: { item: ServiceItem; href: string }) {
   </article>;
 }
 
-function reviewAgeLabel(createdAt: string | undefined, locale: 'fr' | 'en') {
-  if (!createdAt) return null;
-  const date = new Date(createdAt);
-  if (!Number.isFinite(date.getTime())) return null;
-  const elapsedDays = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000));
-  const formatter = new Intl.RelativeTimeFormat(locale === 'en' ? 'en' : 'fr-FR', { numeric: 'auto' });
-  if (elapsedDays < 7) return formatter.format(-elapsedDays, 'day');
-  if (elapsedDays < 30) return formatter.format(-Math.floor(elapsedDays / 7), 'week');
-  if (elapsedDays < 365) return formatter.format(-Math.floor(elapsedDays / 30), 'month');
-  return formatter.format(-Math.floor(elapsedDays / 365), 'year');
-}
-
 function ReviewCard({ review }: { review: Testimonial }) {
   const locale = useSiteLocale();
   const stars = Math.max(0, Math.min(5, review.rating));
   const englishQuote = review.quoteEn?.trim();
   const quote = locale === 'en' && englishQuote ? englishQuote : review.quote;
-  const createdAt = (review as Testimonial & { createdAt?: string }).createdAt;
-  const ageLabel = reviewAgeLabel(createdAt, locale);
   const initial = review.name.trim().charAt(0).toLocaleUpperCase(locale === 'en' ? 'en' : 'fr-FR') || '?';
-  return <article className="review-card" data-testid={`card-review-${review.id}`}>
-    <div className="review-card-rating">
-      <span aria-hidden="true">{Array.from({ length: 5 }, (_, index) => <span key={index} className={index < stars ? 'review-card-star is-filled' : 'review-card-star'}>★</span>)}</span>
-      <span className="sr-only">{uiText(locale, `${stars} étoiles sur 5`, `${stars} stars out of 5`)}</span>
-    </div>
-    <blockquote className="review-card-quote">« {quote} »</blockquote>
+  return <article className="card-ref flex flex-col p-7" data-testid={`card-review-${review.id}`}>
+    <Quote className="text-accent" size={22} />
+    <p className="mt-4 flex-1 text-[15px] leading-7 text-foreground/85">« {quote} »</p>
     {locale === 'en' && !englishQuote && <p className="mt-3 text-xs italic text-muted-foreground">Original quote in French.</p>}
-    <div className="review-card-divider" />
-    <div className="review-card-footer">
-      <span className="review-card-avatar" aria-hidden="true">{initial}</span>
-      <div className="min-w-0">
-        <p className="review-card-name">{review.name}</p>
-        {review.service && <p className="review-card-service">{locale === 'en' ? review.serviceEn?.trim() || `Service label in French: ${review.service}` : review.service}</p>}
-        {ageLabel && createdAt && <time className="review-card-date" dateTime={createdAt}>{ageLabel}</time>}
+    <div className="mt-6 flex items-center justify-between border-t border-border pt-4">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="review-profile-initial" aria-hidden="true">{initial}</span>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[#073e53]">{review.name}</p>
+          {review.service && <p className="mt-1 text-[10px] uppercase tracking-[.16em] text-muted-foreground">{locale === 'en' ? review.serviceEn?.trim() || `Service label in French: ${review.service}` : review.service}</p>}
+        </div>
       </div>
+      <span className="text-xs tracking-widest text-accent" aria-label={uiText(locale, `${stars} sur 5`, `${stars} out of 5`)}>{'★'.repeat(stars)}</span>
     </div>
   </article>;
 }
@@ -972,7 +956,7 @@ export function ReviewsPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
   const publicReviews = usePublicReviews();
   const testimonials = combinePublicReviews(publicReviews.data ?? [], content.testimonials);
-  return <SiteShell clinic={content.clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Avis et retours', 'Reviews and feedback')} title={uiText(locale, 'Avis sur le Cabinet Sourire Serein à Douala', 'Reviews of Cabinet Sourire Serein in Douala')} text={uiText(locale, 'Lisez les retours publiés par les visiteurs du cabinet et partagez votre expérience après votre visite.', 'Read feedback published by practice visitors and share your experience after your visit.')} />
+  return <SiteShell clinic={content.clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Vos mots comptent', 'Your experience matters')} title={uiText(locale, 'La confiance se construit ensemble.', 'Trust is built together.')} text={uiText(locale, 'Découvrez les expériences partagées par les visiteurs du cabinet. Votre retour nous aide à mieux vous accueillir.', 'Read experiences shared by visitors to the practice. Your feedback helps us understand how we can welcome you.')} />
     <section className="wrap section-pad">
       <div className="mb-12"><ReviewTrustPanel testimonials={content.testimonials} ctaHref="#laisser-un-avis" ctaLabel={uiText(locale, 'Laisser un avis', 'Leave a review')} /></div>
       {publicReviews.isError && <div className="mx-auto mb-8 max-w-3xl rounded-2xl border border-destructive/25 bg-destructive/5 p-4 text-sm" role="alert" data-testid="status-public-reviews-error">
@@ -980,9 +964,7 @@ export function ReviewsPage({ content }: { content: SiteContent }) {
         <button type="button" onClick={() => void publicReviews.refetch()} className="mt-2 font-semibold text-destructive underline" data-testid="button-retry-public-reviews">{uiText(locale, 'Réessayer', 'Try again')}</button>
       </div>}
       {publicReviews.isLoading && <p className="mb-6 text-center text-sm text-muted-foreground" role="status" data-testid="status-public-reviews-loading">{uiText(locale, 'Chargement des avis…', 'Loading reviews…')}</p>}
-      {testimonials.length > 0 && <section className="review-cards-grid" aria-label={uiText(locale, 'Avis publiés par les visiteurs', 'Published visitor reviews')} data-testid="reviews-page-list">
-        {testimonials.map((review) => <ReviewCard key={review.id} review={review} />)}
-      </section>}
+      <ReviewCarousel reviews={testimonials} id="reviews-page" />
       <div id="laisser-un-avis" className="mx-auto mt-14 max-w-3xl scroll-mt-32 border-t border-border pt-12">
         <ReviewSubmissionForm />
       </div>
