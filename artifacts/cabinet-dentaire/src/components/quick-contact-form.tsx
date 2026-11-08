@@ -1,9 +1,16 @@
 import { useRef, useState, type FormEvent } from "react";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { submitQuickContactQuestion } from "@/lib/appointment-delivery";
+import { ManualContactLinks } from "@/components/manual-contact-links";
 import { useSiteLocale } from "@/lib/site-locale";
 
-export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: string }) {
+export function QuickContactForm({
+  phone = "+237 677 87 34 42",
+  email,
+}: {
+  phone?: string;
+  email?: string;
+}) {
   const locale = useSiteLocale();
   const en = locale === "en";
   const formRef = useRef<HTMLFormElement>(null);
@@ -192,15 +199,18 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
       </p>
 
       {status === "success" && (
-        <p
-          role="status"
-          className="rounded-md border border-emerald-700/20 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900"
-          data-testid="status-quick-contact-success"
-        >
-          {en
-            ? <>We received your question. Please allow up to 24 hours for a reply. For urgent concerns, call <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>
-            : <>Nous avons bien reçu votre question. Merci de patienter jusqu’à 24 h pour une réponse. En cas d’urgence, appelez le <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>}
-        </p>
+        <div className="space-y-3">
+          <p
+            role="status"
+            className="rounded-md border border-emerald-700/20 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900"
+            data-testid="status-quick-contact-success"
+          >
+            {en
+              ? <>We received your question. Please allow up to 24 hours for a reply. For urgent concerns, call <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>
+              : <>Nous avons bien reçu votre question. Merci de patienter jusqu’à 24 h pour une réponse. En cas d’urgence, appelez le <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>}
+          </p>
+          <ManualContactLinks email={email} phone={phone} />
+        </div>
       )}
 
       {status === "error" && (

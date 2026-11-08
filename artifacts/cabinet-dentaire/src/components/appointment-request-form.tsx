@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ManualContactLinks } from "@/components/manual-contact-links";
 import {
   Dialog,
   DialogClose,
@@ -60,7 +61,13 @@ const defaultValues: AppointmentFormValues = {
   website: "",
 };
 
-export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?: string }) {
+export function AppointmentRequestForm({
+  phone = "+237 677 87 34 42",
+  email,
+}: {
+  phone?: string;
+  email?: string;
+}) {
   const locale = useSiteLocale();
   const en = locale === "en";
   const form = useForm<AppointmentFormValues>({ defaultValues, mode: "onChange" });
@@ -556,6 +563,12 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
               : "Nous avons bien reçu votre demande. Merci de patienter jusqu’à 24 h pour une réponse et la confirmation d’un créneau. Cette demande ne réserve pas de rendez-vous."}
           </DialogDescription>
         </DialogHeader>
+        <div className="pt-1">
+          <p className="mb-2 text-center text-xs text-muted-foreground">
+            {en ? "You can also contact us directly:" : "Vous pouvez aussi nous contacter directement :"}
+          </p>
+          <ManualContactLinks email={email} phone={phone} className="justify-center" />
+        </div>
         <DialogFooter className="sm:justify-center">
           <DialogClose asChild>
             <Button
