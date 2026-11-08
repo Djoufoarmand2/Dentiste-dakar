@@ -19,6 +19,7 @@ import {
 import { CmsError } from '@/lib/supabase';
 import { isValidCampaignPublicationDate } from '@/lib/campaign-dates';
 import { fillEnglishFieldsForAdmin, fillEnglishFieldsForBlogAdmin, fillEnglishFieldsForFaqAdmin } from '@/lib/cms-translations';
+import { editorialBlogPosts } from '@/lib/editorial-blog';
 import { defaultPrivacyPolicyContent, defaultWhyChooseContent } from '@/lib/site-page-defaults';
 import { Link } from 'wouter';
 
@@ -62,7 +63,7 @@ const newItem: Record<ArraySection, Record<string, unknown>> = {
   gallery: { id: '', alt: '', imageUrl: '', altEn: '' },
   testimonials: { id: '', name: '', service: '', quote: '', rating: 5, serviceEn: '', quoteEn: '' },
   faqs: { id: '', question: '', answer: '', questionEn: '', answerEn: '' },
-  blogPosts: { id: '', title: '', slug: '', excerpt: '', content: '', imageUrl: '', author: '', date: new Date().toISOString().slice(0, 10), published: false, titleEn: '', slugEn: '', excerptEn: '', contentEn: '', authorEn: '', imageAlt: '', imageAltEn: '' },
+  blogPosts: { id: '', title: '', slug: '', excerpt: '', content: '', imageUrl: '', author: '', date: new Date().toISOString().slice(0, 10), published: false, titleEn: '', slugEn: '', excerptEn: '', contentEn: '', authorEn: '', imageAlt: '', imageAltEn: '', relatedServiceSlugs: '', relatedArticleSlugs: '' },
   campaigns: { id: '', title: '', description: '', mediaType: 'image', imageUrl: '', videoUrl: null, active: false, titleEn: '', descriptionEn: '', publishedAt: '', transcript: '', transcriptEn: '' },
 };
 
@@ -85,6 +86,8 @@ const fieldLabels: Record<string, string> = {
   altEn: 'Texte alternatif · anglais', serviceEn: 'Soin concerné · anglais', questionEn: 'Question · anglais',
   answerEn: 'Réponse · anglais', excerptEn: 'Chapô · anglais', contentEn: 'Texte de l’article · anglais',
   authorEn: 'Auteur · anglais', openingHoursEn: 'Horaires · anglais', quoteEn: 'Témoignage traduit · anglais',
+  relatedServiceSlugs: 'Soins associés (slugs séparés par des virgules)',
+  relatedArticleSlugs: 'Articles associés (slugs séparés par des virgules)',
   body: 'Texte', bodyEn: 'Texte · anglais', valuesEyebrow: 'Accroche des valeurs',
   valuesTitle: 'Titre des valeurs', valuesEyebrowEn: 'Accroche des valeurs · anglais',
   valuesTitleEn: 'Titre des valeurs · anglais', partnerEyebrow: 'Accroche partenaire',
@@ -99,8 +102,14 @@ const fieldLabels: Record<string, string> = {
 function ensureTranslationFields(content: SiteContent): SiteContent {
   const whyChoose = { ...defaultWhyChooseContent, ...content.whyChoose, values: content.whyChoose?.values ?? defaultWhyChooseContent.values };
   const privacyPolicy = { ...defaultPrivacyPolicyContent, ...content.privacyPolicy, sections: content.privacyPolicy?.sections ?? defaultPrivacyPolicyContent.sections };
+  const existingBlogSlugs = new Set(content.blogPosts.map((post) => post.slug));
+  const blogPosts = [
+    ...content.blogPosts,
+    ...editorialBlogPosts.filter((post) => !existingBlogSlugs.has(post.slug)),
+  ];
   return {
     ...content,
+    editorialBlogLibraryManaged: true,
     clinic: { ...content.clinic, openingHoursEn: content.clinic.openingHoursEn ?? '' },
     hero: {
       ...content.hero,
@@ -132,7 +141,7 @@ function ensureTranslationFields(content: SiteContent): SiteContent {
     gallery: content.gallery.map((item) => ({ ...item, altEn: item.altEn ?? '' })),
     testimonials: content.testimonials.map((item) => ({ ...item, serviceEn: item.serviceEn ?? '', quoteEn: item.quoteEn ?? '' })),
     faqs: content.faqs.map((item) => fillEnglishFieldsForFaqAdmin(item)),
-    blogPosts: content.blogPosts.map((source) => {
+    blogPosts: blogPosts.map((source) => {
       const item = fillEnglishFieldsForBlogAdmin(source);
       return {
       ...item,
@@ -143,6 +152,8 @@ function ensureTranslationFields(content: SiteContent): SiteContent {
       authorEn: item.authorEn ?? '',
       imageAlt: item.imageAlt ?? '',
       imageAltEn: item.imageAltEn ?? '',
+      relatedServiceSlugs: item.relatedServiceSlugs ?? '',
+      relatedArticleSlugs: item.relatedArticleSlugs ?? '',
     };
     }),
     campaigns: content.campaigns.map((item) => ({ ...item, titleEn: item.titleEn ?? '', descriptionEn: item.descriptionEn ?? '', publishedAt: item.publishedAt ?? '', transcript: item.transcript ?? '', transcriptEn: item.transcriptEn ?? '' })),
@@ -409,6 +420,7 @@ export default function AdminPage() {
       </div><p className="mt-6 hidden rounded-2xl border border-border bg-card p-4 text-[11px] leading-5 text-muted-foreground md:block">Les changements sont enregistrés ensemble et deviennent visibles dès leur publication.</p></aside>
       <main className="min-w-0">
         <div className="mb-6 flex flex-col justify-between gap-2 md:flex-row md:items-end"><div><p className="text-[10px] uppercase tracking-[.2em] text-primary">{section === 'clinic' ? 'Coordonnées & identité' : section === 'hero' ? 'Première impression' : sectionLabels[section]}</p><h2 className="mt-2 font-display text-3xl md:text-4xl">{section === 'clinic' ? 'Informations du cabinet' : section === 'hero' ? 'Contenu de l’accueil' : sectionLabels[section]}</h2></div><p className="text-xs text-muted-foreground">Modifications non publiées : enregistrées dans cette session</p></div>
+        {section === 'blogPosts' && !contentQuery.data?.content.editorialBlogLibraryManaged && <div className="mb-6 rounded-2xl border border-[#8c6f0b]/25 bg-[#fff9e8] p-5 text-sm leading-6 text-[#4d432a]" role="status" data-testid="notice-editorial-blog-import">Les {editorialBlogPosts.length} nouveaux articles et leurs liens vers les soins sont préchargés dans ce brouillon. Publiez une première fois pour les enregistrer dans le CMS ; vous pourrez ensuite les modifier, les dépublier ou les supprimer ici sans qu’ils réapparaissent depuis les fichiers du site.</div>}
         {translationGaps.length > 0 && <section className="mb-7 rounded-2xl border border-[#8c6f0b]/25 bg-[#fff9e8] p-5 md:p-6" aria-labelledby="translation-gaps-title" data-testid="translation-gaps">
           <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 id="translation-gaps-title" className="font-display text-xl text-[#073e53]">Traductions anglaises à compléter</h3><p className="mt-1 text-sm text-muted-foreground">{translationGaps.length} contenu(s) ont des champs anglais vides. Ouvrez un élément pour les compléter, puis publiez les changements.</p></div><span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8c6f0b]">{translationGaps.length} à vérifier</span></div>
           <ul className="mt-4 grid gap-2 md:grid-cols-2">{translationGaps.slice(0, 16).map((gap) => {
@@ -440,11 +452,17 @@ export default function AdminPage() {
                  name={key}
                  value={value}
                  onChange={(raw) => setArrayField(index, key, raw)}
-                 wide={['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'body', 'transcript', 'transcriptEn'].includes(key)}
+                 wide={['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'body', 'transcript', 'transcriptEn', 'relatedServiceSlugs', 'relatedArticleSlugs'].includes(key)}
                  protectedUrls={protectedUrls}
                  disabled={busy}
                  required={videoDateField && item.active === true}
-                 helperText={videoDateField ? 'Utilisez la date réelle de publication de la vidéo sur YouTube. Obligatoire avant publication si la vidéo est active.' : undefined}
+                 helperText={videoDateField
+                   ? 'Utilisez la date réelle de publication de la vidéo sur YouTube. Obligatoire avant publication si la vidéo est active.'
+                   : key === 'relatedServiceSlugs'
+                     ? 'Saisissez les slugs de soins séparés par des virgules ; seuls les soins existants seront affichés.'
+                     : key === 'relatedArticleSlugs'
+                       ? 'Saisissez les slugs d’articles séparés par des virgules ; seuls les articles publiés seront affichés.'
+                       : undefined}
                />;
              })}</div>
             {typeof item.imageUrl === 'string' && item.imageUrl && <div className="mt-4"><p className="mb-2 text-[10px] uppercase tracking-[.16em] text-muted-foreground">Aperçu</p><div className="h-48 overflow-hidden rounded-xl bg-secondary"><img src={item.imageUrl} alt="Aperçu du visuel" loading="lazy" className="h-full w-full object-cover" /></div></div>}
@@ -462,7 +480,7 @@ function AdminField({ name, value, onChange, wide = false, protectedUrls, disabl
   if (['imageUrl', 'logoUrl', 'videoUrl'].includes(name)) return <MediaField value={String(value ?? '')} onChange={onChange} kind={name === 'videoUrl' ? 'video' : 'image'} protectedUrls={protectedUrls} disabled={disabled} />;
   const label = fieldLabels[name] || name;
   const isBool = typeof value === 'boolean';
-  const isLong = wide || ['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'purpose', 'procedureSteps', 'descriptionEn', 'biographyEn', 'answerEn', 'contentEn', 'excerptEn', 'purposeEn', 'procedureStepsEn', 'quoteEn'].includes(name);
+  const isLong = wide || ['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'purpose', 'procedureSteps', 'descriptionEn', 'biographyEn', 'answerEn', 'contentEn', 'excerptEn', 'purposeEn', 'procedureStepsEn', 'quoteEn', 'relatedServiceSlugs', 'relatedArticleSlugs'].includes(name);
   const isSelect = name === 'mediaType';
   const inputType = name === 'publishedAt' ? 'date' : name === 'rating' ? 'number' : name === 'date' ? 'date' : name.toLowerCase().includes('url') ? 'url' : 'text';
   const inputValue = name === 'publishedAt' && typeof value === 'string' ? value.slice(0, 10) : String(value ?? '');

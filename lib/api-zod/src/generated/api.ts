@@ -161,8 +161,11 @@ export const GetSiteContentResponse = zod.object({
   "contentEn": zod.string().optional(),
   "authorEn": zod.string().optional(),
   "imageAlt": zod.string().optional(),
-  "imageAltEn": zod.string().optional()
+  "imageAltEn": zod.string().optional(),
+  "relatedServiceSlugs": zod.string().optional(),
+  "relatedArticleSlugs": zod.string().optional()
 })),
+  "editorialBlogLibraryManaged": zod.boolean().optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -325,8 +328,11 @@ export const UpdateSiteContentBody = zod.object({
   "contentEn": zod.string().optional(),
   "authorEn": zod.string().optional(),
   "imageAlt": zod.string().optional(),
-  "imageAltEn": zod.string().optional()
+  "imageAltEn": zod.string().optional(),
+  "relatedServiceSlugs": zod.string().optional(),
+  "relatedArticleSlugs": zod.string().optional()
 })),
+  "editorialBlogLibraryManaged": zod.boolean().optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -484,8 +490,11 @@ export const UpdateSiteContentResponse = zod.object({
   "contentEn": zod.string().optional(),
   "authorEn": zod.string().optional(),
   "imageAlt": zod.string().optional(),
-  "imageAltEn": zod.string().optional()
+  "imageAltEn": zod.string().optional(),
+  "relatedServiceSlugs": zod.string().optional(),
+  "relatedArticleSlugs": zod.string().optional()
 })),
+  "editorialBlogLibraryManaged": zod.boolean().optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -861,8 +870,11 @@ export const GetAdminContentResponse = zod.object({
   "contentEn": zod.string().optional(),
   "authorEn": zod.string().optional(),
   "imageAlt": zod.string().optional(),
-  "imageAltEn": zod.string().optional()
+  "imageAltEn": zod.string().optional(),
+  "relatedServiceSlugs": zod.string().optional(),
+  "relatedArticleSlugs": zod.string().optional()
 })),
+  "editorialBlogLibraryManaged": zod.boolean().optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -1028,8 +1040,11 @@ export const PublishAdminContentBody = zod.object({
   "contentEn": zod.string().optional(),
   "authorEn": zod.string().optional(),
   "imageAlt": zod.string().optional(),
-  "imageAltEn": zod.string().optional()
+  "imageAltEn": zod.string().optional(),
+  "relatedServiceSlugs": zod.string().optional(),
+  "relatedArticleSlugs": zod.string().optional()
 })),
+  "editorialBlogLibraryManaged": zod.boolean().optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -1191,8 +1206,11 @@ export const PublishAdminContentResponse = zod.object({
   "contentEn": zod.string().optional(),
   "authorEn": zod.string().optional(),
   "imageAlt": zod.string().optional(),
-  "imageAltEn": zod.string().optional()
+  "imageAltEn": zod.string().optional(),
+  "relatedServiceSlugs": zod.string().optional(),
+  "relatedArticleSlugs": zod.string().optional()
 })),
+  "editorialBlogLibraryManaged": zod.boolean().optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),

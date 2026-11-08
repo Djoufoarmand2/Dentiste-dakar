@@ -23,4 +23,6 @@ export interface BlogPost {
   authorEn?: string;
   imageAlt?: string;
   imageAltEn?: string;
+  relatedServiceSlugs?: string;
+  relatedArticleSlugs?: string;
 }

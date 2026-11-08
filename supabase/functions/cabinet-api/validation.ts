@@ -37,6 +37,7 @@ export function parseContent(input: unknown, mediaBaseUrl: string) {
     if (typeof value === 'string') {
       if (value.length > 100_000) throw new Error('Un champ de texte est trop long.');
       if (urlFields.has(key) && value.trim()) {
+        if (key === 'imageUrl' && /^\/images\/blog\/[a-z0-9-]+\.(?:webp|jpe?g|png)$/i.test(value)) return;
         const url = new URL(value);
         const allowed = key === 'bookingUrl' ? ['https:', 'mailto:', 'tel:'] : ['https:'];
         if (!allowed.includes(url.protocol) || url.username || url.password) throw new Error('Un lien utilise un format non autorisé.');

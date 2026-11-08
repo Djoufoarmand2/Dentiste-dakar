@@ -303,6 +303,8 @@ export interface BlogPost {
   authorEn?: string;
   imageAlt?: string;
   imageAltEn?: string;
+  relatedServiceSlugs?: string;
+  relatedArticleSlugs?: string;
 }
 
 export type CampaignMediaType = typeof CampaignMediaType[keyof typeof CampaignMediaType];
@@ -340,6 +342,7 @@ export interface SiteContent {
   testimonials: Testimonial[];
   faqs: FAQItem[];
   blogPosts: BlogPost[];
+  editorialBlogLibraryManaged?: boolean;
   campaigns: Campaign[];
 }
 
@@ -360,6 +363,7 @@ export interface SiteContentInput {
   testimonials: Testimonial[];
   faqs: FAQItem[];
   blogPosts: BlogPost[];
+  editorialBlogLibraryManaged?: boolean;
   campaigns: Campaign[];
 }
 

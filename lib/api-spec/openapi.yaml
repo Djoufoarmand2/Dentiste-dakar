@@ -532,6 +532,8 @@ components:
         authorEn: { type: string }
         imageAlt: { type: string }
         imageAltEn: { type: string }
+        relatedServiceSlugs: { type: string }
+        relatedArticleSlugs: { type: string }
       required: [id, title, slug, excerpt, content, imageUrl, author, date, published]
     Campaign:
       type: object
@@ -634,6 +636,7 @@ components:
         blogPosts:
           type: array
           items: { $ref: "#/components/schemas/BlogPost" }
+        editorialBlogLibraryManaged: { type: boolean }
         campaigns:
           type: array
           items: { $ref: "#/components/schemas/Campaign" }
@@ -663,6 +666,7 @@ components:
         blogPosts:
           type: array
           items: { $ref: "#/components/schemas/BlogPost" }
+        editorialBlogLibraryManaged: { type: boolean }
         campaigns:
           type: array
           items: { $ref: "#/components/schemas/Campaign" }

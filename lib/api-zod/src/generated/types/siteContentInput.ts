@@ -28,5 +28,6 @@ export interface SiteContentInput {
   testimonials: Testimonial[];
   faqs: FAQItem[];
   blogPosts: BlogPost[];
+  editorialBlogLibraryManaged?: boolean;
   campaigns: Campaign[];
 }
