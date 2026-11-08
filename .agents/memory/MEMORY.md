@@ -10,3 +10,4 @@
 - [Schéma Supabase déployé](supabase-schema-roundtrip.md) — une API ancienne peut accepter une publication tout en éliminant ses nouveaux champs; vérifier l’aller-retour réel.
 - [Vérification des fichiers Cloudflare](cloudflare-static-assets.md) — vérifier la taille d’un fichier statique avec les octets reçus, pas seulement l’en-tête `Content-Length`.
 - [Bundle Supabase Edge](supabase-edge-bundling.md) — garder le contrat généré dans le dossier de fonction et les imports Deno explicites pour le déploiement distant.
+- [Noms des contraintes PostgreSQL](supabase-migration-constraint-names.md) — éviter de réutiliser le nom automatique d’un CHECK de colonne pour une contrainte de table.
