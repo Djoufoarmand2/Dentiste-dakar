@@ -9,3 +9,4 @@
 - [Export GitHub depuis Replit](replit-github-export.md) — vérifier le remote effectif après sélection du dépôt; l’interface Git peut en relier un autre que celui demandé.
 - [Schéma Supabase déployé](supabase-schema-roundtrip.md) — une API ancienne peut accepter une publication tout en éliminant ses nouveaux champs; vérifier l’aller-retour réel.
 - [Vérification des fichiers Cloudflare](cloudflare-static-assets.md) — vérifier la taille d’un fichier statique avec les octets reçus, pas seulement l’en-tête `Content-Length`.
+- [Bundle Supabase Edge](supabase-edge-bundling.md) — garder le contrat généré dans le dossier de fonction et les imports Deno explicites pour le déploiement distant.
