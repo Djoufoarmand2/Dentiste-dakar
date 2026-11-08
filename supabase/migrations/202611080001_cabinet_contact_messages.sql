@@ -57,7 +57,7 @@ create table if not exists public.cabinet_contact_questions (
   reply_status text not null default 'not_replied'
     check (reply_status in ('not_replied', 'draft_opened', 'replied')),
   created_at timestamptz not null default now(),
-  constraint cabinet_contact_questions_email_check
+  constraint cabinet_contact_questions_channel_email_check
     check (contact_channel not in ('email', 'both') or email is not null),
   constraint cabinet_contact_questions_whatsapp_consent_check
     check (contact_channel not in ('whatsapp', 'both') or (phone is not null and whatsapp_consent))
