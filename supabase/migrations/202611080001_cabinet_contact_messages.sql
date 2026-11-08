@@ -31,7 +31,7 @@ begin
   end if;
   if not exists (select 1 from pg_constraint where conname = 'cabinet_appointments_whatsapp_status_check') then
     alter table public.cabinet_appointments add constraint cabinet_appointments_whatsapp_status_check
-      check (whatsapp_status in ('pending', 'accepted', 'failed', 'not_requested', 'not_configured'));
+      check (whatsapp_status in ('pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured'));
   end if;
   if not exists (select 1 from pg_constraint where conname = 'cabinet_appointments_reply_status_check') then
     alter table public.cabinet_appointments add constraint cabinet_appointments_reply_status_check
@@ -51,7 +51,7 @@ create table if not exists public.cabinet_contact_questions (
   email_status text not null default 'not_requested'
     check (email_status in ('pending', 'accepted', 'failed', 'not_requested', 'not_configured')),
   whatsapp_status text not null default 'not_requested'
-    check (whatsapp_status in ('pending', 'accepted', 'failed', 'not_requested', 'not_configured')),
+    check (whatsapp_status in ('pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured')),
   whatsapp_provider_message_id text,
   contact_validated boolean not null default false,
   reply_status text not null default 'not_replied'

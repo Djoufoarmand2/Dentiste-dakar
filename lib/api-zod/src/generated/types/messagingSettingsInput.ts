@@ -13,6 +13,11 @@ export interface MessagingSettingsInput {
      * @maxLength 100
      * @nullable
      */
+  whatsappWabaId: string | null;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
   whatsappPhoneNumberId: string | null;
   /**
      * @maxLength 120

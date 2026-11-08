@@ -76,6 +76,7 @@ export type ContactAppointmentAcceptedWhatsappStatus = typeof ContactAppointment
 
 export const ContactAppointmentAcceptedWhatsappStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',
@@ -127,6 +128,7 @@ export type AppointmentRequestWhatsappStatus = typeof AppointmentRequestWhatsapp
 
 export const AppointmentRequestWhatsappStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',
@@ -208,6 +210,7 @@ export type ContactQuestionAcceptedWhatsappStatus = typeof ContactQuestionAccept
 
 export const ContactQuestionAcceptedWhatsappStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',
@@ -247,6 +250,7 @@ export type ContactQuestionWhatsappStatus = typeof ContactQuestionWhatsappStatus
 
 export const ContactQuestionWhatsappStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',
@@ -324,6 +328,8 @@ export interface MessagingSettings {
   emailAutoResponderActive: boolean;
   whatsappEnabled: boolean;
   /** @nullable */
+  whatsappWabaId: string | null;
+  /** @nullable */
   whatsappPhoneNumberId: string | null;
   /** @nullable */
   whatsappTemplateName: string | null;
@@ -335,6 +341,11 @@ export interface MessagingSettings {
 export interface MessagingSettingsInput {
   emailAutoResponderActive: boolean;
   whatsappEnabled: boolean;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  whatsappWabaId: string | null;
   /**
      * @maxLength 100
      * @nullable

@@ -10,6 +10,8 @@ export interface MessagingSettings {
   emailAutoResponderActive: boolean;
   whatsappEnabled: boolean;
   /** @nullable */
+  whatsappWabaId: string | null;
+  /** @nullable */
   whatsappPhoneNumberId: string | null;
   /** @nullable */
   whatsappTemplateName: string | null;

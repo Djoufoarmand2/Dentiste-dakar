@@ -11,6 +11,7 @@ export type AppointmentRequestWhatsappStatus = typeof AppointmentRequestWhatsapp
 
 export const AppointmentRequestWhatsappStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',

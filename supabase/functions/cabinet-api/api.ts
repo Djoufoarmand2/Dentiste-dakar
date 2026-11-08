@@ -582,7 +582,7 @@ export const SubmitContactAppointmentResponse = zod.object({
   "notificationSent": zod.boolean().optional(),
   "statusToken": zod.string().optional(),
   "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional(),
-  "whatsappStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional()
+  "whatsappStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional()
 })
 
 
@@ -619,7 +619,7 @@ export const SubmitContactQuestionResponse = zod.object({
   "requestId": zod.string().uuid(),
   "statusToken": zod.string(),
   "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional(),
-  "whatsappStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional()
+  "whatsappStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional()
 })
 
 
@@ -653,7 +653,7 @@ export const GetAdminAppointmentsResponseItem = zod.object({
   "contactChannel": zod.enum(['email', 'whatsapp', 'both']),
   "whatsappConsent": zod.boolean(),
   "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']),
-  "whatsappStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']),
+  "whatsappStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']),
   "contactValidated": zod.boolean(),
   "replyStatus": zod.enum(['not_replied', 'draft_opened', 'replied']),
   "createdAt": zod.coerce.date()
@@ -689,7 +689,7 @@ export const GetAdminContactQuestionsResponseItem = zod.object({
   "contactChannel": zod.enum(['email', 'whatsapp', 'both']),
   "whatsappConsent": zod.boolean(),
   "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']),
-  "whatsappStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']),
+  "whatsappStatus": zod.enum(['pending', 'sending', 'accepted', 'failed', 'not_requested', 'not_configured']),
   "contactValidated": zod.boolean(),
   "replyStatus": zod.enum(['not_replied', 'draft_opened', 'replied']),
   "createdAt": zod.coerce.date()
@@ -719,6 +719,7 @@ export const DeleteAdminContactQuestionResponse = zod.void()
 export const GetAdminMessagingSettingsResponse = zod.object({
   "emailAutoResponderActive": zod.boolean(),
   "whatsappEnabled": zod.boolean(),
+  "whatsappWabaId": zod.string().nullable(),
   "whatsappPhoneNumberId": zod.string().nullable(),
   "whatsappTemplateName": zod.string().nullable(),
   "whatsappTemplateLanguage": zod.string(),
@@ -726,6 +727,8 @@ export const GetAdminMessagingSettingsResponse = zod.object({
   "whatsappCredentialsReady": zod.boolean()
 })
 
+
+export const updateAdminMessagingSettingsBodyWhatsappWabaIdMax = 100;
 
 export const updateAdminMessagingSettingsBodyWhatsappPhoneNumberIdMax = 100;
 
@@ -739,6 +742,7 @@ export const updateAdminMessagingSettingsBodyWhatsappTemplateLanguageMax = 20;
 export const UpdateAdminMessagingSettingsBody = zod.object({
   "emailAutoResponderActive": zod.boolean(),
   "whatsappEnabled": zod.boolean(),
+  "whatsappWabaId": zod.string().max(updateAdminMessagingSettingsBodyWhatsappWabaIdMax).nullable(),
   "whatsappPhoneNumberId": zod.string().max(updateAdminMessagingSettingsBodyWhatsappPhoneNumberIdMax).nullable(),
   "whatsappTemplateName": zod.string().max(updateAdminMessagingSettingsBodyWhatsappTemplateNameMax).nullable(),
   "whatsappTemplateLanguage": zod.string().min(updateAdminMessagingSettingsBodyWhatsappTemplateLanguageMin).max(updateAdminMessagingSettingsBodyWhatsappTemplateLanguageMax)
@@ -747,6 +751,7 @@ export const UpdateAdminMessagingSettingsBody = zod.object({
 export const UpdateAdminMessagingSettingsResponse = zod.object({
   "emailAutoResponderActive": zod.boolean(),
   "whatsappEnabled": zod.boolean(),
+  "whatsappWabaId": zod.string().nullable(),
   "whatsappPhoneNumberId": zod.string().nullable(),
   "whatsappTemplateName": zod.string().nullable(),
   "whatsappTemplateLanguage": zod.string(),

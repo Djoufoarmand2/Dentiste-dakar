@@ -25,7 +25,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  appointmentProviderName,
   submitAppointmentRequest,
 } from "@/lib/appointment-delivery";
 import { useSiteLocale } from "@/lib/site-locale";
@@ -52,6 +51,8 @@ const defaultValues: AppointmentFormValues = {
   name: "",
   phone: "",
   email: "",
+  contactChannel: "email",
+  whatsappConsent: false,
   service: "",
   preferredDate: "",
   preferredWindow: "",
@@ -72,9 +73,10 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
   const submissionId = useRef<string | null>(null);
   const phoneValue = form.watch("phone");
   const emailValue = form.watch("email");
+  const contactChannel = form.watch("contactChannel");
   const phoneDigits = phoneValue.replace(/\D/g, "");
   const phoneValid = phoneDigits.length >= 8 && phoneDigits.length <= 15;
-  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
+  const emailValid = !emailValue || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
   const phoneLink = phone.replace(/[^\d+]/g, "");
 
   const submit = async (values: AppointmentFormValues) => {
@@ -95,7 +97,9 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
           submissionId: submissionId.current ?? (submissionId.current = crypto.randomUUID()),
           name: values.name.trim(),
           phone: values.phone.trim(),
-          email: values.email.trim(),
+          email: values.email?.trim() ?? "",
+          contactChannel: values.contactChannel,
+          whatsappConsent: values.whatsappConsent === true,
           service: values.service,
           preferredDate: values.preferredDate || undefined,
           preferredWindow: values.preferredWindow || undefined,
@@ -197,18 +201,105 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
 
         <FormField
           control={form.control}
+          name="contactChannel"
+          render={({ field }) => (
+            <FormItem>
+              <fieldset>
+                <legend className="text-sm font-medium">
+                  {en ? "How should we reply?" : "Comment souhaitez-vous recevoir une réponse ?"}
+                </legend>
+                <FormDescription>
+                  {en
+                    ? "Choose email, WhatsApp, or both. We use WhatsApp only with your consent."
+                    : "Choisissez l’e-mail, WhatsApp ou les deux. WhatsApp est utilisé uniquement avec votre accord."}
+                </FormDescription>
+                <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                  {([
+                    ["email", en ? "Email" : "E-mail"],
+                    ["whatsapp", "WhatsApp"],
+                    ["both", en ? "Both" : "Les deux"],
+                  ] as const).map(([value, label]) => (
+                    <label key={value} className="cursor-pointer">
+                      <input
+                        ref={field.ref}
+                        type="radio"
+                        name={field.name}
+                        value={value}
+                        checked={field.value === value}
+                        onChange={() => {
+                          field.onChange(value);
+                          if (value === "whatsapp") form.clearErrors("email");
+                        }}
+                        onBlur={field.onBlur}
+                        className="peer sr-only"
+                        data-testid={`radio-contact-channel-${value}`}
+                      />
+                      <span className={`flex min-h-12 items-center justify-center rounded-lg border px-3 text-sm font-medium transition peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#b5965a] ${
+                        field.value === value
+                          ? "border-[#18365f] bg-[#edf2ff] text-[#18365f]"
+                          : "border-[#18365f]/20 bg-white text-[#20213e] hover:border-[#315c9a]/55"
+                      }`}>
+                        {label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {contactChannel !== "email" && (
+          <FormField
+            control={form.control}
+            name="whatsappConsent"
+            rules={{
+              validate: (value) =>
+                value === true || (en
+                  ? "Please consent before choosing WhatsApp."
+                  : "Votre accord est nécessaire pour choisir WhatsApp."),
+            }}
+            render={({ field }) => (
+              <FormItem>
+                <label className="flex items-start gap-3 rounded-lg border border-[#18365f]/15 bg-white p-4 text-sm leading-6">
+                  <input
+                    ref={field.ref}
+                    type="checkbox"
+                    checked={field.value === true}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    className="mt-1 accent-[#18365f]"
+                    data-testid="checkbox-whatsapp-consent"
+                  />
+                  <span>
+                    {en
+                      ? "I agree to receive one WhatsApp confirmation about this request. No marketing messages."
+                      : "J’accepte de recevoir un message WhatsApp de confirmation au sujet de cette demande. Aucun message publicitaire."}
+                  </span>
+                </label>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <FormField
+          control={form.control}
           name="email"
           rules={{
-            required: en ? "Enter your email address." : "Indiquez votre adresse e-mail.",
-            pattern: {
-              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: en ? "Enter a valid email address." : "Saisissez une adresse e-mail valide.",
+            required: contactChannel !== "whatsapp" && (en ? "Enter your email address." : "Indiquez votre adresse e-mail."),
+            validate: (value) => {
+              if (!value && contactChannel === "whatsapp") return true;
+              return (typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) || (en
+                ? "Enter a valid email address."
+                : "Saisissez une adresse e-mail valide.");
             },
             maxLength: 254,
           }}
             render={({ field, fieldState }) => (
             <FormItem>
-              <FormLabel>{en ? "Email address *" : "Adresse e-mail *"}</FormLabel>
+              <FormLabel>{en ? `Email address${contactChannel !== "whatsapp" ? " *" : ""}` : `Adresse e-mail${contactChannel !== "whatsapp" ? " *" : ""}`}</FormLabel>
               <FormControl>
                 <Input
                   {...field}
@@ -223,7 +314,9 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
                 />
               </FormControl>
               <FormDescription className="sr-only">
-                  {en ? "Your email address is required." : "Votre adresse e-mail est obligatoire."}
+                  {contactChannel === "whatsapp"
+                    ? (en ? "Email is optional for WhatsApp contact." : "L’e-mail est facultatif si vous choisissez WhatsApp.")
+                    : (en ? "Your email address is required." : "Votre adresse e-mail est obligatoire.")}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -432,11 +525,9 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             )}
           </Button>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">
-            {appointmentProviderName
-              ? (en
-                ? `Your request will be recorded in Supabase and a notification sent via ${appointmentProviderName}.`
-                : `Votre demande sera enregistrée dans Supabase et notifiée via ${appointmentProviderName}.`)
-              : (en ? "Your request will be stored in the practice's private workspace." : "Votre demande sera enregistrée dans l’espace privé du cabinet.")}{" "}
+            {en
+              ? "Your request is saved in the practice’s private inbox. Automatic confirmations depend on the selected channel being activated by the administrator."
+              : "Votre demande est enregistrée dans l’espace privé du cabinet. Les confirmations automatiques dépendent de l’activation du canal choisi par l’administrateur."}{" "}
             {en ? "This does not confirm an appointment." : "Elle ne confirme pas encore un rendez-vous."}
           </p>
         </div>
@@ -467,8 +558,22 @@ export function AppointmentRequestForm({ phone = "+237 677 87 34 42" }: { phone?
             {notificationSent === false && (
               <span className="mt-2 block font-medium">
                 {en
-                  ? "The email notification could not be sent. Your request is still available to the practice; there is no need to send it again."
-                  : "La notification par e-mail n’a pas pu être envoyée. Votre demande reste disponible pour le cabinet dans son espace privé; inutile de la renvoyer."}
+                  ? "The practice’s email notification could not be sent. Your request is still in its private inbox; there is no need to send it again."
+                  : "La notification au cabinet n’a pas pu être envoyée. Votre demande reste dans son espace privé; inutile de la renvoyer."}
+              </span>
+            )}
+            {(request.data?.emailStatus === "not_configured" || request.data?.emailStatus === "failed") && (
+              <span className="mt-2 block font-medium">
+                {en
+                  ? "Automatic email confirmation is not active. The practice can still see and answer your request."
+                  : "La confirmation automatique par e-mail n’est pas active. Le cabinet peut tout de même voir votre demande et y répondre."}
+              </span>
+            )}
+            {(request.data?.whatsappStatus === "not_configured" || request.data?.whatsappStatus === "failed") && (
+              <span className="mt-2 block font-medium">
+                {en
+                  ? "Automatic WhatsApp confirmation is not active. The practice can still see and answer your request."
+                  : "La confirmation automatique par WhatsApp n’est pas active. Le cabinet peut tout de même voir votre demande et y répondre."}
               </span>
             )}
           </DialogDescription>

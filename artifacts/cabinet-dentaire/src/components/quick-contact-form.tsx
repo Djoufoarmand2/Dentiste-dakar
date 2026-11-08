@@ -9,6 +9,9 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
   const formRef = useRef<HTMLFormElement>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [channel, setChannel] = useState<"email" | "whatsapp" | "both">("email");
+  const [confirmationWarning, setConfirmationWarning] = useState("");
+  const submissionId = useRef<string | null>(null);
   const phoneLink = phone.replace(/[^\d+]/g, "");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -17,7 +20,10 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
     const data = new FormData(form);
     const firstName = String(data.get("name") ?? "").trim();
     const email = String(data.get("email") ?? "").trim();
+    const mobile = String(data.get("phone") ?? "").trim();
     const message = String(data.get("message") ?? "").trim();
+    const contactChannel = String(data.get("contactChannel") ?? "email") as "email" | "whatsapp" | "both";
+    const whatsappConsent = data.get("whatsappConsent") === "on";
 
     if (String(data.get("website") ?? "").trim()) {
       // Quietly absorb bot submissions that fill the visually hidden field.
@@ -26,13 +32,39 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
       return;
     }
 
-    if (!email || !message) return;
+    if ((contactChannel !== "whatsapp" && !email) || (contactChannel !== "email" && (!mobile || !whatsappConsent)) || message.length < 5) {
+      setErrorMessage(en
+        ? "Check the selected contact method and the required details."
+        : "Vérifiez le moyen de contact choisi et les coordonnées requises.");
+      setStatus("error");
+      return;
+    }
 
     setStatus("sending");
     setErrorMessage("");
+    setConfirmationWarning("");
     try {
-      await submitQuickContactQuestion({ firstName, email, message });
+      const result = await submitQuickContactQuestion({
+        submissionId: submissionId.current ?? (submissionId.current = crypto.randomUUID()),
+        name: firstName,
+        email: email || undefined,
+        phone: mobile || undefined,
+        message,
+        contactChannel,
+        whatsappConsent,
+      });
+      if (result.emailStatus === "not_configured" || result.emailStatus === "failed") {
+        setConfirmationWarning(en
+          ? "Automatic email confirmation is not active. The practice has your request and can reply from its private inbox."
+          : "La confirmation automatique par e-mail n’est pas active. Le cabinet a reçu votre demande dans son espace privé et pourra vous répondre.");
+      } else if (result.whatsappStatus === "not_configured" || result.whatsappStatus === "failed") {
+        setConfirmationWarning(en
+          ? "Automatic WhatsApp confirmation is not active yet. The practice has your request and can reply from its private inbox."
+          : "La confirmation automatique par WhatsApp n’est pas encore active. Le cabinet a reçu votre demande dans son espace privé et pourra vous répondre.");
+      }
       formRef.current?.reset();
+      submissionId.current = null;
+      setChannel("email");
       setStatus("success");
     } catch (error) {
       setErrorMessage(
@@ -79,18 +111,70 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
       </label>
 
       <label className="block text-[10px] font-semibold uppercase tracking-[.13em] text-[#536174]">
-        {en ? "Email address *" : "Adresse e-mail *"}
+        {en ? `Email address${channel !== "whatsapp" ? " *" : ""}` : `Adresse e-mail${channel !== "whatsapp" ? " *" : ""}`}
         <input
           name="email"
           type="email"
           autoComplete="email"
-          required
+          required={channel !== "whatsapp"}
           maxLength={254}
           className="mt-2 block h-12 w-full rounded-md border border-[#e3dfd5] bg-white px-4 text-sm normal-case tracking-normal text-[#18365f] outline-none transition focus:border-[#b5965a] focus:ring-2 focus:ring-[#b5965a]/15"
           placeholder={en ? "you@example.com" : "vous@exemple.com"}
           data-testid="input-quick-contact-email"
         />
       </label>
+
+      <fieldset>
+        <legend className="text-[10px] font-semibold uppercase tracking-[.13em] text-[#536174]">
+          {en ? "How should we reply?" : "Comment souhaitez-vous recevoir une réponse ?"}
+        </legend>
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
+          {([
+            ["email", en ? "Email" : "E-mail"],
+            ["whatsapp", "WhatsApp"],
+            ["both", en ? "Both" : "Les deux"],
+          ] as const).map(([value, label]) => (
+            <label key={value} className="cursor-pointer">
+              <input
+                className="peer sr-only"
+                type="radio"
+                name="contactChannel"
+                value={value}
+                checked={channel === value}
+                onChange={() => setChannel(value)}
+              />
+              <span className="flex min-h-11 items-center justify-center rounded-md border border-[#e3dfd5] bg-white px-3 text-sm font-medium text-[#18365f] transition peer-checked:border-[#18365f] peer-checked:bg-[#edf2ff] peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[#b5965a]">
+                {label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      {channel !== "email" && (
+        <>
+          <label className="block text-[10px] font-semibold uppercase tracking-[.13em] text-[#536174]">
+            {en ? "WhatsApp number *" : "Numéro WhatsApp *"}
+            <input
+              name="phone"
+              type="tel"
+              autoComplete="tel"
+              required
+              maxLength={40}
+              className="mt-2 block h-12 w-full rounded-md border border-[#e3dfd5] bg-white px-4 text-sm normal-case tracking-normal text-[#18365f] outline-none transition focus:border-[#b5965a] focus:ring-2 focus:ring-[#b5965a]/15"
+              placeholder="+237 6XX XX XX XX"
+            />
+          </label>
+          <label className="flex items-start gap-3 text-xs leading-5 text-[#536174]">
+            <input name="whatsappConsent" type="checkbox" required className="mt-1 accent-[#18365f]" />
+            <span>
+              {en
+                ? "I agree to receive one WhatsApp confirmation about this request. No marketing messages."
+                : "J’accepte de recevoir un message WhatsApp de confirmation au sujet de cette demande. Aucun message publicitaire."}
+            </span>
+          </label>
+        </>
+      )}
 
       <label className="block text-[10px] font-semibold uppercase tracking-[.13em] text-[#536174]">
         {en ? "Your message *" : "Votre message *"}
@@ -125,6 +209,7 @@ export function QuickContactForm({ phone = "+237 677 87 34 42" }: { phone?: stri
           {en
             ? <>We received your question. Please allow up to 24 hours for a reply. For urgent concerns, call <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>
             : <>Nous avons bien reçu votre question. Merci de patienter jusqu’à 24 h pour une réponse. En cas d’urgence, appelez le <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>}
+          {confirmationWarning && <span className="mt-2 block font-medium">{confirmationWarning}</span>}
         </p>
       )}
 

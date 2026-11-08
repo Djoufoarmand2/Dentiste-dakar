@@ -36,9 +36,13 @@ router.post("/contact/appointment", async (req, res): Promise<void> => {
 
   const name = parsed.data.name.trim();
   const phone = parsed.data.phone.trim();
-  const email = parsed.data.email.trim().toLowerCase();
+  const email = parsed.data.email?.trim().toLowerCase() ?? "";
   if (!name || !phone) {
     res.status(400).json({ error: "Le nom et le numéro de téléphone sont obligatoires." });
+    return;
+  }
+  if ((parsed.data.contactChannel === "email" || parsed.data.contactChannel === "both") && !email) {
+    res.status(400).json({ error: "Une adresse e-mail est requise pour ce canal." });
     return;
   }
 

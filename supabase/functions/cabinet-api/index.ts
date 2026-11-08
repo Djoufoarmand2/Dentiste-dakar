@@ -3,6 +3,12 @@ import {
   CreateAdminReviewBody, DeleteAdminReviewParams, PublishAdminContentBody, PrepareAdminMediaBody,
   FinalizeAdminMediaBody, DeleteAdminMediaBody, SubmitReviewBody,
   SubmitContactAppointmentBody, SubmitContactAppointmentResponse,
+  SubmitContactQuestionBody, SubmitContactQuestionResponse, UpdateContactNotificationStatusBody,
+  UpdateAdminAppointmentParams, UpdateAdminAppointmentBody,
+  GetAdminContactQuestionsResponse, UpdateAdminContactQuestionParams,
+  UpdateAdminContactQuestionBody, DeleteAdminContactQuestionParams,
+  GetAdminMessagingSettingsResponse, UpdateAdminMessagingSettingsBody,
+  ValidateAdminWhatsAppSettingsResponse,
 } from './api.ts';
 import { mimeExtensions, normalizePublicationInput, parseContent, publicContent, signatureMatches } from './validation.ts';
 
@@ -23,7 +29,7 @@ const reviewRateLimitKey = crypto.subtle.importKey(
   new TextEncoder().encode(secret),
   { name: 'HMAC', hash: 'SHA-256' },
   false,
-  ['sign'],
+  ['sign', 'verify'],
 );
 
 class HttpError extends Error {
@@ -111,6 +117,196 @@ async function checkReviewRate(request: Request) {
   }
 }
 
+type ContactType = 'appointment' | 'question';
+type ContactChannel = 'email' | 'whatsapp' | 'both';
+type NotificationStatus = 'pending' | 'sending' | 'accepted' | 'failed' | 'not_requested' | 'not_configured';
+
+function usesEmail(channel: ContactChannel) { return channel === 'email' || channel === 'both'; }
+function usesWhatsApp(channel: ContactChannel) { return channel === 'whatsapp' || channel === 'both'; }
+
+function encodeBase64Url(bytes: Uint8Array) {
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
+}
+
+function decodeBase64Url(value: string) {
+  const base64 = value.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - value.length % 4) % 4);
+  return Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
+}
+
+async function contactStatusToken(type: ContactType, id: string) {
+  const signature = await crypto.subtle.sign(
+    'HMAC',
+    await reviewRateLimitKey,
+    new TextEncoder().encode(`contact-email-status:${type}:${id}`),
+  );
+  return encodeBase64Url(new Uint8Array(signature));
+}
+
+async function validContactStatusToken(type: ContactType, id: string, token: string) {
+  try {
+    return await crypto.subtle.verify(
+      'HMAC',
+      await reviewRateLimitKey,
+      decodeBase64Url(token),
+      new TextEncoder().encode(`contact-email-status:${type}:${id}`),
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function readMessagingSettings() {
+  const { data, error } = await db.from('cabinet_messaging_settings').select('*').eq('id', true).maybeSingle();
+  if (error) throw new HttpError(503, 'Les réglages de messagerie sont indisponibles.');
+  return data ?? {
+    email_auto_responder_active: false,
+    whatsapp_enabled: false,
+    whatsapp_waba_id: null,
+    whatsapp_phone_number_id: null,
+    whatsapp_template_name: null,
+    whatsapp_template_language: 'fr',
+    whatsapp_validated_at: null,
+  };
+}
+
+function publicMessagingSettings(row: Record<string, unknown>) {
+  return GetAdminMessagingSettingsResponse.parse({
+    emailAutoResponderActive: row.email_auto_responder_active === true,
+    whatsappEnabled: row.whatsapp_enabled === true,
+    whatsappWabaId: typeof row.whatsapp_waba_id === 'string' ? row.whatsapp_waba_id : null,
+    whatsappPhoneNumberId: typeof row.whatsapp_phone_number_id === 'string' ? row.whatsapp_phone_number_id : null,
+    whatsappTemplateName: typeof row.whatsapp_template_name === 'string' ? row.whatsapp_template_name : null,
+    whatsappTemplateLanguage: typeof row.whatsapp_template_language === 'string' ? row.whatsapp_template_language : 'fr',
+    whatsappValidated: typeof row.whatsapp_validated_at === 'string' && !!row.whatsapp_validated_at,
+    whatsappCredentialsReady: !!Deno.env.get('WHATSAPP_ACCESS_TOKEN'),
+  });
+}
+
+function whatsappRecipient(phone: string) {
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 9 && /^[2368]/.test(digits)) return `237${digits}`;
+  if (digits.startsWith('237') && digits.length === 12) return digits;
+  if (digits.length >= 8 && digits.length <= 15) return digits;
+  return null;
+}
+
+async function sendWhatsAppConfirmation(settings: Record<string, unknown>, phone: string, name: string) {
+  const token = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
+  const phoneNumberId = typeof settings.whatsapp_phone_number_id === 'string' ? settings.whatsapp_phone_number_id : '';
+  const templateName = typeof settings.whatsapp_template_name === 'string' ? settings.whatsapp_template_name : '';
+  const language = typeof settings.whatsapp_template_language === 'string' ? settings.whatsapp_template_language : 'fr';
+  const recipient = whatsappRecipient(phone);
+  if (settings.whatsapp_enabled !== true || !token || !phoneNumberId || !templateName || !recipient) {
+    return { status: 'not_configured' as NotificationStatus, providerMessageId: null };
+  }
+
+  try {
+    const response = await fetch(`https://graph.facebook.com/v23.0/${encodeURIComponent(phoneNumberId)}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: recipient,
+        type: 'template',
+        template: {
+          name: templateName,
+          language: { code: language },
+          components: [{ type: 'body', parameters: [{ type: 'text', text: name.trim().slice(0, 120) || 'Bonjour' }] }],
+        },
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const result = await response.json().catch(() => null) as { messages?: Array<{ id?: string }> } | null;
+    if (!response.ok) return { status: 'failed' as NotificationStatus, providerMessageId: null };
+    return { status: 'accepted' as NotificationStatus, providerMessageId: result?.messages?.[0]?.id ?? null };
+  } catch {
+    return { status: 'failed' as NotificationStatus, providerMessageId: null };
+  }
+}
+
+async function deliverWhatsAppOnce(type: ContactType, id: string, channel: ContactChannel, consent: boolean, phone: string, name: string, settings: Record<string, unknown>) {
+  const table = type === 'appointment' ? 'cabinet_appointments' : 'cabinet_contact_questions';
+  if (!usesWhatsApp(channel)) return 'not_requested' as NotificationStatus;
+  if (!consent) return 'not_configured' as NotificationStatus;
+  if (settings.whatsapp_enabled !== true || !Deno.env.get('WHATSAPP_ACCESS_TOKEN')) {
+    await db.from(table).update({ whatsapp_status: 'not_configured' }).eq('id', id);
+    return 'not_configured' as NotificationStatus;
+  }
+
+  const claim = await db.from(table).update({ whatsapp_status: 'sending' })
+    .eq('id', id).eq('whatsapp_status', 'pending').select('id').maybeSingle();
+  if (claim.error) throw new HttpError(503, 'Le suivi de la notification WhatsApp est indisponible.');
+  if (!claim.data) {
+    const existing = await db.from(table).select('whatsapp_status').eq('id', id).maybeSingle();
+    if (existing.error) throw new HttpError(503, 'Le suivi de la notification WhatsApp est indisponible.');
+    return (existing.data?.whatsapp_status ?? 'not_configured') as NotificationStatus;
+  }
+
+  const sent = await sendWhatsAppConfirmation(settings, phone, name);
+  const update = await db.from(table).update({
+    whatsapp_status: sent.status,
+    whatsapp_provider_message_id: sent.providerMessageId,
+  }).eq('id', id).eq('whatsapp_status', 'sending');
+  if (update.error) throw new HttpError(503, 'Le suivi de la notification WhatsApp est indisponible.');
+  return sent.status;
+}
+
+async function validateWhatsAppSettings(settings: Record<string, unknown>) {
+  const token = Deno.env.get('WHATSAPP_ACCESS_TOKEN');
+  const wabaId = typeof settings.whatsapp_waba_id === 'string' ? settings.whatsapp_waba_id : '';
+  const phoneNumberId = typeof settings.whatsapp_phone_number_id === 'string' ? settings.whatsapp_phone_number_id : '';
+  const templateName = typeof settings.whatsapp_template_name === 'string' ? settings.whatsapp_template_name : '';
+  const language = typeof settings.whatsapp_template_language === 'string' ? settings.whatsapp_template_language : 'fr';
+  if (!token) throw new HttpError(503, 'La clé WhatsApp Cloud API doit être configurée comme secret de la fonction Supabase.');
+  if (!/^\d{5,100}$/.test(wabaId) || !/^\d{5,100}$/.test(phoneNumberId) || !/^[a-z0-9_]{2,120}$/.test(templateName)) {
+    return { valid: false, message: 'Renseignez un WABA ID, un Phone Number ID et le nom exact du modèle approuvé.' };
+  }
+
+  try {
+    const headers = { Authorization: `Bearer ${token}` };
+    const numbersUrl = new URL(`https://graph.facebook.com/v23.0/${encodeURIComponent(wabaId)}/phone_numbers`);
+    numbersUrl.searchParams.set('fields', 'id');
+    numbersUrl.searchParams.set('limit', '100');
+    const numbersResponse = await fetch(numbersUrl, { headers, signal: AbortSignal.timeout(8000) });
+    if (!numbersResponse.ok) return { valid: false, message: 'Meta n’a pas validé le WABA ID ou l’accès aux numéros WhatsApp.' };
+    const numbersData = await numbersResponse.json().catch(() => null) as { data?: Array<{ id?: string }> } | null;
+    if (!numbersData?.data?.some((item) => item.id === phoneNumberId)) {
+      return { valid: false, message: 'Le Phone Number ID ne fait pas partie du WABA ID indiqué.' };
+    }
+
+    const phoneResponse = await fetch(`https://graph.facebook.com/v23.0/${encodeURIComponent(phoneNumberId)}?fields=id`, {
+      headers, signal: AbortSignal.timeout(8000),
+    });
+    if (!phoneResponse.ok) return { valid: false, message: 'Meta n’a pas validé le Phone Number ID. Vérifiez le compte et les autorisations.' };
+    const phoneData = await phoneResponse.json().catch(() => null) as { id?: string } | null;
+    if (phoneData?.id !== phoneNumberId) return { valid: false, message: 'Le Phone Number ID ne correspond pas au compte configuré.' };
+
+    const templateUrl = new URL(`https://graph.facebook.com/v23.0/${encodeURIComponent(wabaId)}/message_templates`);
+    templateUrl.searchParams.set('name', templateName);
+    templateUrl.searchParams.set('fields', 'name,status,language,components');
+    const templateResponse = await fetch(templateUrl, { headers, signal: AbortSignal.timeout(8000) });
+    if (!templateResponse.ok) return { valid: false, message: 'Meta n’a pas validé le WABA ID ou l’accès aux modèles WhatsApp.' };
+    const templateData = await templateResponse.json().catch(() => null) as {
+      data?: Array<{ name?: string; status?: string; language?: string; components?: Array<{ type?: string; text?: string }> }>
+    } | null;
+    const template = templateData?.data?.find((item) => item.name === templateName && item.language === language);
+    if (!template || template.status !== 'APPROVED') {
+      return { valid: false, message: 'Le modèle doit exister, avoir cette langue et être approuvé par Meta.' };
+    }
+    const bodyComponent = template.components?.find((component) => component.type === 'BODY');
+    const placeholders = bodyComponent?.text?.match(/\{\{\s*\d+\s*\}\}/g) ?? [];
+    if (placeholders.length !== 1 || !/\{\{\s*1\s*\}\}/.test(placeholders[0])) {
+      return { valid: false, message: 'Le modèle doit avoir exactement une variable, {{1}}, dans son corps.' };
+    }
+    return { valid: true, message: 'Numéro et modèle WhatsApp approuvé validés.' };
+  } catch {
+    return { valid: false, message: 'Meta est temporairement inaccessible. Réessayez plus tard.' };
+  }
+}
+
 async function getAsset(path: string) {
   if (!/^uploads\/[a-f0-9-]+\.(jpg|png|webp|gif|mp4|webm)$/.test(path)) throw new HttpError(400, 'Chemin de média invalide.');
   const { data, error } = await db.from('cabinet_media').select('*').eq('path', path).maybeSingle();
@@ -132,7 +328,7 @@ export async function handleRequest(request: Request): Promise<Response> {
   try {
     if (origin && !allowedOrigins.has(origin)) throw new HttpError(403, 'Origine non autorisée.');
     if (request.method === 'OPTIONS') {
-      headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS';
+      headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,PATCH,DELETE,OPTIONS';
       headers['Access-Control-Allow-Headers'] = 'authorization,apikey,content-type,x-client-info';
       return respond(null, 204);
     }
@@ -151,17 +347,105 @@ export async function handleRequest(request: Request): Promise<Response> {
 
       const name = parsed.data.name.trim();
       const phone = parsed.data.phone.trim();
+      const email = parsed.data.email?.trim().toLowerCase() || null;
+      const channel = parsed.data.contactChannel as ContactChannel;
       if (!name || !phone) throw new HttpError(400, 'Le nom et le numéro de téléphone sont obligatoires.');
+      if (usesEmail(channel) && !email) throw new HttpError(400, 'Une adresse e-mail est requise pour la confirmation par e-mail.');
+      if (usesWhatsApp(channel) && (!parsed.data.whatsappConsent || !whatsappRecipient(phone))) {
+        throw new HttpError(400, 'Un numéro WhatsApp valide et votre accord sont requis pour recevoir une confirmation.');
+      }
       await checkReviewRate(request); // Shared anti-abuse quota for public submissions.
       const id = parsed.data.submissionId ?? crypto.randomUUID();
+      const settings = await readMessagingSettings();
+      const emailStatus: NotificationStatus = usesEmail(channel)
+        ? settings.email_auto_responder_active === true ? 'pending' : 'not_configured'
+        : 'not_requested';
+      const whatsappStatus: NotificationStatus = usesWhatsApp(channel)
+        ? settings.whatsapp_enabled === true && !!Deno.env.get('WHATSAPP_ACCESS_TOKEN') ? 'pending' : 'not_configured'
+        : 'not_requested';
       const { error } = await db.from('cabinet_appointments').upsert({
-        id, name, phone, email: parsed.data.email.trim().toLowerCase(),
+        id, name, phone, email,
         service: parsed.data.service, preferred_date: parsed.data.preferredDate || null,
         preferred_window: parsed.data.preferredWindow || null,
         message: parsed.data.message?.trim() || null,
+        contact_channel: channel,
+        whatsapp_consent: usesWhatsApp(channel) && parsed.data.whatsappConsent,
+        email_status: emailStatus,
+        whatsapp_status: whatsappStatus,
       }, { onConflict: 'id', ignoreDuplicates: true });
       if (error) throw new HttpError(503, 'Impossible d’enregistrer votre demande. Réessayez ou contactez le cabinet.');
-      return respond(SubmitContactAppointmentResponse.parse({ accepted: true, requestId: id }));
+      const { data: saved, error: readError } = await db.from('cabinet_appointments')
+        .select('email_status,whatsapp_status').eq('id', id).single();
+      if (readError || !saved) throw new HttpError(503, 'La demande est enregistrée, mais son suivi est indisponible.');
+      const sentWhatsApp = await deliverWhatsAppOnce(
+        'appointment', id, channel, parsed.data.whatsappConsent, phone, name, settings,
+      );
+      return respond(SubmitContactAppointmentResponse.parse({
+        accepted: true, requestId: id, statusToken: await contactStatusToken('appointment', id),
+        emailStatus: saved.email_status,
+        whatsappStatus: sentWhatsApp,
+      }));
+    }
+    if (request.method === 'POST' && path === '/contact/question') {
+      const parsed = SubmitContactQuestionBody.safeParse(await body(request));
+      if (!parsed.success) throw new HttpError(400, 'Vérifiez les informations du formulaire.');
+      if (parsed.data.website?.trim()) {
+        const requestId = crypto.randomUUID();
+        return respond(SubmitContactQuestionResponse.parse({
+          accepted: true, requestId, statusToken: await contactStatusToken('question', requestId),
+          emailStatus: 'not_requested', whatsappStatus: 'not_requested',
+        }), 201);
+      }
+
+      const channel = parsed.data.contactChannel as ContactChannel;
+      const name = parsed.data.name?.trim() ?? '';
+      const email = parsed.data.email?.trim().toLowerCase() || null;
+      const phone = parsed.data.phone?.trim() || null;
+      const message = parsed.data.message.trim();
+      if (usesEmail(channel) && !email) throw new HttpError(400, 'Une adresse e-mail est requise pour la confirmation par e-mail.');
+      if (usesWhatsApp(channel) && (!phone || !whatsappRecipient(phone) || !parsed.data.whatsappConsent)) {
+        throw new HttpError(400, 'Un numéro WhatsApp valide et votre accord sont requis pour recevoir une confirmation.');
+      }
+      await checkReviewRate(request);
+      const id = parsed.data.submissionId;
+      const settings = await readMessagingSettings();
+      const emailStatus: NotificationStatus = usesEmail(channel)
+        ? settings.email_auto_responder_active === true ? 'pending' : 'not_configured'
+        : 'not_requested';
+      const whatsappStatus: NotificationStatus = usesWhatsApp(channel)
+        ? settings.whatsapp_enabled === true && !!Deno.env.get('WHATSAPP_ACCESS_TOKEN') ? 'pending' : 'not_configured'
+        : 'not_requested';
+      const { error } = await db.from('cabinet_contact_questions').upsert({
+        id, submission_id: id, name, email, phone, message, contact_channel: channel,
+        whatsapp_consent: usesWhatsApp(channel) && parsed.data.whatsappConsent,
+        email_status: emailStatus, whatsapp_status: whatsappStatus,
+      }, { onConflict: 'submission_id', ignoreDuplicates: true });
+      if (error) throw new HttpError(503, 'Impossible d’enregistrer votre question. Réessayez ou contactez le cabinet.');
+      const { data: saved, error: readError } = await db.from('cabinet_contact_questions')
+        .select('id,email_status,whatsapp_status').eq('submission_id', id).single();
+      if (readError || !saved) throw new HttpError(503, 'La question est enregistrée, mais son suivi est indisponible.');
+      const sentWhatsApp = await deliverWhatsAppOnce(
+        'question', saved.id, channel, parsed.data.whatsappConsent, phone ?? '', name, settings,
+      );
+      return respond(SubmitContactQuestionResponse.parse({
+        accepted: true, requestId: saved.id, statusToken: await contactStatusToken('question', saved.id),
+        emailStatus: saved.email_status, whatsappStatus: sentWhatsApp,
+      }), 201);
+    }
+    if (request.method === 'POST' && path === '/contact/notification-status') {
+      const parsed = UpdateContactNotificationStatusBody.safeParse(await body(request));
+      if (!parsed.success) throw new HttpError(400, 'Le suivi de cette notification n’a pas pu être vérifié.');
+      const validToken = await validContactStatusToken(
+        parsed.data.requestType, parsed.data.requestId, parsed.data.statusToken,
+      );
+      if (!validToken) {
+        throw new HttpError(400, 'Le suivi de cette notification n’a pas pu être vérifié.');
+      }
+      const table = parsed.data.requestType === 'appointment' ? 'cabinet_appointments' : 'cabinet_contact_questions';
+      const { error } = await db.from(table).update({ email_status: parsed.data.emailStatus })
+        .eq('id', parsed.data.requestId).eq('email_status', 'pending');
+      if (error) throw new HttpError(503, 'Impossible de mettre à jour le suivi de la confirmation.');
+      return respond(null, 204);
     }
     if (request.method === 'GET' && path === '/reviews') {
       const { data, error } = await db.from('cabinet_reviews').select('*').order('created_at', { ascending: false }).limit(100);
@@ -200,8 +484,102 @@ export async function handleRequest(request: Request): Promise<Response> {
         id: row.id, name: row.name, phone: row.phone, email: row.email,
         service: row.service, preferredDate: row.preferred_date,
         preferredWindow: row.preferred_window, message: row.message,
+        contactChannel: row.contact_channel, whatsappConsent: row.whatsapp_consent,
+        emailStatus: row.email_status, whatsappStatus: row.whatsapp_status,
+        contactValidated: row.contact_validated, replyStatus: row.reply_status,
         createdAt: row.created_at,
       })));
+    }
+    if (request.method === 'PATCH' && path.startsWith('/admin/appointments/')) {
+      const parsedParams = UpdateAdminAppointmentParams.safeParse({ id: path.slice('/admin/appointments/'.length) });
+      const parsedBody = UpdateAdminAppointmentBody.safeParse(await body(request));
+      if (!parsedParams.success || !parsedBody.success || !Object.keys(parsedBody.data).length) {
+        throw new HttpError(400, 'Vérifiez la mise à jour demandée.');
+      }
+      const updates: Record<string, unknown> = {};
+      if (parsedBody.data.contactValidated !== undefined) updates.contact_validated = parsedBody.data.contactValidated;
+      if (parsedBody.data.replyStatus !== undefined) updates.reply_status = parsedBody.data.replyStatus;
+      const { data, error } = await db.from('cabinet_appointments').update(updates)
+        .eq('id', parsedParams.data.id).select('id').maybeSingle();
+      if (error) throw new HttpError(503, 'Impossible de mettre à jour la demande.');
+      if (!data) throw new HttpError(404, 'Demande introuvable.');
+      return respond({ updated: true });
+    }
+    if (request.method === 'GET' && path === '/admin/contact-questions') {
+      const { data, error } = await db.from('cabinet_contact_questions').select('*').order('created_at', { ascending: false }).limit(500);
+      if (error) throw new HttpError(503, 'Impossible de charger les questions.');
+      return respond(GetAdminContactQuestionsResponse.parse((data ?? []).map((row) => ({
+        id: row.id, name: row.name, email: row.email, phone: row.phone, message: row.message,
+        contactChannel: row.contact_channel, whatsappConsent: row.whatsapp_consent,
+        emailStatus: row.email_status, whatsappStatus: row.whatsapp_status,
+        contactValidated: row.contact_validated, replyStatus: row.reply_status, createdAt: row.created_at,
+      }))));
+    }
+    if (request.method === 'PATCH' && path.startsWith('/admin/contact-questions/')) {
+      const parsedParams = UpdateAdminContactQuestionParams.safeParse({ id: path.slice('/admin/contact-questions/'.length) });
+      const parsedBody = UpdateAdminContactQuestionBody.safeParse(await body(request));
+      if (!parsedParams.success || !parsedBody.success || !Object.keys(parsedBody.data).length) {
+        throw new HttpError(400, 'Vérifiez la mise à jour demandée.');
+      }
+      const updates: Record<string, unknown> = {};
+      if (parsedBody.data.contactValidated !== undefined) updates.contact_validated = parsedBody.data.contactValidated;
+      if (parsedBody.data.replyStatus !== undefined) updates.reply_status = parsedBody.data.replyStatus;
+      const { data, error } = await db.from('cabinet_contact_questions').update(updates)
+        .eq('id', parsedParams.data.id).select('id').maybeSingle();
+      if (error) throw new HttpError(503, 'Impossible de mettre à jour la question.');
+      if (!data) throw new HttpError(404, 'Question introuvable.');
+      return respond({ updated: true });
+    }
+    if (request.method === 'DELETE' && path.startsWith('/admin/contact-questions/')) {
+      const parsed = DeleteAdminContactQuestionParams.safeParse({ id: path.slice('/admin/contact-questions/'.length) });
+      if (!parsed.success) throw new HttpError(400, 'Identifiant de demande invalide.');
+      const { data, error } = await db.from('cabinet_contact_questions').delete()
+        .eq('id', parsed.data.id).select('id').maybeSingle();
+      if (error) throw new HttpError(503, 'Impossible de supprimer la question.');
+      if (!data) throw new HttpError(404, 'Question introuvable.');
+      return respond(null, 204);
+    }
+    if (request.method === 'GET' && path === '/admin/messaging-settings') {
+      return respond(publicMessagingSettings(await readMessagingSettings()));
+    }
+    if (request.method === 'PUT' && path === '/admin/messaging-settings') {
+      const parsed = UpdateAdminMessagingSettingsBody.safeParse(await body(request));
+      if (!parsed.success) throw new HttpError(400, 'Vérifiez les réglages des canaux de confirmation.');
+      const current = await readMessagingSettings();
+      const next = parsed.data;
+      const changedWhatsAppConfig =
+        next.whatsappWabaId !== (current.whatsapp_waba_id ?? null)
+        || next.whatsappPhoneNumberId !== (current.whatsapp_phone_number_id ?? null)
+        || next.whatsappTemplateName !== (current.whatsapp_template_name ?? null)
+        || next.whatsappTemplateLanguage !== (current.whatsapp_template_language ?? 'fr');
+      if (next.whatsappEnabled && (changedWhatsAppConfig || !current.whatsapp_validated_at)) {
+        throw new HttpError(400, 'Validez d’abord le numéro et le modèle WhatsApp avant de l’activer.');
+      }
+      const { data, error } = await db.from('cabinet_messaging_settings').upsert({
+        id: true,
+        email_auto_responder_active: next.emailAutoResponderActive,
+        whatsapp_enabled: changedWhatsAppConfig ? false : next.whatsappEnabled,
+        whatsapp_waba_id: next.whatsappWabaId,
+        whatsapp_phone_number_id: next.whatsappPhoneNumberId,
+        whatsapp_template_name: next.whatsappTemplateName,
+        whatsapp_template_language: next.whatsappTemplateLanguage,
+        whatsapp_validated_at: changedWhatsAppConfig ? null : current.whatsapp_validated_at,
+        updated_at: new Date().toISOString(),
+        updated_by: admin.userId,
+      }, { onConflict: 'id' }).select('*').single();
+      if (error || !data) throw new HttpError(503, 'Impossible d’enregistrer les réglages de messagerie.');
+      return respond(publicMessagingSettings(data));
+    }
+    if (request.method === 'POST' && path === '/admin/messaging-settings/validate-whatsapp') {
+      const settings = await readMessagingSettings();
+      const result = ValidateAdminWhatsAppSettingsResponse.parse(await validateWhatsAppSettings(settings));
+      if (result.valid) {
+        const { error } = await db.from('cabinet_messaging_settings')
+          .update({ whatsapp_validated_at: new Date().toISOString(), whatsapp_enabled: false, updated_at: new Date().toISOString() })
+          .eq('id', true);
+        if (error) throw new HttpError(503, 'La validation a réussi, mais son état n’a pas été enregistré.');
+      }
+      return respond(result);
     }
     if (request.method === 'DELETE' && path.startsWith('/admin/appointments/')) {
       const id = path.slice('/admin/appointments/'.length);

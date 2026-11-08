@@ -3,6 +3,7 @@ import type { AppointmentRequest } from '@workspace/api-client-react';
 import { useCabinetSession } from '@/components/auth-provider';
 import { cmsRequest } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
+import { ContactReplyActions } from '@/components/admin-messaging-panel';
 
 export function AdminAppointmentsPanel() {
   const { session } = useCabinetSession();
@@ -34,13 +35,32 @@ export function AdminAppointmentsPanel() {
             <h3 className="font-semibold">{item.name} — {item.service}</h3>
             <p className="text-sm">{new Date(item.createdAt).toLocaleString('fr-FR')} · Date souhaitée : {item.preferredDate || 'Non précisée'}</p>
             <p className="mt-1 text-sm font-medium text-[#18365f]">Plage préférée : {item.preferredWindow === 'weekdays' ? 'Lundi–vendredi · 16 h–19 h (sur rendez-vous)' : item.preferredWindow === 'saturday' ? 'Samedi · 10 h–14 h (sur rendez-vous)' : 'Non précisée'}</p>
-            <p className="mt-2 text-sm"><a className="underline" href={`tel:${item.phone.replace(/[^\d+]/g, '')}`}>{item.phone}</a> · <a className="underline" href={`mailto:${item.email}`}>{item.email}</a></p>
+            <p className="mt-2 text-sm">
+              <a className="underline" href={`tel:${item.phone.replace(/[^\d+]/g, '')}`}>{item.phone}</a>
+              {item.email && <> · <a className="underline" href={`mailto:${item.email}`}>{item.email}</a></>}
+            </p>
+            <p className="mt-2 flex flex-wrap gap-2 text-[11px]">
+              <span className="rounded-full bg-[#edf2ff] px-2.5 py-1">Canal : {item.contactChannel === 'both' ? 'E-mail et WhatsApp' : item.contactChannel === 'whatsapp' ? 'WhatsApp' : 'E-mail'}</span>
+              <span className="rounded-full bg-[#edf2ff] px-2.5 py-1">E-mail : {item.emailStatus}</span>
+              <span className="rounded-full bg-[#edf2ff] px-2.5 py-1">WhatsApp : {item.whatsappStatus}</span>
+            </p>
             {item.message && <p className="mt-2 whitespace-pre-wrap text-sm">{item.message}</p>}
           </div>
           <Button variant="destructive" disabled={remove.isPending} onClick={() => {
             if (window.confirm('Supprimer définitivement cette demande et ses coordonnées ?')) remove.mutate(item.id);
           }}>Supprimer</Button>
         </div>
+          <ContactReplyActions
+            id={item.id}
+            name={item.name}
+            email={item.email}
+            phone={item.phone}
+            channel={item.contactChannel}
+            whatsappConsent={item.whatsappConsent}
+            contactValidated={item.contactValidated}
+            replyStatus={item.replyStatus}
+            requestType="appointment"
+          />
       </article>)}
     </div>
   </section>;

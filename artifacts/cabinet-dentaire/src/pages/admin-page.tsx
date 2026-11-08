@@ -5,6 +5,7 @@ import type { SiteContent } from '@workspace/api-client-react';
 import { useCabinetSession } from '@/components/auth-provider';
 import { AdminReviewsPanel } from '@/components/admin-reviews-panel';
 import { AdminAppointmentsPanel } from '@/components/admin-appointments-panel';
+import { AdminMessagingPanel } from '@/components/admin-messaging-panel';
 import { MediaField } from '@/components/media-field';
 import { LogoWordmark } from '@/components/public-site';
 import {
@@ -450,6 +451,7 @@ export default function AdminPage() {
         {section === 'testimonials' && <div className="mb-5 rounded-2xl border border-[#b94f5b]/40 bg-[#f7e9ec] p-4 text-xs leading-5 text-[#070116]" data-testid="notice-admin-sample-content"><b>Consentement :</b> les témoignages historiques du CMS ne comportent pas de preuve de consentement enregistrée. Faites confirmer l’autorisation par le cabinet avant tout transfert ou nouvelle publication. Les exemples fictifs identifiés sont masqués du site public.</div>}
          {section === 'socialLinks' && <p className="mb-5 rounded-2xl border border-border bg-card p-4 text-sm leading-6 text-muted-foreground" data-testid="notice-social-links-help">Ajoutez les profils officiels du cabinet. Si le champ logo est vide, le site affiche l’icône intégrée correspondant à la plateforme. Les changements deviennent visibles après publication.</p>}
         <AdminAppointmentsPanel />
+         <AdminMessagingPanel />
         {section === 'testimonials' && <div className="mb-8"><AdminReviewsPanel /></div>}
         {(section === 'clinic' || section === 'hero' || section === 'whyChoose' || section === 'privacyPolicy') && <div id={`admin-singleton-${section}`} className="grid gap-4 md:grid-cols-2" data-testid={`admin-singleton-${section}`}>
           {Object.entries(currentFields || {}).filter(([key]) => key !== 'values' && key !== 'sections').map(([key, value]) => <AdminField key={`${section}-${key}`} name={key} value={value} onChange={(raw) => setObjectField(key, raw)} wide={['description', 'openingHours', 'intro', 'partnerBody', 'contactIntro'].includes(key)} protectedUrls={protectedUrls} disabled={busy} />)}

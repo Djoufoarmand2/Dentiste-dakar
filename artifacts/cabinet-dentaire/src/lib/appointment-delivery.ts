@@ -1,6 +1,9 @@
 import type {
   ContactAppointmentAccepted,
   ContactAppointmentInput,
+  ContactQuestionAccepted,
+  ContactQuestionInput,
+  ContactNotificationStatusInputEmailStatus,
 } from "@workspace/api-client-react";
 import { cmsRequest } from "./supabase";
 
@@ -17,6 +20,32 @@ const preferredWindowLabel = (
   if (window === "saturday") return "Samedi · 10 h–14 h (sur rendez-vous)";
   return "";
 };
+
+const includesEmail = (channel: ContactAppointmentInput["contactChannel"] | ContactQuestionInput["contactChannel"] | undefined) =>
+  channel !== "whatsapp";
+
+async function recordEmailStatus(
+  requestId: string,
+  statusToken: string | undefined,
+  requestType: "appointment" | "question",
+  emailStatus: ContactNotificationStatusInputEmailStatus,
+) {
+  if (!statusToken) return;
+  try {
+    await cmsRequest<void>(
+      "/contact/notification-status",
+      {
+        method: "POST",
+        body: JSON.stringify({ requestId, requestType, statusToken, emailStatus }),
+        signal: AbortSignal.timeout(8000),
+      },
+      false,
+    );
+  } catch {
+    // The request itself is already saved. A tracking update must never cause
+    // the visitor to submit the same private details a second time.
+  }
+}
 
 export const appointmentProviderName = formBoldEndpoint
   ? "FormBold"
@@ -64,8 +93,10 @@ async function submitToFormBold(
   const formData = new FormData();
   formData.set("name", data.name);
   formData.set("phone", data.phone);
-  formData.set("email", data.email);
+  if (includesEmail(data.contactChannel) && data.email) formData.set("email", data.email);
   formData.set("service", data.service);
+  formData.set("contact_channel", data.contactChannel ?? "email");
+  formData.set("whatsapp_consent", String(data.whatsappConsent === true));
   if (data.preferredDate) formData.set("preferred_date", data.preferredDate);
   if (data.preferredWindow) formData.set("preferred_window", preferredWindowLabel(data.preferredWindow));
   if (data.message) formData.set("message", data.message);
@@ -97,61 +128,79 @@ async function submitToFormBold(
   return { accepted: true };
 }
 
-export async function submitQuickContactQuestion(data: {
-  firstName: string;
-  email: string;
-  message: string;
-}): Promise<void> {
-  if (!formBoldEndpoint) {
-    throw new Error(
-      "Le formulaire de question rapide n’est pas configuré. Contactez le cabinet par téléphone.",
-    );
-  }
-
-  const firstName = data.firstName.trim();
-  const email = data.email.trim();
+export async function submitQuickContactQuestion(
+  data: Omit<ContactQuestionInput, "submissionId"> & { submissionId?: string },
+): Promise<ContactQuestionAccepted & { notificationSent: boolean }> {
+  const firstName = data.name?.trim() ?? "";
+  const email = data.email?.trim() ?? "";
+  const phone = data.phone?.trim() ?? "";
   const message = data.message.trim();
   if (
     firstName.length > 120 ||
-    email.length > 254 ||
-    !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) ||
+    (includesEmail(data.contactChannel) && (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))) ||
+    (data.contactChannel !== "email" && (phone.length < 8 || !data.whatsappConsent)) ||
     message.length < 5 ||
     message.length > 2000
   ) {
-    throw new Error("Vérifiez votre adresse e-mail et la longueur du message.");
+    throw new Error("Vérifiez le canal choisi, les coordonnées et la longueur du message.");
+  };
+
+  const input: ContactQuestionInput = {
+    submissionId: data.submissionId ?? crypto.randomUUID(),
+    name: firstName,
+    email: email || undefined,
+    phone: phone || undefined,
+    message,
+    contactChannel: data.contactChannel,
+    whatsappConsent: data.whatsappConsent === true,
+    website: data.website,
+  }
+  const saved = await cmsRequest<ContactQuestionAccepted>(
+    "/contact/question",
+    { method: "POST", body: JSON.stringify(input), signal: AbortSignal.timeout(15_000) },
+    false,
+  );
+  if (!saved.accepted || !saved.requestId) throw new Error("Le cabinet n’a pas confirmé l’enregistrement de votre question.");
+
+  let notificationSent = false;
+  let emailStatus = saved.emailStatus;
+  if (formBoldEndpoint) {
+    const formData = new FormData();
+    formData.set("name", firstName);
+    formData.set("phone", phone);
+    if (includesEmail(data.contactChannel) && email) formData.set("email", email);
+    formData.set("message", message);
+    formData.set("subject", "Question rapide — Cabinet Sourire Serein");
+    formData.set("form_type", "Question rapide");
+    formData.set("contact_channel", data.contactChannel);
+    formData.set("whatsapp_consent", String(data.whatsappConsent === true));
+    try {
+      const endpoint = validateFormBoldEndpoint(formBoldEndpoint);
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: formData,
+        signal: AbortSignal.timeout(15_000),
+      });
+      const result = (await response.json().catch(() => null)) as { success?: boolean } | null;
+      if (!response.ok || result?.success === false) throw new Error("FormBold a refusé la demande.");
+      notificationSent = true;
+      if (emailStatus === "pending" && saved.statusToken) {
+        await recordEmailStatus(saved.requestId, saved.statusToken, "question", "accepted");
+        emailStatus = "accepted";
+      }
+    } catch {
+      if (emailStatus === "pending" && saved.statusToken) {
+        await recordEmailStatus(saved.requestId, saved.statusToken, "question", "failed");
+        emailStatus = "failed";
+      }
+    }
+  } else if (emailStatus === "pending" && saved.statusToken) {
+    await recordEmailStatus(saved.requestId, saved.statusToken, "question", "failed");
+    emailStatus = "failed";
   }
 
-  const endpoint = validateFormBoldEndpoint(formBoldEndpoint);
-  const formData = new FormData();
-  formData.set("name", firstName);
-  formData.set("email", email);
-  formData.set("message", message);
-  formData.set("subject", "Question rapide — Cabinet Sourire Serein");
-  formData.set("form_type", "Question rapide");
-
-  let response: Response;
-  try {
-    response = await fetch(endpoint, {
-      method: "POST",
-      headers: { Accept: "application/json" },
-      body: formData,
-      signal: AbortSignal.timeout(15_000),
-    });
-  } catch {
-    throw new Error(
-      "FormBold est temporairement inaccessible. Réessayez ou contactez le cabinet par téléphone.",
-    );
-  }
-
-  const result = (await response.json().catch(() => null)) as
-    | { success?: boolean; message?: string }
-      | null;
-  if (!response.ok || result?.success === false) {
-    throw new Error(
-      result?.message ||
-        "FormBold n’a pas accepté l’envoi. Réessayez ou contactez le cabinet par téléphone.",
-    );
-  }
+  return { ...saved, emailStatus, notificationSent };
 }
 
 async function submitToWeb3Forms(
@@ -177,7 +226,7 @@ async function submitToWeb3Forms(
         from_name: "Site Web Cabinet Dentaire",
         name: data.name,
         phone: data.phone,
-        email: data.email,
+        email: includesEmail(data.contactChannel) ? data.email : undefined,
         service: data.service,
         preferred_date: data.preferredDate,
         preferred_window: preferredWindowLabel(data.preferredWindow),
@@ -215,11 +264,26 @@ export async function submitAppointmentRequest(
   if (!saved.accepted || !saved.requestId) throw new Error("Le cabinet n’a pas confirmé l’enregistrement.");
   // Storage is authoritative: a failed email must never hide a saved request
   // or encourage resubmitting the same patient data.
+  let notificationSent = false;
+  let emailStatus = saved.emailStatus;
   try {
-    if (formBoldEndpoint) await submitToFormBold(data, formBoldEndpoint);
-    else await submitToWeb3Forms(data);
-    return { ...saved, notificationSent: true };
+    if (formBoldEndpoint) {
+      await submitToFormBold(data, formBoldEndpoint);
+      notificationSent = true;
+      if (emailStatus === "pending" && saved.statusToken && saved.requestId) {
+        await recordEmailStatus(saved.requestId, saved.statusToken, "appointment", "accepted");
+        emailStatus = "accepted";
+      }
+    } else if (web3FormsAccessKey) {
+      await submitToWeb3Forms(data);
+      notificationSent = true;
+    }
   } catch {
-    return { ...saved, notificationSent: false };
+    notificationSent = false;
+    if (emailStatus === "pending" && saved.statusToken && saved.requestId) {
+      await recordEmailStatus(saved.requestId, saved.statusToken, "appointment", "failed");
+      emailStatus = "failed";
+    }
   }
+  return { ...saved, emailStatus, notificationSent };
 }

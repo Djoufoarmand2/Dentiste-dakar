@@ -11,6 +11,7 @@ export type ContactAppointmentAcceptedWhatsappStatus = typeof ContactAppointment
 
 export const ContactAppointmentAcceptedWhatsappStatus = {
   pending: 'pending',
+  sending: 'sending',
   accepted: 'accepted',
   failed: 'failed',
   not_requested: 'not_requested',

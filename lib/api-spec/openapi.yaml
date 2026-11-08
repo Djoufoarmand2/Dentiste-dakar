@@ -476,7 +476,7 @@ components:
         notificationSent: { type: boolean }
         statusToken: { type: string }
         emailStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
-        whatsappStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+        whatsappStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
     AppointmentRequest:
       type: object
       required: [id, name, phone, service, createdAt, contactChannel, whatsappConsent, emailStatus, whatsappStatus, contactValidated, replyStatus]
@@ -494,7 +494,7 @@ components:
         contactChannel: { type: string, enum: [email, whatsapp, both] }
         whatsappConsent: { type: boolean }
         emailStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
-        whatsappStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+        whatsappStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
         contactValidated: { type: boolean }
         replyStatus: { type: string, enum: [not_replied, draft_opened, replied] }
         createdAt: { type: string, format: date-time }
@@ -518,7 +518,7 @@ components:
         requestId: { type: string, format: uuid }
         statusToken: { type: string }
         emailStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
-        whatsappStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+        whatsappStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
     ContactQuestion:
       type: object
       required: [id, name, email, phone, message, contactChannel, whatsappConsent, emailStatus, whatsappStatus, contactValidated, replyStatus, createdAt]
@@ -531,7 +531,7 @@ components:
         contactChannel: { type: string, enum: [email, whatsapp, both] }
         whatsappConsent: { type: boolean }
         emailStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
-        whatsappStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+        whatsappStatus: { type: string, enum: [pending, sending, accepted, failed, not_requested, not_configured] }
         contactValidated: { type: boolean }
         replyStatus: { type: string, enum: [not_replied, draft_opened, replied] }
         createdAt: { type: string, format: date-time }
@@ -551,10 +551,11 @@ components:
         replyStatus: { type: string, enum: [not_replied, draft_opened, replied] }
     MessagingSettings:
       type: object
-      required: [emailAutoResponderActive, whatsappEnabled, whatsappPhoneNumberId, whatsappTemplateName, whatsappTemplateLanguage, whatsappValidated, whatsappCredentialsReady]
+      required: [emailAutoResponderActive, whatsappEnabled, whatsappWabaId, whatsappPhoneNumberId, whatsappTemplateName, whatsappTemplateLanguage, whatsappValidated, whatsappCredentialsReady]
       properties:
         emailAutoResponderActive: { type: boolean }
         whatsappEnabled: { type: boolean }
+        whatsappWabaId: { type: ["string", "null"] }
         whatsappPhoneNumberId: { type: ["string", "null"] }
         whatsappTemplateName: { type: ["string", "null"] }
         whatsappTemplateLanguage: { type: string }
@@ -562,10 +563,11 @@ components:
         whatsappCredentialsReady: { type: boolean }
     MessagingSettingsInput:
       type: object
-      required: [emailAutoResponderActive, whatsappEnabled, whatsappPhoneNumberId, whatsappTemplateName, whatsappTemplateLanguage]
+      required: [emailAutoResponderActive, whatsappEnabled, whatsappWabaId, whatsappPhoneNumberId, whatsappTemplateName, whatsappTemplateLanguage]
       properties:
         emailAutoResponderActive: { type: boolean }
         whatsappEnabled: { type: boolean }
+        whatsappWabaId: { type: ["string", "null"], maxLength: 100 }
         whatsappPhoneNumberId: { type: ["string", "null"], maxLength: 100 }
         whatsappTemplateName: { type: ["string", "null"], maxLength: 120 }
         whatsappTemplateLanguage: { type: string, minLength: 2, maxLength: 20 }
