@@ -9,6 +9,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { localizedPath, rememberedSiteLocale, SiteLocaleProvider, type SiteLocale } from '@/lib/site-locale';
 import { englishBlogPost, englishService } from '@/lib/cms-translations';
+import { withEditorialBlogPosts } from '@/lib/editorial-blog';
 import { getYouTubeThumbnailUrl } from '@/lib/video-url';
 
 const queryClient = new QueryClient();
@@ -95,15 +96,16 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
   if (query.isLoading) return <main className="grid min-h-[100dvh] place-items-center bg-background px-5" role="status" aria-live="polite"><p className="animate-pulse text-sm text-muted-foreground">{locale === 'en' ? 'Loading the website…' : 'Chargement du site…'}</p></main>;
   if (query.isError || !query.data) return <main className="grid min-h-[100dvh] place-items-center bg-background px-5"><section className="max-w-xl rounded-2xl border border-border bg-card p-8 text-center" role="alert"><h1 className="font-display text-2xl text-[#073e53]">{locale === 'en' ? 'The website could not load its information' : 'Le site n’a pas pu charger ses informations'}</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">{locale === 'en' ? 'Please try again shortly.' : 'Réessayez dans quelques instants.'}</p><button onClick={() => void query.refetch()} className="btn-gold mt-6">{locale === 'en' ? 'Try again' : 'Réessayer'}</button></section></main>;
 
+  const content = withEditorialBlogPosts(query.data);
   const rawPath = location.split('?')[0] || '/';
   const path = rawPath.length > 1 ? rawPath.replace(/\/+$/, '') : rawPath;
   const localizedRoute = locale === 'en' ? path.replace(/^\/en(?=\/|$)/, '') || '/' : path;
   const pathParts = localizedRoute.split('/').filter(Boolean);
   const article = pathParts[0] === 'blog'
-    ? query.data.blogPosts.find((post) => (post.slug === pathParts[1] || post.slugEn === pathParts[1] || englishBlogPost(post).slug === pathParts[1]) && post.published)
+    ? content.blogPosts.find((post) => (post.slug === pathParts[1] || post.slugEn === pathParts[1] || englishBlogPost(post).slug === pathParts[1]) && post.published)
     : undefined;
   const service = pathParts[0] === 'soins' || pathParts[0] === 'services'
-    ? query.data.services.find((item) => item.slug === pathParts[1] || item.slugEn === pathParts[1] || englishService(item).slug === pathParts[1])
+    ? content.services.find((item) => item.slug === pathParts[1] || item.slugEn === pathParts[1] || englishService(item).slug === pathParts[1])
     : undefined;
   const pageNames: Record<SiteLocale, Record<string, string>> = {
     fr: {
@@ -137,19 +139,19 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
   const isPrivacyRoute = localizedRoute === '/confidentialite' || localizedRoute === '/privacy';
   const isInformationRoute = localizedRoute === '/informations' || localizedRoute === '/information';
   const cmsPageTitle = isWhyChooseRoute
-    ? (locale === 'en' ? query.data.whyChoose?.titleEn?.trim() : query.data.whyChoose?.title?.trim())
+    ? (locale === 'en' ? content.whyChoose?.titleEn?.trim() : content.whyChoose?.title?.trim())
     : isPrivacyRoute
-      ? (locale === 'en' ? query.data.privacyPolicy?.titleEn?.trim() : query.data.privacyPolicy?.title?.trim())
+      ? (locale === 'en' ? content.privacyPolicy?.titleEn?.trim() : content.privacyPolicy?.title?.trim())
       : isInformationRoute
-        ? (locale === 'en' ? `Dental practice news and videos in ${query.data.clinic.city}` : `Actualités et vidéos du cabinet dentaire à ${query.data.clinic.city}`)
+        ? (locale === 'en' ? `Dental practice news and videos in ${content.clinic.city}` : `Actualités et vidéos du cabinet dentaire à ${content.clinic.city}`)
       : '';
   const pageName = (locale === 'en' ? (article ? englishBlogPost(article).title : service ? englishService(service).title : '') : article?.title || service?.title)
     || cmsPageTitle
     || pageNames[locale][localizedRoute]
     || (locale === 'en' ? 'Cabinet Sourire Serein' : 'Cabinet Sourire Serein');
-  const clinicName = query.data.clinic.name;
-  const city = query.data.clinic.city;
-  const activeCampaigns = query.data.campaigns.filter((campaign) => campaign.active);
+  const clinicName = content.clinic.name;
+  const city = content.clinic.city;
+  const activeCampaigns = content.campaigns.filter((campaign) => campaign.active);
   const campaignText = activeCampaigns
     .slice(0, 2)
     .map((campaign) => locale === 'en'
@@ -187,9 +189,9 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
     },
   };
   const cmsPageDescription = isWhyChooseRoute
-    ? (locale === 'en' ? query.data.whyChoose?.introEn?.trim() : query.data.whyChoose?.intro?.trim())
+    ? (locale === 'en' ? content.whyChoose?.introEn?.trim() : content.whyChoose?.intro?.trim())
     : isPrivacyRoute
-      ? (locale === 'en' ? query.data.privacyPolicy?.descriptionEn?.trim() : query.data.privacyPolicy?.description?.trim())
+      ? (locale === 'en' ? content.privacyPolicy?.descriptionEn?.trim() : content.privacyPolicy?.description?.trim())
       : isInformationRoute
         ? informationDescription
       : '';
@@ -197,24 +199,24 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
     ? (article ? englishBlogPost(article).excerpt : service ? englishService(service).summary : cmsPageDescription)
     : article?.excerpt || service?.summary || cmsPageDescription;
   const description = metaText(contentDescription || (localizedRoute === '/'
-    ? (locale === 'en' ? query.data.hero.descriptionEn?.trim() || query.data.hero.description : query.data.hero.description)
+    ? (locale === 'en' ? content.hero.descriptionEn?.trim() || content.hero.description : content.hero.description)
     : routeDescriptions[locale][localizedRoute] || (locale === 'en'
       ? `${pageName} at ${clinicName} in ${city}. Contact the practice for information.`
       : `${pageName} au ${clinicName}, à ${city}. Informations et contact.`)), 160);
-  const title = seoTitle(localizedRoute === '/' ? (locale === 'en' ? `Dentist in ${city}` : `Cabinet dentaire à ${city}`) : pageName, query.data.clinic.name);
+  const title = seoTitle(localizedRoute === '/' ? (locale === 'en' ? `Dentist in ${city}` : `Cabinet dentaire à ${city}`) : pageName, content.clinic.name);
   const informationCampaign = activeCampaigns.find((campaign) => campaign.mediaType === 'video') || activeCampaigns[0];
   const informationPoster = informationCampaign?.imageUrl?.trim()
     || (informationCampaign?.videoUrl ? getYouTubeThumbnailUrl(informationCampaign.videoUrl) || undefined : undefined);
-  const imageUrl = article?.imageUrl?.trim() || service?.imageUrl?.trim() || (isInformationRoute ? informationPoster : undefined) || query.data.hero.imageUrl?.trim() || query.data.clinic.logoUrl?.trim() || undefined;
-  const indexable = indexableSeoConfigured(query.data);
+  const imageUrl = article?.imageUrl?.trim() || service?.imageUrl?.trim() || (isInformationRoute ? informationPoster : undefined) || content.hero.imageUrl?.trim() || content.clinic.logoUrl?.trim() || undefined;
+  const indexable = indexableSeoConfigured(content);
   const imageAlt = article
     ? (locale === 'en' ? englishBlogPost(article).imageAlt : article.imageAlt?.trim() || `Illustration de l’article : ${pageName}`)
     : service
       ? (locale === 'en' ? englishService(service).imageAlt : service.imageAlt?.trim() || `Illustration du soin : ${pageName}`)
       : isInformationRoute && informationCampaign
         ? (locale === 'en' ? `Thumbnail for ${informationCampaign.titleEn?.trim() || 'practice video'}` : `Miniature de la vidéo : ${informationCampaign.title}`)
-        : query.data.hero.title;
-  return <SiteLocaleProvider locale={locale}><DocumentMetadata title={title} description={description} imageUrl={imageUrl} imageAlt={imageAlt} isArticle={!!article} indexable={indexable} locale={locale} currentPath={path} content={query.data} />{page(query.data)}</SiteLocaleProvider>;
+        : content.hero.title;
+  return <SiteLocaleProvider locale={locale}><DocumentMetadata title={title} description={description} imageUrl={imageUrl} imageAlt={imageAlt} isArticle={!!article} indexable={indexable} locale={locale} currentPath={path} content={content} />{page(content)}</SiteLocaleProvider>;
 }
 
 function DocumentMetadata({ title, description, imageUrl, imageAlt, isArticle = false, indexable = false, locale, currentPath, content }: { title: string; description: string; imageUrl?: string; imageAlt?: string; isArticle?: boolean; indexable?: boolean; locale: SiteLocale; currentPath: string; content: SiteContent }) {
@@ -244,7 +246,8 @@ function DocumentMetadata({ title, description, imageUrl, imageAlt, isArticle = 
     for (const candidate of [imageUrl, import.meta.env.VITE_SITE_OG_IMAGE_URL]) {
       if (!candidate) continue;
       try {
-        const url = new URL(candidate);
+        const normalizedCandidate = candidate.startsWith(`${basePath}/`) ? candidate.slice(basePath.length) : candidate;
+        const url = new URL(normalizedCandidate, canonicalBaseUrl || window.location.origin);
         if (url.protocol === 'https:') {
           socialImage = url.href;
           break;

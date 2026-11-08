@@ -891,7 +891,7 @@ function BlogCard({ post }: { post: BlogPost }) {
 
 export function BlogPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
-  const posts = content.blogPosts.filter((p) => p.published);
+  const posts = content.blogPosts.filter((p) => p.published).sort((a, b) => b.date.localeCompare(a.date));
   return <SiteShell clinic={content.clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Conseils dentaires à Douala', 'Dental information in Douala')} title={uiText(locale, 'Quelques repères pour votre sourire.', 'A few notes for your smile.')} text={uiText(locale, 'Des informations générales sur les soins dentaires et la santé bucco-dentaire, à compléter par les conseils de votre praticien.', 'General information about dental care and oral health. It is not a substitute for advice from your practitioner.')} />
     <section className="wrap section-pad">{posts.length ? <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{posts.map((p) => <BlogCard key={p.id} post={p} />)}</div> : <EmptyInline title={uiText(locale, 'Le carnet prend forme', 'The journal is taking shape')} text={uiText(locale, 'Nos premiers conseils et articles seront publiés prochainement.', 'The first articles and information will be published here soon.')} />}</section><RelatedPages content={content} current="blog" /></main></SiteShell>;
 }
@@ -931,6 +931,11 @@ export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?
     </header>
     <ImageFrame src={post.imageUrl} alt={articleImageAlt(post, locale)} label={uiText(locale, 'Illustration de l’article', 'Article illustration')} indicator={uiText(locale, 'Conseil dentaire', 'Dental information')} details={title} className="mt-8 h-[280px] rounded-md md:mt-10 md:h-[440px]" priority />
     <div className="blog-article-prose mt-10 max-w-none">{blocks.length ? blocks.map((block, index) => block.type === 'heading' ? <h2 key={`${block.type}-${index}`}>{block.text}</h2> : <p key={`${block.type}-${index}`}>{renderArticleText(block.text)}</p>) : <p>{uiText(locale, 'Le contenu de cet article sera bientôt disponible.', 'English translation not yet available.')}</p>}</div>
+    <aside className="mt-12 rounded-2xl border border-[#073e53]/10 bg-white p-6 shadow-[0_12px_40px_rgba(7,1,22,.06)] md:p-8">
+      <h2 className="font-display text-2xl font-medium text-[#073e53]">{uiText(locale, 'Une question sur votre situation ?', 'Have a question about your situation?')}</h2>
+      <p className="mt-2 text-sm leading-6 text-muted-foreground">{uiText(locale, 'Un article ne remplace pas un examen. Contactez le cabinet pour demander un rendez-vous ou poser une question générale.', 'An article cannot replace an examination. Contact the practice to request an appointment or ask a general question.')}</p>
+      <Link href={routeFor('/contact/', locale, content)} className="btn-gold mt-5 inline-flex" data-testid="link-blog-contact">{uiText(locale, 'Contacter le cabinet', 'Contact the practice')}</Link>
+    </aside>
   </article></main></SiteShell>;
 }
 

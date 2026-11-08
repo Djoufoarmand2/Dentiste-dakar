@@ -14,6 +14,16 @@ const appPath = (route) => `${basePath}${String(route).replace(/^\/+/, '')}`;
 const viteEnv = loadEnv('production', process.cwd(), 'VITE_');
 const viteSetting = (name) => process.env[name]?.trim() || viteEnv[name]?.trim();
 const cmsTranslations = JSON.parse(await readFile(new URL('../src/lib/cms-translations.json', import.meta.url), 'utf8'));
+const editorialBlogPosts = JSON.parse(await readFile(new URL('../src/lib/editorial-blog.json', import.meta.url), 'utf8'));
+
+function addEditorialPosts(content) {
+  if (!content || !Array.isArray(content.blogPosts)) return content;
+  const existingSlugs = new Set(content.blogPosts.map((post) => post.slug));
+  return {
+    ...content,
+    blogPosts: [...content.blogPosts, ...editorialBlogPosts.filter((post) => !existingSlugs.has(post.slug))],
+  };
+}
 
 function englishService(service) {
   const fallback = cmsTranslations.services[service.slug] || cmsTranslations.services[service.id] || {};
@@ -104,7 +114,7 @@ if (supabaseUrl && publishableKey) {
       signal: AbortSignal.timeout(10_000),
     });
     if (response.ok) {
-      publicContent = await response.json();
+      publicContent = addEditorialPosts(await response.json());
       for (const post of publicContent.blogPosts ?? []) {
         if (post?.published === true && typeof post.slug === 'string' && /^[a-z0-9-]+$/.test(post.slug)) {
           routes.add(`/blog/${post.slug}/`);
@@ -133,7 +143,8 @@ if (supabaseUrl && publishableKey) {
 
 function httpsImageUrl(value) {
   try {
-    const image = new URL(value || '');
+    if (!origin) return undefined;
+    const image = new URL(value || '', origin);
     return image.protocol === 'https:' ? image.href : undefined;
   } catch {
     return undefined;
@@ -593,7 +604,9 @@ function renderBlogMarkup(route) {
   const canonicalRoute = normalizedPublicRoute(route);
   const english = canonicalRoute.startsWith('/en/');
   const localRoute = (english ? canonicalRoute.replace(/^\/en/, '') || '/' : canonicalRoute).replace(/\/+$/, '') || '/';
-  const posts = (publicContent?.blogPosts ?? []).filter((post) => post.published && /^[a-z0-9-]+$/.test(post.slug || ''));
+  const posts = (publicContent?.blogPosts ?? [])
+    .filter((post) => post.published && /^[a-z0-9-]+$/.test(post.slug || ''))
+    .sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
   if (localRoute === '/blog') {
     const cards = posts.map((post) => {
       const translated = englishBlogPost(post);

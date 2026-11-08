@@ -5,6 +5,7 @@ import { loadEnv } from 'vite';
 const viteEnv = loadEnv('production', process.cwd(), 'VITE_');
 const viteSetting = (name) => process.env[name]?.trim() || viteEnv[name]?.trim();
 const cmsTranslations = JSON.parse(await readFile(new URL('../src/lib/cms-translations.json', import.meta.url), 'utf8'));
+const editorialBlogPosts = JSON.parse(await readFile(new URL('../src/lib/editorial-blog.json', import.meta.url), 'utf8'));
 const englishService = (service) => {
   const fallback = cmsTranslations.services[service.slug] || cmsTranslations.services[service.id] || {};
   return {
@@ -43,6 +44,11 @@ try {
   throw new Error('Site Supabase runtime public-content response was not valid JSON; response details were suppressed.');
 }
 assert.ok(publicContent && typeof publicContent === 'object' && !Array.isArray(publicContent), 'Site Supabase runtime should return a public content object.');
+const existingBlogSlugs = new Set((publicContent.blogPosts || []).map((post) => post.slug));
+publicContent.blogPosts = [
+  ...(publicContent.blogPosts || []),
+  ...editorialBlogPosts.filter((post) => !existingBlogSlugs.has(post.slug)),
+];
 assert.ok(publicContent.clinic && typeof publicContent.clinic === 'object', 'Public content should include clinic information.');
 assert.ok(publicContent.hero && typeof publicContent.hero === 'object', 'Public content should include hero content.');
 for (const collection of ['services', 'team', 'gallery', 'testimonials', 'faqs', 'blogPosts', 'campaigns']) {
