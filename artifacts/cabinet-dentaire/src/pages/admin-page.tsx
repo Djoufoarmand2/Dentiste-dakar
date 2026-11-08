@@ -23,7 +23,7 @@ import { editorialBlogPosts, editorialBlogRelations } from '@/lib/editorial-blog
 import { defaultPrivacyPolicyContent, defaultWhyChooseContent } from '@/lib/site-page-defaults';
 import { Link } from 'wouter';
 
-type ArraySection = 'services' | 'team' | 'gallery' | 'testimonials' | 'faqs' | 'blogPosts' | 'campaigns';
+type ArraySection = 'services' | 'team' | 'gallery' | 'testimonials' | 'faqs' | 'blogPosts' | 'campaigns' | 'socialLinks';
 type AdminSection = ArraySection | 'clinic' | 'hero' | 'whyChoose' | 'privacyPolicy';
 
 const sections: { key: ArraySection; label: string }[] = [
@@ -34,6 +34,7 @@ const sections: { key: ArraySection; label: string }[] = [
   { key: 'faqs', label: 'FAQ' },
   { key: 'blogPosts', label: 'Blog' },
   { key: 'campaigns', label: 'Campagnes' },
+  { key: 'socialLinks', label: 'Réseaux sociaux' },
 ];
 
 const sectionLabels: Record<AdminSection, string> = {
@@ -48,6 +49,7 @@ const sectionLabels: Record<AdminSection, string> = {
   faqs: 'FAQ',
   blogPosts: 'Blog',
   campaigns: 'Campagnes',
+  socialLinks: 'Réseaux sociaux',
 };
 const adminTabs: { key: AdminSection; label: string }[] = [
   { key: 'clinic', label: sectionLabels.clinic },
@@ -65,6 +67,7 @@ const newItem: Record<ArraySection, Record<string, unknown>> = {
   faqs: { id: '', question: '', answer: '', questionEn: '', answerEn: '' },
   blogPosts: { id: '', title: '', slug: '', excerpt: '', content: '', imageUrl: '', author: '', date: new Date().toISOString().slice(0, 10), published: false, titleEn: '', slugEn: '', excerptEn: '', contentEn: '', authorEn: '', imageAlt: '', imageAltEn: '', relatedServiceSlugs: '', relatedArticleSlugs: '' },
   campaigns: { id: '', title: '', description: '', mediaType: 'image', imageUrl: '', videoUrl: null, active: false, titleEn: '', descriptionEn: '', publishedAt: '', transcript: '', transcriptEn: '' },
+  socialLinks: { id: '', platform: 'facebook', label: '', url: '', logoUrl: '', imageAlt: '' },
 };
 
 const fieldLabels: Record<string, string> = {
@@ -77,6 +80,7 @@ const fieldLabels: Record<string, string> = {
   question: 'Question', answer: 'Réponse', excerpt: 'Chapô', content: 'Texte de l’article',
   author: 'Auteur', date: 'Date', published: 'Publié', mediaType: 'Type de média',
   videoUrl: 'Lien de la vidéo', active: 'Campagne active',
+  platform: 'Plateforme', label: 'Libellé', url: 'Lien du profil',
   eyebrowEn: 'Accroche · anglais', titleEn: 'Titre · anglais', descriptionEn: 'Description · anglais',
   primaryActionEn: 'Action principale · anglais', secondaryActionEn: 'Action secondaire · anglais',
   slugEn: 'Adresse courte · anglais', summaryEn: 'Résumé · anglais', purpose: 'À quoi sert ce soin ?',
@@ -119,6 +123,7 @@ function ensureTranslationFields(content: SiteContent): SiteContent {
   ];
   return {
     ...content,
+    socialLinks: content.socialLinks ?? [],
     editorialBlogLibraryManaged: true,
     clinic: { ...content.clinic, openingHoursEn: content.clinic.openingHoursEn ?? '' },
     hero: {
@@ -199,6 +204,7 @@ function missingEnglishContent(content: SiteContent): TranslationGap[] {
     faqs: [['question', 'questionEn'], ['answer', 'answerEn']],
     blogPosts: [['title', 'titleEn'], ['slug', 'slugEn'], ['excerpt', 'excerptEn'], ['content', 'contentEn'], ['author', 'authorEn'], ['imageAlt', 'imageAltEn']],
     campaigns: [['title', 'titleEn'], ['description', 'descriptionEn'], ['transcript', 'transcriptEn']],
+    socialLinks: [],
   };
 
   for (const section of ['clinic', 'hero', 'whyChoose', 'privacyPolicy'] as const) {
@@ -442,6 +448,7 @@ export default function AdminPage() {
           {translationGaps.length > 16 && <p className="mt-3 text-xs text-muted-foreground">Les autres éléments sont signalés dans leurs onglets respectifs.</p>}
         </section>}
         {section === 'testimonials' && <div className="mb-5 rounded-2xl border border-[#b94f5b]/40 bg-[#f7e9ec] p-4 text-xs leading-5 text-[#070116]" data-testid="notice-admin-sample-content"><b>Consentement :</b> les témoignages historiques du CMS ne comportent pas de preuve de consentement enregistrée. Faites confirmer l’autorisation par le cabinet avant tout transfert ou nouvelle publication. Les exemples fictifs identifiés sont masqués du site public.</div>}
+         {section === 'socialLinks' && <p className="mb-5 rounded-2xl border border-border bg-card p-4 text-sm leading-6 text-muted-foreground" data-testid="notice-social-links-help">Ajoutez les profils officiels du cabinet. Si le champ logo est vide, le site affiche l’icône intégrée correspondant à la plateforme. Les changements deviennent visibles après publication.</p>}
         <AdminAppointmentsPanel />
         {section === 'testimonials' && <div className="mb-8"><AdminReviewsPanel /></div>}
         {(section === 'clinic' || section === 'hero' || section === 'whyChoose' || section === 'privacyPolicy') && <div id={`admin-singleton-${section}`} className="grid gap-4 md:grid-cols-2" data-testid={`admin-singleton-${section}`}>
@@ -454,7 +461,7 @@ export default function AdminPage() {
             <p className="mt-2 text-sm leading-6 text-muted-foreground">Gérez ici les témoignages déjà présents dans le contenu du site. Les avis du formulaire et ceux publiés par le cabinet se gèrent dans la liste ci-dessus. Après confirmation du consentement, ajoutez l’ancien témoignage dans la liste d’avis gérés ci-dessus, puis retirez son entrée CMS. Les doublons temporaires sont masqués sur le site public.</p>
           </section>}
           {entries.map((item, index) => <section key={String(item.id ?? index)} id={`admin-entry-${section}-${String(item.id ?? index)}`} className="rounded-[22px] border border-border bg-card p-5 md:p-6" data-testid={`admin-entry-${section}-${String(item.id ?? index)}`}>
-            <div className="mb-5 flex items-center justify-between border-b border-border pb-4"><div><p className="text-[9px] uppercase tracking-[.18em] text-muted-foreground">{sectionLabels[section]} · {String(item.id || `Élément ${index + 1}`)}</p><h3 className="mt-1 font-display text-xl">{String(item.title || item.name || item.question || item.alt || `Élément ${index + 1}`)}</h3></div><button type="button" onClick={() => removeItem(index)} disabled={busy || (section === 'privacyPolicy' && item.required === true)} title={section === 'privacyPolicy' && item.required === true ? 'Cette rubrique est nécessaire à la page de confidentialité.' : 'Supprimer cet élément'} aria-label="Supprimer cet élément" className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-30" data-testid={`button-remove-${section}-${index}`}><Trash2 size={16} /></button></div>
+             <div className="mb-5 flex items-center justify-between border-b border-border pb-4"><div><p className="text-[9px] uppercase tracking-[.18em] text-muted-foreground">{sectionLabels[section]} · {String(item.id || `Élément ${index + 1}`)}</p><h3 className="mt-1 font-display text-xl">{String(item.title || item.name || item.label || item.question || item.alt || `Élément ${index + 1}`)}</h3></div><button type="button" onClick={() => removeItem(index)} disabled={busy || (section === 'privacyPolicy' && item.required === true)} title={section === 'privacyPolicy' && item.required === true ? 'Cette rubrique est nécessaire à la page de confidentialité.' : 'Supprimer cet élément'} aria-label="Supprimer cet élément" className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-30" data-testid={`button-remove-${section}-${index}`}><Trash2 size={16} /></button></div>
              <div className="grid gap-4 md:grid-cols-2">{Object.entries(item).filter(([key]) => !(section === 'privacyPolicy' && key === 'required')).map(([key, value]) => {
                const videoDateField = section === 'campaigns' && key === 'publishedAt' && item.mediaType === 'video';
                return <AdminField
@@ -465,9 +472,11 @@ export default function AdminPage() {
                  wide={['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'body', 'transcript', 'transcriptEn', 'relatedServiceSlugs', 'relatedArticleSlugs'].includes(key)}
                  protectedUrls={protectedUrls}
                  disabled={busy}
-                 required={videoDateField && item.active === true}
+                  required={videoDateField && item.active === true || section === 'socialLinks' && ['id', 'label', 'url'].includes(key)}
                  helperText={videoDateField
                    ? 'Utilisez la date réelle de publication de la vidéo sur YouTube. Obligatoire avant publication si la vidéo est active.'
+                    : section === 'socialLinks' && key === 'logoUrl'
+                      ? 'Facultatif : si le logo est vide, le site affiche automatiquement l’icône intégrée de la plateforme.'
                    : key === 'relatedServiceSlugs'
                      ? 'Saisissez les slugs de soins séparés par des virgules ; seuls les soins existants seront affichés.'
                      : key === 'relatedArticleSlugs'
@@ -492,12 +501,14 @@ function AdminField({ name, value, onChange, wide = false, protectedUrls, disabl
   const isBool = typeof value === 'boolean';
   const isLong = wide || ['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'purpose', 'procedureSteps', 'descriptionEn', 'biographyEn', 'answerEn', 'contentEn', 'excerptEn', 'purposeEn', 'procedureStepsEn', 'quoteEn', 'relatedServiceSlugs', 'relatedArticleSlugs'].includes(name);
   const isSelect = name === 'mediaType';
+  const isSocialPlatform = name === 'platform';
   const inputType = name === 'publishedAt' ? 'date' : name === 'rating' ? 'number' : name === 'date' ? 'date' : name.toLowerCase().includes('url') ? 'url' : 'text';
   const inputValue = name === 'publishedAt' && typeof value === 'string' ? value.slice(0, 10) : String(value ?? '');
   return <label className={`block text-xs font-medium text-foreground/80 ${wide ? 'md:col-span-2' : ''}`} data-testid={`field-${name}`}>
     <span className="mb-2 block">{label}</span>
     {isBool ? <select disabled={disabled} className="editor-input" value={String(value)} onChange={(event) => onChange(event.target.value)} data-testid={`input-${name}`}><option value="true">Oui</option><option value="false">Non</option></select>
-      : isSelect ? <select disabled={disabled} className="editor-input" value={String(value ?? 'image')} onChange={(event) => onChange(event.target.value)} data-testid={`input-${name}`}><option value="image">Image</option><option value="video">Vidéo</option></select>
+       : isSocialPlatform ? <select disabled={disabled} className="editor-input" value={String(value ?? 'other')} onChange={(event) => onChange(event.target.value)} data-testid={`input-${name}`}><option value="facebook">Facebook</option><option value="instagram">Instagram</option><option value="tiktok">TikTok</option><option value="youtube">YouTube</option><option value="linkedin">LinkedIn</option><option value="x">X</option><option value="whatsapp">WhatsApp</option><option value="other">Autre</option></select>
+       : isSelect ? <select disabled={disabled} className="editor-input" value={String(value ?? 'image')} onChange={(event) => onChange(event.target.value)} data-testid={`input-${name}`}><option value="image">Image</option><option value="video">Vidéo</option></select>
       : isLong ? <textarea disabled={disabled} rows={name === 'content' ? 8 : 4} className="editor-input resize-y" value={String(value ?? '')} onChange={(event) => onChange(event.target.value)} placeholder={name.toLowerCase().includes('url') ? 'https://…' : ''} data-testid={`input-${name}`} />
       : <input disabled={disabled} required={required} aria-required={required || undefined} className="editor-input" type={inputType} min={name === 'rating' ? 1 : undefined} max={name === 'rating' ? 5 : undefined} value={inputValue} onChange={(event) => onChange(event.target.value)} placeholder={name.toLowerCase().includes('url') ? 'https://…' : ''} data-testid={`input-${name}`} />}
     {helperText && <span className="mt-2 block text-[11px] leading-5 text-muted-foreground">{helperText}</span>}

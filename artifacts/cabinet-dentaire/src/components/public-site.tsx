@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from 'react';
 import {
-  ArrowLeft, ArrowRight, ChevronDown, Clock3, Image as ImageIcon, MapPin, Menu,
+  ArrowLeft, ArrowRight, ChevronDown, Clock3, Image as ImageIcon, Link2, Linkedin, Mail, MapPin, Menu,
   MessageCircle, Phone, Quote, X,
 } from 'lucide-react';
-import type { BlogPost, Campaign, ServiceItem, SiteContent, Testimonial } from '@workspace/api-client-react';
+import type { BlogPost, Campaign, ServiceItem, SiteContent, SocialLink, Testimonial } from '@workspace/api-client-react';
+import { SiFacebook, SiInstagram, SiTiktok, SiWhatsapp, SiX, SiYoutube } from 'react-icons/si';
 import { Link, useLocation } from 'wouter';
 import { AppointmentRequestForm } from './appointment-request-form';
 import { ReviewSubmissionForm } from './review-submission-form';
@@ -41,6 +42,61 @@ const partnerPhotoId = 'photo-clinique-la-bienveillance';
 const partnerSite = 'https://cliniquelabienveillance.com';
 const mapsDirections = 'https://www.google.com/maps/place/Clinique+La+Bienveillance/@4.0307524,9.7258638,17z/data=!4m6!3m5!1s0x10610d2ffb339343:0xcc207a6138777c30!8m2!3d4.0307524!4d9.7307347!16s%2Fg%2F11fltnv9l8';
 const mapEmbedUrl = 'https://maps.google.com/maps?q=4.0307524%2C9.7307347&z=17&output=embed';
+
+function PlatformIcon({ platform, size = 18 }: { platform: SocialLink['platform']; size?: number }) {
+  switch (platform) {
+    case 'facebook': return <SiFacebook size={size} aria-hidden="true" />;
+    case 'instagram': return <SiInstagram size={size} aria-hidden="true" />;
+    case 'tiktok': return <SiTiktok size={size} aria-hidden="true" />;
+    case 'youtube': return <SiYoutube size={size} aria-hidden="true" />;
+    case 'linkedin': return <Linkedin size={size} aria-hidden="true" />;
+    case 'x': return <SiX size={size} aria-hidden="true" />;
+    case 'whatsapp': return <SiWhatsapp size={size} aria-hidden="true" />;
+    default: return <Link2 size={size} aria-hidden="true" />;
+  }
+}
+
+function safeExternalUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function safeLogoUrl(value?: string) {
+  if (!value?.trim()) return undefined;
+  if (value.startsWith('/') && !value.startsWith('//')) return value;
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.href : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function SocialLinks({ links, className = '' }: { links?: SocialLink[]; className?: string }) {
+  const locale = useSiteLocale();
+  const validLinks = (links ?? []).flatMap((link) => {
+    const href = safeExternalUrl(link.url);
+    return href ? [{ ...link, href }] : [];
+  });
+  if (!validLinks.length) return null;
+  return <nav aria-label={uiText(locale, 'Réseaux sociaux', 'Social networks')} className={className} data-testid="social-links">
+    <ul className="flex flex-wrap items-center gap-2">
+      {validLinks.map((link) => {
+        const logo = safeLogoUrl(link.logoUrl);
+        return <li key={link.id}>
+          <a href={link.href} target="_blank" rel="noopener noreferrer" aria-label={`${link.label} · ${uiText(locale, 'Ouvre dans un nouvel onglet', 'opens in a new tab')}`} title={link.label} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/20 px-3 text-xs text-white/85 transition-colors hover:border-white/50 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" data-testid={`link-social-${link.id}`}>
+            {logo ? <img src={logo} alt={link.imageAlt?.trim() || ''} loading="lazy" className="h-4 w-4 object-contain" /> : <PlatformIcon platform={link.platform} size={16} />}
+            <span>{link.label}</span>
+          </a>
+        </li>;
+      })}
+    </ul>
+  </nav>;
+}
 
 export const safeName = (name?: string) => name?.trim() || 'Cabinet Sourire Serein';
 export const safeCity = (city?: string) => city?.trim() || 'Douala';
@@ -199,7 +255,7 @@ export function Footer({ clinic, content }: { clinic?: SiteContent['clinic']; co
       <div><BrandLockup clinic={clinic} /><p className="mt-5 max-w-sm text-sm leading-7 text-white/65">{uiText(locale, 'Un lieu de soin où l’on prend le temps de vous écouter, de vous expliquer et de vous accompagner.', 'A place for care where we take time to listen, explain and support you.')}</p></div>
       <div><p className="footer-title">{uiText(locale, 'Navigation', 'Explore')}</p><ul className="space-y-2 text-sm text-white/70">{navItems.map(([label, href]) => <li key={href}><Link href={routeFor(href, locale, content)} className="hover:text-[#f0a0a6]" data-testid={`footer-nav-${href.slice(1)}`}>{label}</Link></li>)}<li><Link href={routeFor('/informations', locale)} className="hover:text-[#f0a0a6]" data-testid="footer-nav-informations">{uiText(locale, 'Informations', 'Updates')}</Link></li><li><Link href={routeFor('/confidentialite', locale)} className="hover:text-[#f0a0a6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" data-testid="footer-nav-confidentialite">{uiText(locale, 'Confidentialité', 'Privacy')}</Link></li></ul></div>
       <div><p className="footer-title">{uiText(locale, 'Nous trouver', 'Find us')}</p><p className="text-sm leading-7 text-white/70">{clinic?.address ? (locale === 'en' ? `Address supplied by the practice (not translated): ${clinic.address}` : clinic.address) : uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon')}<br />{safeCity(clinic?.city)}</p><a href={clinic?.mapUrl || mapsDirections} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs text-[#f0a0a6] hover:text-white" data-testid="link-footer-map">{uiText(locale, 'Itinéraire', 'Directions')} <ArrowRight size={14} /></a><a href={partnerSite} target="_blank" rel="noopener noreferrer" className="mt-3 block text-xs text-white/60 hover:text-white">{uiText(locale, 'Établissement partenaire : La Bienveillance', 'Partner clinic: La Bienveillance')}</a></div>
-      <div><p className="footer-title">{uiText(locale, 'Contact', 'Contact')}</p><a href={`tel:${clinic?.phone || ''}`} className="block text-base font-medium" data-testid="link-footer-phone">{clinic?.phone || uiText(locale, 'Contactez-nous', 'Contact us')}</a><a href={`mailto:${clinic?.email || ''}`} className="mt-2 block text-sm text-white/70" data-testid="link-footer-email">{clinic?.email || uiText(locale, 'Adresse à renseigner', 'Email address to be added')}</a><p className="mt-4 whitespace-pre-line text-xs leading-6 text-white/60">{clinic ? hoursLabel(clinic, locale) : uiText(locale, 'Horaires à renseigner', 'Practice hours to be added')}</p></div>
+      <div><p className="footer-title">{uiText(locale, 'Contact', 'Contact')}</p><a href={`tel:${clinic?.phone || ''}`} className="block text-base font-medium" data-testid="link-footer-phone">{clinic?.phone || uiText(locale, 'Contactez-nous', 'Contact us')}</a><a href={`mailto:${clinic?.email || ''}`} className="mt-2 block text-sm text-white/70" data-testid="link-footer-email">{clinic?.email || uiText(locale, 'Adresse à renseigner', 'Email address to be added')}</a><p className="mt-4 whitespace-pre-line text-xs leading-6 text-white/60">{clinic ? hoursLabel(clinic, locale) : uiText(locale, 'Horaires à renseigner', 'Practice hours to be added')}</p><SocialLinks links={content?.socialLinks} className="mt-5" /></div>
     </div>
     <div className="border-t border-white/10">
       <div className="mx-auto flex max-w-[1240px] flex-col justify-between gap-3 px-5 py-5 text-[11px] text-white/75 sm:flex-row sm:flex-wrap sm:items-center md:px-8">
@@ -898,6 +954,7 @@ export function BlogPage({ content }: { content: SiteContent }) {
 
 export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?: string }) {
   const locale = useSiteLocale();
+  const [copyState, setCopyState] = useState<'idle' | 'success' | 'failure'>('idle');
   const post = content.blogPosts.find((c) => (c.slug === slug || c.slugEn === slug || englishBlogPost(c).slug === slug) && c.published);
   if (!post) return <SiteShell clinic={content.clinic} content={content}><main className="mx-auto max-w-3xl px-5 py-24 text-center"><p className="eyebrow">{uiText(locale, 'Article introuvable', 'Article not found')}</p><h1 className="mt-4 font-display text-4xl font-semibold text-[#073e53]">{uiText(locale, 'Ce carnet n’a pas encore cette page.', 'This article is not available.')}</h1><div className="mt-7"><ActionLink href="/blog" testId="link-article-back">{uiText(locale, 'Retour au carnet', 'Back to articles')}</ActionLink></div></main></SiteShell>;
   const translated = englishBlogPost(post);
@@ -916,6 +973,47 @@ export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?
   const title = cmsText(locale, post.title, translated.title);
   const excerpt = cmsText(locale, post.excerpt, translated.excerpt);
   const author = cmsText(locale, post.author, translated.author);
+  const articleUrl = typeof window === 'undefined' ? '' : (() => {
+    const current = new URL(window.location.href);
+    current.search = '';
+    current.hash = '';
+    return current.href;
+  })();
+  const shareTitle = encodeURIComponent(title);
+  const shareUrl = encodeURIComponent(articleUrl);
+  const shareLinks = [
+    { id: 'whatsapp', label: 'WhatsApp', href: `https://wa.me/?text=${encodeURIComponent(`${title} ${articleUrl}`)}`, icon: <SiWhatsapp size={17} aria-hidden="true" /> },
+    { id: 'facebook', label: 'Facebook', href: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`, icon: <SiFacebook size={17} aria-hidden="true" /> },
+    { id: 'gmail', label: 'Gmail', href: `https://mail.google.com/mail/?view=cm&fs=1&su=${shareTitle}&body=${shareUrl}`, icon: <Mail size={17} aria-hidden="true" /> },
+  ];
+  async function copyArticleUrl() {
+    try {
+      if (!articleUrl) throw new Error('Article URL unavailable');
+      if (navigator.clipboard?.writeText) {
+        try {
+          await navigator.clipboard.writeText(articleUrl);
+          setCopyState('success');
+          return;
+        } catch {
+          // Fall back for browsers that deny clipboard access.
+        }
+      }
+      const field = document.createElement('textarea');
+      field.value = articleUrl;
+      field.setAttribute('readonly', '');
+      field.style.position = 'fixed';
+      field.style.opacity = '0';
+      field.style.left = '-9999px';
+      document.body.appendChild(field);
+      field.select();
+      const copied = document.execCommand('copy');
+      field.remove();
+      if (!copied) throw new Error('Clipboard unavailable');
+      setCopyState('success');
+    } catch {
+      setCopyState('failure');
+    }
+  }
   const relatedServiceSlugs = new Set((post.relatedServiceSlugs ?? '').split(/[,\n]+/).map((value) => value.trim()).filter(Boolean));
   const relatedArticleSlugs = new Set((post.relatedArticleSlugs ?? '').split(/[,\n]+/).map((value) => value.trim()).filter(Boolean));
   const relatedServices = content.services.filter((service) => relatedServiceSlugs.has(service.slug));
@@ -925,7 +1023,10 @@ export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?
     && (relatedArticleSlugs.has(article.slug) || relatedArticleSlugs.has(article.slugEn ?? '') || relatedArticleSlugs.has(englishBlogPost(article).slug)),
   );
   return <SiteShell clinic={content.clinic} content={content}><main><article className="blog-editorial mx-auto max-w-4xl px-5 pb-24 pt-12 md:px-8 md:pt-16">
-    <Link href={routeFor('/blog/', locale, content)} className="inline-flex items-center gap-2 text-xs font-semibold text-accent" data-testid="link-back-blog"><ArrowLeft size={14} /> {uiText(locale, 'Tous les articles', 'All articles')}</Link>
+    <section className="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#073e53]/10 bg-[#f8f8f2] px-5 py-4" aria-label={uiText(locale, 'Navigation des articles', 'Article navigation')} data-testid="article-back-top">
+      <div><p className="text-[9px] font-semibold uppercase tracking-[.18em] text-accent">{uiText(locale, 'Le carnet du cabinet', 'Practice journal')}</p><p className="mt-1 text-xs text-muted-foreground">{uiText(locale, 'Poursuivre la lecture à votre rythme.', 'Continue reading at your own pace.')}</p></div>
+      <Link href={routeFor('/blog/', locale, content)} className="inline-flex min-h-11 items-center gap-2 rounded-md border border-[#073e53]/20 bg-white px-4 text-xs font-semibold text-[#073e53] hover:border-accent hover:text-accent" data-testid="link-back-blog"><ArrowLeft size={15} /> {uiText(locale, 'Tous les articles', 'All articles')}</Link>
+    </section>
     <header className="blog-editorial-header mt-10">
       <h1 className="blog-editorial-title">{title}</h1>
       <p className="blog-editorial-excerpt">{excerpt}</p>
@@ -939,6 +1040,17 @@ export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?
     </header>
     <ImageFrame src={post.imageUrl} alt={articleImageAlt(post, locale)} label={uiText(locale, 'Illustration de l’article', 'Article illustration')} indicator={uiText(locale, 'Conseil dentaire', 'Dental information')} details={title} className="mt-8 h-[280px] rounded-md md:mt-10 md:h-[440px]" priority />
     <div className="blog-article-prose mt-10 max-w-none">{blocks.length ? blocks.map((block, index) => block.type === 'heading' ? <h2 key={`${block.type}-${index}`}>{block.text}</h2> : <p key={`${block.type}-${index}`}>{renderArticleText(block.text)}</p>) : <p>{uiText(locale, 'Le contenu de cet article sera bientôt disponible.', 'English translation not yet available.')}</p>}</div>
+    <section className="mt-10 rounded-2xl border border-[#073e53]/10 bg-white p-6 shadow-[0_12px_40px_rgba(7,1,22,.05)] md:p-8" aria-labelledby="article-share-title" data-testid="article-share-section">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div><p className="text-[10px] font-semibold uppercase tracking-[.18em] text-accent">{uiText(locale, 'À partager', 'Pass it along')}</p><h2 id="article-share-title" className="mt-2 font-display text-2xl font-medium text-[#073e53]">{uiText(locale, 'Transmettre cet article', 'Share this article')}</h2></div>
+        <p className="max-w-sm text-sm leading-6 text-muted-foreground">{uiText(locale, 'Une information utile peut aussi aider quelqu’un autour de vous.', 'Useful information can help someone around you, too.')}</p>
+      </div>
+      <div className="mt-5 flex flex-wrap gap-2" data-testid="article-share-actions">
+        {shareLinks.map((share, index) => <a key={share.id} href={share.href} target="_blank" rel="noopener noreferrer" aria-label={`${uiText(locale, 'Partager sur', 'Share on')} ${share.label}`} className="share-action inline-flex min-h-11 items-center gap-2 rounded-full border border-[#073e53]/15 bg-[#f8f8f2] px-4 text-xs font-semibold text-[#073e53] hover:-translate-y-0.5 hover:border-accent hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" style={{ animationDelay: `${index * 70}ms` }} data-testid={`button-share-${share.id}`}>{share.icon}<span>{share.label}</span></a>)}
+        <button type="button" onClick={() => void copyArticleUrl()} aria-label={uiText(locale, 'Copier le lien de cet article', 'Copy this article link')} className="share-action inline-flex min-h-11 items-center gap-2 rounded-full border border-[#073e53]/15 bg-[#f8f8f2] px-4 text-xs font-semibold text-[#073e53] hover:-translate-y-0.5 hover:border-accent hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" style={{ animationDelay: '210ms' }} data-testid="button-share-copy"><Link2 size={16} aria-hidden="true" />{uiText(locale, 'Copier le lien', 'Copy link')}</button>
+      </div>
+      {copyState !== 'idle' && <p className={`mt-4 text-xs ${copyState === 'success' ? 'text-[#466536]' : 'text-[#943d35]'}`} role={copyState === 'failure' ? 'alert' : 'status'} aria-live="polite" data-testid="status-copy-article-url">{copyState === 'success' ? uiText(locale, 'Lien copié dans le presse-papiers.', 'Link copied to the clipboard.') : uiText(locale, 'Impossible de copier le lien. Vous pouvez copier l’adresse depuis la barre du navigateur.', 'Could not copy the link. You can copy the address from your browser bar.')}</p>}
+    </section>
     {(relatedServices.length > 0 || relatedArticles.length > 0) && <section className="mt-12 rounded-2xl border border-[#073e53]/10 bg-[#f8f8f2] p-6 md:p-8" aria-labelledby="related-reading-title" data-testid="blog-related-links">
       <p className="text-[10px] font-semibold uppercase tracking-[.18em] text-accent">{uiText(locale, 'Pour continuer', 'Continue reading')}</p>
       <h2 id="related-reading-title" className="mt-2 font-display text-2xl font-medium text-[#073e53]">{uiText(locale, 'Soins et conseils associés', 'Related care and advice')}</h2>
@@ -967,6 +1079,10 @@ export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?
       <p className="mt-2 text-sm leading-6 text-muted-foreground">{uiText(locale, 'Un article ne remplace pas un examen. Contactez le cabinet pour demander un rendez-vous ou poser une question générale.', 'An article cannot replace an examination. Contact the practice to request an appointment or ask a general question.')}</p>
       <Link href={routeFor('/contact/', locale, content)} className="btn-gold mt-5 inline-flex" data-testid="link-blog-contact">{uiText(locale, 'Contacter le cabinet', 'Contact the practice')}</Link>
     </aside>
+    <section className="mt-12 flex flex-col justify-between gap-4 border-t border-[#073e53]/15 pt-8 sm:flex-row sm:items-center" aria-label={uiText(locale, 'Retour à la liste des articles', 'Return to the articles list')} data-testid="article-back-bottom">
+      <div><p className="font-display text-xl font-medium text-[#073e53]">{uiText(locale, 'La suite de votre lecture vous attend.', 'More reading is waiting for you.')}</p><p className="mt-1 text-sm text-muted-foreground">{uiText(locale, 'Retrouvez tous les conseils et informations du cabinet.', 'Browse all the practice’s advice and information.')}</p></div>
+      <Link href={routeFor('/blog/', locale, content)} className="inline-flex min-h-11 items-center gap-2 rounded-md bg-[#073e53] px-5 text-xs font-semibold text-white hover:bg-accent" data-testid="link-back-blog-bottom"><ArrowLeft size={15} /> {uiText(locale, 'Retour aux articles', 'Back to articles')}</Link>
+    </section>
   </article></main></SiteShell>;
 }
 
@@ -1027,6 +1143,10 @@ export function InformationPage({ content }: { content: SiteContent }) {
 export function ContactPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
   const clinic = content.clinic;
+  const [quickQuestion, setQuickQuestion] = useState('');
+  const whatsappDigits = clinic.phone.replace(/\D/g, '') || '237677873442';
+  const genericQuestion = uiText(locale, 'Bonjour, j’ai une question générale sur le cabinet ou son fonctionnement.', 'Hello, I have a general question about the practice or how it works.');
+  const whatsappQuestionUrl = `https://wa.me/${whatsappDigits}?text=${encodeURIComponent(quickQuestion.trim() || genericQuestion)}`;
   const row = (icon: ReactNode, label: string, value: ReactNode) => <><span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-white/10 text-[#f0a0a6]">{icon}</span><span><b className="block font-semibold">{label}</b><span className="mt-1 block whitespace-pre-line text-white/70">{value}</span></span></>;
   return <SiteShell clinic={clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Prenons le temps d’échanger', 'Let’s talk')} title={uiText(locale, 'Nous sommes tout près.', 'We are here to help.')} text={uiText(locale, 'Un rendez-vous, une question, un besoin d’orientation ? Contactez-nous comme vous le souhaitez.', 'Have a question or need information about an appointment? Contact the practice in the way that suits you.')} />
     <section className="wrap section-pad grid gap-7 md:grid-cols-[.8fr_1.2fr]">
@@ -1035,12 +1155,39 @@ export function ContactPage({ content }: { content: SiteContent }) {
         <a href={`mailto:${clinic.email}`} className="flex items-start gap-4" data-testid="link-contact-email">{row(<MessageCircle size={17} />, uiText(locale, 'Courriel', 'Email'), clinic.email || uiText(locale, 'À renseigner', 'To be added'))}</a>
         <div className="flex items-start gap-4" data-testid="text-contact-address">{row(<MapPin size={17} />, uiText(locale, 'Adresse', 'Address'), clinic.address ? (locale === 'en' ? `Address supplied by the practice (not translated): ${clinic.address}` : clinic.address) : uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon'))}</div>
         <div className="flex items-start gap-4 whitespace-pre-line" data-testid="text-contact-hours">{row(<Clock3 size={17} />, uiText(locale, 'Horaires', 'Hours'), hoursLabel(clinic, locale))}</div>
+         <SocialLinks links={content.socialLinks} className="border-t border-white/15 pt-5" />
       </div><div className="mt-9"><BookButton clinic={clinic} testId="button-contact-book">{uiText(locale, 'Demander un rendez-vous', 'Request an appointment')}</BookButton></div></div>
       <div className="card-ref p-6 md:p-9">
         <p className="eyebrow">{uiText(locale, 'À votre rythme', 'At your pace')}</p>
         <h2 className="mt-2 font-display text-2xl font-semibold text-[#073e53] md:text-3xl">{uiText(locale, 'Faire une demande de rendez-vous', 'Send an appointment request')}</h2>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">{uiText(locale, 'L’équipe vous recontactera pour convenir d’un créneau adapté.', 'The team will contact you to discuss a suitable time.')}</p>
         <AppointmentRequestForm phone={clinic.phone} />
+      </div>
+    </section>
+    <section className="wrap pb-14" aria-labelledby="quick-question-title" data-testid="contact-quick-question">
+      <div className="flex flex-col justify-between gap-5 rounded-2xl border border-[#073e53]/10 bg-[#f8f8f2] p-6 md:flex-row md:items-center md:p-8">
+        <div className="max-w-2xl">
+          <p className="text-[10px] font-semibold uppercase tracking-[.2em] text-accent">{uiText(locale, 'Un échange simple', 'A simple conversation')}</p>
+          <h2 id="quick-question-title" className="mt-2 font-display text-2xl font-semibold text-[#073e53]">{uiText(locale, 'Une question rapide ?', 'A quick question?')}</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">{uiText(locale, 'Écrivez-nous sur WhatsApp pour une question générale sur le cabinet ou son fonctionnement. Le message proposé ne demande aucune information personnelle.', 'Message us on WhatsApp with a general question about the practice or how it works. The suggested message does not request personal information.')}</p>
+          <p className="mt-3 text-xs font-medium leading-5 text-[#8a3440]">{uiText(locale, 'Ce canal n’est pas destiné aux urgences. N’envoyez pas d’informations cliniques ou sensibles par WhatsApp.', 'This channel is not for emergencies. Do not send clinical or sensitive information over WhatsApp.')}</p>
+        </div>
+        <div className="w-full max-w-xl shrink-0 space-y-3 md:max-w-sm">
+          <label className="block text-xs font-semibold text-[#073e53]" htmlFor="quick-question-message">{uiText(locale, 'Votre question (facultatif)', 'Your question (optional)')}</label>
+          <textarea
+            id="quick-question-message"
+            value={quickQuestion}
+            onChange={(event) => setQuickQuestion(event.target.value)}
+            maxLength={500}
+            rows={3}
+            placeholder={uiText(locale, 'Écrivez une question générale pour le cabinet…', 'Write a general question for the practice…')}
+            className="w-full resize-y rounded-xl border border-[#073e53]/15 bg-white p-3 text-sm leading-6 text-[#073e53] placeholder:text-muted-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            aria-describedby="quick-question-privacy"
+            data-testid="input-contact-quick-question"
+          />
+          <p id="quick-question-privacy" className="text-[11px] leading-5 text-muted-foreground">{uiText(locale, 'Le texte sera préparé dans WhatsApp; rien n’est envoyé depuis cette page.', 'Your text is prepared in WhatsApp; nothing is sent from this page.')}</p>
+          <a href={whatsappQuestionUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-md bg-[#073e53] px-5 text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transform-none motion-reduce:transition-none" aria-label={uiText(locale, `Ouvrir WhatsApp pour une question générale au ${clinic.phone}`, `Open WhatsApp with a general question for ${clinic.phone}`)} data-testid="button-contact-quick-question"><SiWhatsapp size={19} aria-hidden="true" />{uiText(locale, 'Continuer dans WhatsApp', 'Continue in WhatsApp')}<ArrowRight size={15} /></a>
+        </div>
       </div>
     </section>
     <section className="wrap pb-16">

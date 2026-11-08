@@ -24,6 +24,9 @@ export const getSiteContentResponseTestimonialsItemRatingMax = 5;
 
 
 
+
+
+
 export const GetSiteContentResponse = zod.object({
   "clinic": zod.object({
   "name": zod.string(),
@@ -166,6 +169,14 @@ export const GetSiteContentResponse = zod.object({
   "relatedArticleSlugs": zod.string().optional()
 })),
   "editorialBlogLibraryManaged": zod.boolean().optional(),
+  "socialLinks": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "label": zod.string().min(1),
+  "url": zod.string().min(1),
+  "logoUrl": zod.string().optional(),
+  "imageAlt": zod.string().optional()
+})).optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -188,6 +199,9 @@ export const GetSiteContentResponse = zod.object({
  * @summary Replace website content
  */
 export const updateSiteContentBodyTestimonialsItemRatingMax = 5;
+
+
+
 
 
 
@@ -333,6 +347,14 @@ export const UpdateSiteContentBody = zod.object({
   "relatedArticleSlugs": zod.string().optional()
 })),
   "editorialBlogLibraryManaged": zod.boolean().optional(),
+  "socialLinks": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "label": zod.string().min(1),
+  "url": zod.string().min(1),
+  "logoUrl": zod.string().optional(),
+  "imageAlt": zod.string().optional()
+})).optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -350,6 +372,9 @@ export const UpdateSiteContentBody = zod.object({
 })
 
 export const updateSiteContentResponseTestimonialsItemRatingMax = 5;
+
+
+
 
 
 
@@ -495,6 +520,14 @@ export const UpdateSiteContentResponse = zod.object({
   "relatedArticleSlugs": zod.string().optional()
 })),
   "editorialBlogLibraryManaged": zod.boolean().optional(),
+  "socialLinks": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "label": zod.string().min(1),
+  "url": zod.string().min(1),
+  "logoUrl": zod.string().optional(),
+  "imageAlt": zod.string().optional()
+})).optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -732,6 +765,9 @@ export const getAdminContentResponseContentTestimonialsItemRatingMax = 5;
 
 
 
+
+
+
 export const GetAdminContentResponse = zod.object({
   "content": zod.object({
   "clinic": zod.object({
@@ -875,6 +911,14 @@ export const GetAdminContentResponse = zod.object({
   "relatedArticleSlugs": zod.string().optional()
 })),
   "editorialBlogLibraryManaged": zod.boolean().optional(),
+  "socialLinks": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "label": zod.string().min(1),
+  "url": zod.string().min(1),
+  "logoUrl": zod.string().optional(),
+  "imageAlt": zod.string().optional()
+})).optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -898,6 +942,9 @@ export const GetAdminContentResponse = zod.object({
  * @summary Publish content with optimistic concurrency
  */
 export const publishAdminContentBodyContentTestimonialsItemRatingMax = 5;
+
+
+
 
 
 
@@ -1045,6 +1092,14 @@ export const PublishAdminContentBody = zod.object({
   "relatedArticleSlugs": zod.string().optional()
 })),
   "editorialBlogLibraryManaged": zod.boolean().optional(),
+  "socialLinks": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "label": zod.string().min(1),
+  "url": zod.string().min(1),
+  "logoUrl": zod.string().optional(),
+  "imageAlt": zod.string().optional()
+})).optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),
@@ -1064,6 +1119,9 @@ export const PublishAdminContentBody = zod.object({
 })
 
 export const publishAdminContentResponseContentTestimonialsItemRatingMax = 5;
+
+
+
 
 
 
@@ -1211,6 +1269,14 @@ export const PublishAdminContentResponse = zod.object({
   "relatedArticleSlugs": zod.string().optional()
 })),
   "editorialBlogLibraryManaged": zod.boolean().optional(),
+  "socialLinks": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "platform": zod.enum(['facebook', 'instagram', 'tiktok', 'youtube', 'linkedin', 'x', 'whatsapp', 'other']),
+  "label": zod.string().min(1),
+  "url": zod.string().min(1),
+  "logoUrl": zod.string().optional(),
+  "imageAlt": zod.string().optional()
+})).optional(),
   "campaigns": zod.array(zod.object({
   "id": zod.string(),
   "title": zod.string(),

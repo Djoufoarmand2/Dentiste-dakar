@@ -110,7 +110,7 @@ async function deploy() {
     entryPoints: [resolve(root, 'supabase/functions/cabinet-api/index.ts')], bundle: true, write: false,
     platform: 'neutral', format: 'esm', target: 'es2022', minify: false,
     nodePaths: [resolve(root, 'scripts/node_modules')], conditions: ['deno', 'import'],
-    external: ['npm:@supabase/supabase-js@2.118.0'],
+    external: ['npm:@supabase/supabase-js@2.118.0', 'npm:zod@3.25.76'],
     plugins: [{ name: 'supabase-deno-runtime', setup(b) { b.onResolve({ filter: /^@supabase\/supabase-js$/ }, () => ({ path: 'npm:@supabase/supabase-js@2.118.0', external: true })); } }],
   });
   const code = result.outputFiles[0].text;

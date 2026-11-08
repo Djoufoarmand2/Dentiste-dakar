@@ -535,6 +535,16 @@ components:
         relatedServiceSlugs: { type: string }
         relatedArticleSlugs: { type: string }
       required: [id, title, slug, excerpt, content, imageUrl, author, date, published]
+    SocialLink:
+      type: object
+      properties:
+        id: { type: string, minLength: 1 }
+        platform: { type: string, enum: [facebook, instagram, tiktok, youtube, linkedin, x, whatsapp, other] }
+        label: { type: string, minLength: 1 }
+        url: { type: string, minLength: 1 }
+        logoUrl: { type: string }
+        imageAlt: { type: string }
+      required: [id, platform, label, url]
     Campaign:
       type: object
       properties:
@@ -637,6 +647,9 @@ components:
           type: array
           items: { $ref: "#/components/schemas/BlogPost" }
         editorialBlogLibraryManaged: { type: boolean }
+        socialLinks:
+          type: array
+          items: { $ref: "#/components/schemas/SocialLink" }
         campaigns:
           type: array
           items: { $ref: "#/components/schemas/Campaign" }
@@ -667,6 +680,9 @@ components:
           type: array
           items: { $ref: "#/components/schemas/BlogPost" }
         editorialBlogLibraryManaged: { type: boolean }
+        socialLinks:
+          type: array
+          items: { $ref: "#/components/schemas/SocialLink" }
         campaigns:
           type: array
           items: { $ref: "#/components/schemas/Campaign" }

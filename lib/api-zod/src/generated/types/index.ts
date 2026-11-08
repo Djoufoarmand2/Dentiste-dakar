@@ -38,6 +38,8 @@ export * from './reviewSubmission';
 export * from './serviceItem';
 export * from './siteContent';
 export * from './siteContentInput';
+export * from './socialLink';
+export * from './socialLinkPlatform';
 export * from './teamMember';
 export * from './testimonial';
 export * from './whyChooseContent';

@@ -13,6 +13,7 @@ import type { GalleryImage } from './galleryImage';
 import type { HeroContent } from './heroContent';
 import type { PrivacyPolicyContent } from './privacyPolicyContent';
 import type { ServiceItem } from './serviceItem';
+import type { SocialLink } from './socialLink';
 import type { TeamMember } from './teamMember';
 import type { Testimonial } from './testimonial';
 import type { WhyChooseContent } from './whyChooseContent';
@@ -29,5 +30,6 @@ export interface SiteContent {
   faqs: FAQItem[];
   blogPosts: BlogPost[];
   editorialBlogLibraryManaged?: boolean;
+  socialLinks?: SocialLink[];
   campaigns: Campaign[];
 }

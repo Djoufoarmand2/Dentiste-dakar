@@ -1,6 +1,6 @@
 import { GetSiteContentResponse } from './api.ts';
 
-const urlFields = new Set(['imageUrl', 'logoUrl', 'videoUrl', 'mapUrl', 'bookingUrl']);
+const urlFields = new Set(['imageUrl', 'logoUrl', 'videoUrl', 'mapUrl', 'bookingUrl', 'url']);
 // Empty optional dates from older admin clients mean "not supplied", not an
 // invalid date. Nonempty invalid dates still fail the generated API contract.
 export function normalizePublicationInput(input: unknown): unknown {

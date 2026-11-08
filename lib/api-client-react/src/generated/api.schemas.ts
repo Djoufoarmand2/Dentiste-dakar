@@ -307,6 +307,32 @@ export interface BlogPost {
   relatedArticleSlugs?: string;
 }
 
+export type SocialLinkPlatform = typeof SocialLinkPlatform[keyof typeof SocialLinkPlatform];
+
+
+export const SocialLinkPlatform = {
+  facebook: 'facebook',
+  instagram: 'instagram',
+  tiktok: 'tiktok',
+  youtube: 'youtube',
+  linkedin: 'linkedin',
+  x: 'x',
+  whatsapp: 'whatsapp',
+  other: 'other',
+} as const;
+
+export interface SocialLink {
+  /** @minLength 1 */
+  id: string;
+  platform: SocialLinkPlatform;
+  /** @minLength 1 */
+  label: string;
+  /** @minLength 1 */
+  url: string;
+  logoUrl?: string;
+  imageAlt?: string;
+}
+
 export type CampaignMediaType = typeof CampaignMediaType[keyof typeof CampaignMediaType];
 
 
@@ -343,6 +369,7 @@ export interface SiteContent {
   faqs: FAQItem[];
   blogPosts: BlogPost[];
   editorialBlogLibraryManaged?: boolean;
+  socialLinks?: SocialLink[];
   campaigns: Campaign[];
 }
 
@@ -364,6 +391,7 @@ export interface SiteContentInput {
   faqs: FAQItem[];
   blogPosts: BlogPost[];
   editorialBlogLibraryManaged?: boolean;
+  socialLinks?: SocialLink[];
   campaigns: Campaign[];
 }
 
