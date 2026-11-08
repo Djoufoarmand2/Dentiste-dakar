@@ -112,3 +112,17 @@ mtime_ms = 1794155654622
 storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/03948dc5-a1f4-40ec-ba20-0b9ce62fab2b/4f6cff32-6449-498f-84e2-282366bbe6ce"
 storage_version_token = "1794155756516108"
 content_type = "application/pdf"
+
+[[outputs]]
+id = "F6qVd4zYqWFrW7lztT8m9"
+uri = "file://generated-artifacts/cabinet-dentaire-dossier/06_guide_administrateur_tout_le_site.pdf"
+type = "pdf"
+title = "Guide PDF — Administrer tout le site"
+description = "Guide pratique en 7 pages pour l’espace /arm : connexion, rubriques administrables, contenus FR/EN, blog et vidéos, publication SEO, demandes visiteurs, réponses manuelles et précautions avant suppression."
+logical_id = "cf635935-fb83-4fb5-98a8-b313a4ede65a"
+content_hash = "sha256:2e264b66e7086b2240387944bdb0c907387fb0eb680907715a86ae5357cd3d6c"
+size = 146694
+mtime_ms = 1794156328198
+storage_uri = "gcs://replit-rams-assets-spock/rams/assets/repl:97ded17a-9a65-4736-95bb-4e478cdd61be/cf635935-fb83-4fb5-98a8-b313a4ede65a/5d253125-3ea3-4428-9b34-75255e08d127"
+storage_version_token = "1794156345897707"
+content_type = "application/pdf"
