@@ -886,7 +886,7 @@ function BlogCard({ post }: { post: BlogPost }) {
   const excerpt = cmsText(locale, post.excerpt, translated.excerpt);
   const author = cmsText(locale, post.author, translated.author);
   const slug = locale === 'en' ? translated.slug : post.slug;
-  return <article className="card-ref overflow-hidden" data-testid={`card-blog-${post.id}`}><Link href={locale === 'en' ? `/en/blog/${slug}/` : `/blog/${slug}/`} className="block" data-testid={`link-blog-${post.slug}`}><ImageFrame src={post.imageUrl} alt={articleImageAlt(post, locale)} label={uiText(locale, 'Illustration de l’article', 'Article illustration')} indicator={title} details={excerpt} className="h-52" /><div className="p-6"><p className="text-[10px] uppercase tracking-[.16em] text-accent">{post.date} · {author}</p><h2 className="mt-3 font-display text-xl font-semibold leading-snug text-[#073e53]">{title}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{excerpt}</p><span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.12em] text-accent">{uiText(locale, 'Lire l’article', 'Read article')} <ArrowRight size={14} /></span></div></Link></article>;
+  return <article className="card-ref overflow-hidden" data-testid={`card-blog-${post.id}`}><Link href={locale === 'en' ? `/en/blog/${slug}/` : `/blog/${slug}/`} className="block" data-testid={`link-blog-${post.slug}`}><ImageFrame src={post.imageUrl} alt={articleImageAlt(post, locale)} label={uiText(locale, 'Illustration de l’article', 'Article illustration')} indicator={title} details={excerpt} className="h-52" /><div className="p-6"><p className="text-[10px] uppercase tracking-[.16em] text-accent">{post.date} · {author}</p><h2 className="mt-3 font-display text-xl font-medium leading-snug text-[#073e53]">{title}</h2><p className="mt-3 text-sm leading-6 text-muted-foreground">{excerpt}</p><span className="mt-5 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[.12em] text-accent">{uiText(locale, 'Lire l’article', 'Read article')} <ArrowRight size={14} /></span></div></Link></article>;
 }
 
 export function BlogPage({ content }: { content: SiteContent }) {
@@ -902,11 +902,36 @@ export function BlogArticlePage({ content, slug }: { content: SiteContent; slug?
   if (!post) return <SiteShell clinic={content.clinic} content={content}><main className="mx-auto max-w-3xl px-5 py-24 text-center"><p className="eyebrow">{uiText(locale, 'Article introuvable', 'Article not found')}</p><h1 className="mt-4 font-display text-4xl font-semibold text-[#073e53]">{uiText(locale, 'Ce carnet n’a pas encore cette page.', 'This article is not available.')}</h1><div className="mt-7"><ActionLink href="/blog" testId="link-article-back">{uiText(locale, 'Retour au carnet', 'Back to articles')}</ActionLink></div></main></SiteShell>;
   const translated = englishBlogPost(post);
   const body = locale === 'en' ? translated.content : post.content;
-  const blocks = body?.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean) || [];
+  const blocks = (body ?? '').split(/\n{2,}/).flatMap((block) => {
+    const lines = block.split(/\n/).map((line) => line.trim()).filter(Boolean);
+    if (!lines.length) return [];
+    if (lines[0].startsWith('## ')) {
+      const heading = { type: 'heading' as const, text: lines[0].replace(/^##\s+/, '') };
+      const paragraph = lines.slice(1).join(' ').trim();
+      return paragraph ? [heading, { type: 'paragraph' as const, text: paragraph }] : [heading];
+    }
+    return [{ type: 'paragraph' as const, text: lines.join(' ') }];
+  });
+  const readingMinutes = Math.max(1, Math.ceil((body ?? '').trim().split(/\s+/).filter(Boolean).length / 200));
   const title = cmsText(locale, post.title, translated.title);
   const excerpt = cmsText(locale, post.excerpt, translated.excerpt);
   const author = cmsText(locale, post.author, translated.author);
-  return <SiteShell clinic={content.clinic} content={content}><main><article className="mx-auto max-w-4xl px-5 pb-24 pt-12 md:px-8 md:pt-16"><Link href={routeFor('/blog/', locale, content)} className="inline-flex items-center gap-2 text-xs font-semibold text-accent" data-testid="link-back-blog"><ArrowLeft size={14} /> {uiText(locale, 'Tous les articles', 'All articles')}</Link><p className="mt-10 text-[10px] uppercase tracking-[.2em] text-accent">{post.date} · {author}</p><h1 className="mt-4 font-display text-4xl font-semibold leading-tight text-[#073e53] md:text-5xl">{title}</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-muted-foreground">{excerpt}</p><ImageFrame src={post.imageUrl} alt={articleImageAlt(post, locale)} label={uiText(locale, 'Illustration de l’article', 'Article illustration')} indicator={uiText(locale, 'Conseil dentaire', 'Dental information')} details={title} className="mt-10 h-[280px] rounded-md md:h-[440px]" priority /><div className="prose prose-lg mt-10 max-w-none font-sans text-[17px] leading-8 text-foreground/80 md:text-lg">{blocks.length ? blocks.map((block, index) => block.startsWith('## ') ? <h2 key={index} className="font-display">{block.slice(3)}</h2> : <p key={index}>{renderArticleText(block)}</p>) : <p>{uiText(locale, 'Le contenu de cet article sera bientôt disponible.', 'English translation not yet available.')}</p>}</div></article></main></SiteShell>;
+  return <SiteShell clinic={content.clinic} content={content}><main><article className="blog-editorial mx-auto max-w-4xl px-5 pb-24 pt-12 md:px-8 md:pt-16">
+    <Link href={routeFor('/blog/', locale, content)} className="inline-flex items-center gap-2 text-xs font-semibold text-accent" data-testid="link-back-blog"><ArrowLeft size={14} /> {uiText(locale, 'Tous les articles', 'All articles')}</Link>
+    <header className="blog-editorial-header mt-10">
+      <h1 className="blog-editorial-title">{title}</h1>
+      <p className="blog-editorial-excerpt">{excerpt}</p>
+      <div className="blog-editorial-meta" aria-label={uiText(locale, 'Informations sur l’article', 'Article information')}>
+        <span>{uiText(locale, 'Par', 'By')} <strong>{author}</strong></span>
+        <span aria-hidden="true">·</span>
+        <span>{readingMinutes} {uiText(locale, 'min de lecture', 'min read')}</span>
+        <span aria-hidden="true">·</span>
+        <time dateTime={post.date}>{post.date}</time>
+      </div>
+    </header>
+    <ImageFrame src={post.imageUrl} alt={articleImageAlt(post, locale)} label={uiText(locale, 'Illustration de l’article', 'Article illustration')} indicator={uiText(locale, 'Conseil dentaire', 'Dental information')} details={title} className="mt-8 h-[280px] rounded-md md:mt-10 md:h-[440px]" priority />
+    <div className="blog-article-prose mt-10 max-w-none">{blocks.length ? blocks.map((block, index) => block.type === 'heading' ? <h2 key={`${block.type}-${index}`}>{block.text}</h2> : <p key={`${block.type}-${index}`}>{renderArticleText(block.text)}</p>) : <p>{uiText(locale, 'Le contenu de cet article sera bientôt disponible.', 'English translation not yet available.')}</p>}</div>
+  </article></main></SiteShell>;
 }
 
 function CampaignGrid({ campaigns }: { campaigns: Campaign[] }) {
