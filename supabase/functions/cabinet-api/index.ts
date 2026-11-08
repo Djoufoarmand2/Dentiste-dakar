@@ -4,7 +4,7 @@ import {
   FinalizeAdminMediaBody, DeleteAdminMediaBody, SubmitReviewBody,
   SubmitContactAppointmentBody, SubmitContactAppointmentResponse,
 } from './api.ts';
-import { mimeExtensions, normalizePublicationInput, parseContent, publicContent, signatureMatches } from './validation';
+import { mimeExtensions, normalizePublicationInput, parseContent, publicContent, signatureMatches } from './validation.ts';
 
 declare const Deno: { env: { get(key: string): string | undefined }; serve(handler: (request: Request) => Promise<Response>): void };
 const env = (key: string) => {

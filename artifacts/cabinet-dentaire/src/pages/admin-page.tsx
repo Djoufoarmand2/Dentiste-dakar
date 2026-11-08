@@ -113,7 +113,9 @@ function ensureTranslationFields(content: SiteContent): SiteContent {
         relatedArticleSlugs: post.relatedArticleSlugs ?? seed?.relatedArticleSlugs ?? '',
       };
     }),
-    ...editorialBlogPosts.filter((post) => !existingBlogSlugs.has(post.slug)),
+    ...(content.editorialBlogLibraryManaged
+      ? []
+      : editorialBlogPosts.filter((post) => !existingBlogSlugs.has(post.slug))),
   ];
   return {
     ...content,
