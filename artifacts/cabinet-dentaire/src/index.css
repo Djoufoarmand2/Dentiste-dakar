@@ -285,6 +285,13 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .faq-panel > div { overflow: hidden; }
 .confirmation-in { animation: confirm-in .45s cubic-bezier(.2,.75,.25,1) both; }
 @keyframes confirm-in { from { opacity: 0; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.contact-receipt-glow { animation: contact-receipt-glow 4.5s ease-in-out infinite alternate; }
+.contact-receipt-mark { animation: contact-receipt-mark .72s cubic-bezier(.2,.8,.25,1.25) both; }
+@keyframes contact-receipt-glow { from { opacity:.45; transform:scale(.88); } to { opacity:.9; transform:scale(1.12); } }
+@keyframes contact-receipt-mark { 0% { opacity:0; transform:scale(.45) rotate(-12deg); } 68% { opacity:1; transform:scale(1.12) rotate(3deg); } 100% { opacity:1; transform:scale(1) rotate(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .contact-receipt-glow, .contact-receipt-mark { animation:none !important; }
+}
 .input-valid { border-color: #5d7f46 !important; box-shadow: 0 0 0 2px rgba(93,127,70,.12); }
 .input-invalid { border-color: #a44c42 !important; box-shadow: 0 0 0 2px rgba(164,76,66,.1); }
 .floating-call { position: fixed; right: max(1.1rem, env(safe-area-inset-right)); bottom: max(1.1rem, env(safe-area-inset-bottom)); z-index: 35; }

@@ -13,6 +13,7 @@ import { ReviewSubmissionForm } from './review-submission-form';
 import { RelatedPages, ReviewTrustPanel } from './review-trust';
 import { VideoPlayer } from './video-player';
 import { getYouTubeThumbnailUrl } from '@/lib/video-url';
+import { PRACTICE_CONTACT_EMAIL } from '@/lib/contact-info';
 import { ServiceDetailContent as ServiceDetailBody, WhyChooseContent as WhyChooseBody } from './patient-content-pages';
 import { combinePublicReviews, usePublicReviews } from '@/lib/reviews';
 import { summarizePublishedReviews } from '@/lib/review-summary';
@@ -304,7 +305,7 @@ export function Footer({ clinic, content }: { clinic?: SiteContent['clinic']; co
       <div><BrandLockup clinic={clinic} /><p className="mt-5 max-w-sm text-sm leading-7 text-white/65">{uiText(locale, 'Un lieu de soin où l’on prend le temps de vous écouter, de vous expliquer et de vous accompagner.', 'A place for care where we take time to listen, explain and support you.')}</p></div>
       <div><p className="footer-title">{uiText(locale, 'Navigation', 'Explore')}</p><ul className="space-y-2 text-sm text-white/70">{navItems.map(([label, href]) => <li key={href}><Link href={routeFor(href, locale, content)} className="hover:text-[#f0a0a6]" data-testid={`footer-nav-${href.slice(1)}`}>{label}</Link></li>)}<li><Link href={routeFor('/informations', locale)} className="hover:text-[#f0a0a6]" data-testid="footer-nav-informations">{uiText(locale, 'Informations', 'Updates')}</Link></li><li><Link href={routeFor('/confidentialite', locale)} className="hover:text-[#f0a0a6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" data-testid="footer-nav-confidentialite">{uiText(locale, 'Confidentialité', 'Privacy')}</Link></li></ul></div>
       <div><p className="footer-title">{uiText(locale, 'Nous trouver', 'Find us')}</p><p className="text-sm leading-7 text-white/70">{clinic?.address ? (locale === 'en' ? `Address supplied by the practice (not translated): ${clinic.address}` : clinic.address) : uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon')}<br />{safeCity(clinic?.city)}</p><a href={clinic?.mapUrl || mapsDirections} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs text-[#f0a0a6] hover:text-white" data-testid="link-footer-map">{uiText(locale, 'Itinéraire', 'Directions')} <ArrowRight size={14} /></a><a href={partnerSite} target="_blank" rel="noopener noreferrer" className="mt-3 block text-xs text-white/60 hover:text-white">{uiText(locale, 'Établissement partenaire : La Bienveillance', 'Partner clinic: La Bienveillance')}</a></div>
-      <div><p className="footer-title">{uiText(locale, 'Contact', 'Contact')}</p><a href={`tel:${clinic?.phone || ''}`} className="block text-base font-medium" data-testid="link-footer-phone">{clinic?.phone || uiText(locale, 'Contactez-nous', 'Contact us')}</a><a href={`mailto:${clinic?.email || ''}`} className="mt-2 block text-sm text-white/70" data-testid="link-footer-email">{clinic?.email || uiText(locale, 'Adresse à renseigner', 'Email address to be added')}</a><ManualContactLinks email={clinic?.email} phone={clinic?.phone} tone="dark" className="mt-4" /><p className="mt-4 whitespace-pre-line text-xs leading-6 text-white/60">{clinic ? hoursLabel(clinic, locale) : uiText(locale, 'Horaires à renseigner', 'Practice hours to be added')}</p><SocialLinks links={content?.socialLinks} className="mt-5" /></div>
+      <div><p className="footer-title">{uiText(locale, 'Contact', 'Contact')}</p><a href={`tel:${clinic?.phone || ''}`} className="block text-base font-medium" data-testid="link-footer-phone">{clinic?.phone || uiText(locale, 'Contactez-nous', 'Contact us')}</a><a href={`mailto:${PRACTICE_CONTACT_EMAIL}`} className="mt-2 block text-sm text-white/70" data-testid="link-footer-email">{PRACTICE_CONTACT_EMAIL}</a><ManualContactLinks phone={clinic?.phone} tone="dark" className="mt-4" /><p className="mt-4 whitespace-pre-line text-xs leading-6 text-white/60">{clinic ? hoursLabel(clinic, locale) : uiText(locale, 'Horaires à renseigner', 'Practice hours to be added')}</p><SocialLinks links={content?.socialLinks} className="mt-5" /></div>
     </div>
     <div className="border-t border-white/10">
       <div className="mx-auto flex max-w-[1240px] flex-col justify-between gap-3 px-5 py-5 text-[11px] text-white/75 sm:flex-row sm:flex-wrap sm:items-center md:px-8">
@@ -735,7 +736,7 @@ export function HomePage({ content }: { content: SiteContent }) {
             <div><p className="text-[11px] font-semibold uppercase tracking-[.25em] text-[#f0a0a6]">{uiText(locale, 'Prendre rendez-vous', 'Appointments')}</p><h2 className="mt-3 font-display text-3xl font-semibold leading-tight md:text-[2.6rem]">{uiText(locale, 'Votre prochain rendez-vous peut être plus simple que vous ne le pensez.', 'Taking the next step can start with a simple conversation.')}</h2><div className="mt-8 flex flex-wrap gap-4"><BookButton clinic={clinic} testId="button-home-final-book">{uiText(locale, 'Prendre rendez-vous', 'Request an appointment')}</BookButton><Link href={routeFor('/contact', locale, content)} className="btn-outline-light" data-testid="link-home-contact">{uiText(locale, 'Nous contacter', 'Contact us')}</Link></div></div>
             <ul className="space-y-5 rounded-md border border-white/12 bg-white/[.04] p-7 text-sm">
                <li className="flex gap-4"><Phone size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><a href={`tel:${clinic.phone || ''}`} data-testid="link-home-phone">{clinic.phone || uiText(locale, 'Téléphone à renseigner', 'Phone number to be added')}</a></li>
-               <li className="flex gap-4"><MessageCircle size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><a href={`mailto:${clinic.email || ''}`} className="break-all" data-testid="link-home-email">{clinic.email || uiText(locale, 'Courriel à renseigner', 'Email address to be added')}</a></li>
+               <li className="flex gap-4"><MessageCircle size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><a href={`mailto:${PRACTICE_CONTACT_EMAIL}`} className="break-all" data-testid="link-home-email">{PRACTICE_CONTACT_EMAIL}</a></li>
                <li className="flex gap-4"><MapPin size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><span>{clinic.address || uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon')}</span></li>
                <li className="flex gap-4"><Clock3 size={18} className="mt-0.5 shrink-0 text-[#f0a0a6]" /><span className="whitespace-pre-line text-white/80">{locale === 'en' ? hoursLabel(clinic, locale) : `Horaires : ${hoursLabel(clinic, locale)}`}</span></li>
             </ul>
@@ -767,7 +768,7 @@ export function WhyChoosePage({ content }: { content: SiteContent }) {
   return <SiteShell clinic={content.clinic} content={content}>
     <WhyChooseBody
       locale={locale}
-      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: content.clinic.email || 'bienveillanceclinique4@dentiste-sourireserein.cm' }}
+      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: PRACTICE_CONTACT_EMAIL }}
       content={content.whyChoose}
     />
   </SiteShell>;
@@ -791,7 +792,7 @@ export function ServiceDetailPage({ content, slug }: { content: SiteContent; slu
     </div>
     <ServiceDetailBody
       locale={locale}
-      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: content.clinic.email || 'bienveillanceclinique4@dentiste-sourireserein.cm' }}
+      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: PRACTICE_CONTACT_EMAIL }}
       service={{
         id: service.id,
          title: locale === 'en' ? translated.title : service.title,
@@ -1199,7 +1200,7 @@ export function ContactPage({ content }: { content: SiteContent }) {
     <section className="wrap section-pad grid gap-7 md:grid-cols-[.8fr_1.2fr]">
       <div className="rounded-md bg-[#073e53] p-7 text-white md:p-10"><p className="text-[11px] uppercase tracking-[.24em] text-[#f0a0a6]">{safeName(clinic.name)} · {safeCity(clinic.city)}</p><h2 className="mt-4 font-display text-3xl font-semibold">{uiText(locale, 'À votre écoute.', 'We are listening.')}</h2><div className="mt-8 space-y-6 text-sm">
         <a href={`tel:${clinic.phone}`} className="flex items-start gap-4" data-testid="link-contact-phone">{row(<Phone size={17} />, uiText(locale, 'Téléphone', 'Phone'), clinic.phone || uiText(locale, 'À renseigner', 'To be added'))}</a>
-        <a href={`mailto:${clinic.email}`} className="flex items-start gap-4" data-testid="link-contact-email">{row(<MessageCircle size={17} />, uiText(locale, 'Courriel', 'Email'), clinic.email || uiText(locale, 'À renseigner', 'To be added'))}</a>
+        <a href={`mailto:${PRACTICE_CONTACT_EMAIL}`} className="flex items-start gap-4" data-testid="link-contact-email">{row(<MessageCircle size={17} />, uiText(locale, 'Courriel', 'Email'), PRACTICE_CONTACT_EMAIL)}</a>
         <div className="flex items-start gap-4" data-testid="text-contact-address">{row(<MapPin size={17} />, uiText(locale, 'Adresse', 'Address'), clinic.address ? (locale === 'en' ? `Address supplied by the practice (not translated): ${clinic.address}` : clinic.address) : uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon'))}</div>
         <div className="flex items-start gap-4 whitespace-pre-line" data-testid="text-contact-hours">{row(<Clock3 size={17} />, uiText(locale, 'Horaires', 'Hours'), hoursLabel(clinic, locale))}</div>
       </div><div className="mt-9"><BookButton clinic={clinic} testId="button-contact-book">{uiText(locale, 'Demander un rendez-vous', 'Request an appointment')}</BookButton></div></div>
@@ -1207,14 +1208,14 @@ export function ContactPage({ content }: { content: SiteContent }) {
         <p className="eyebrow">{uiText(locale, 'À votre rythme', 'At your pace')}</p>
         <h2 className="mt-2 font-display text-2xl font-semibold text-[#073e53] md:text-3xl">{uiText(locale, 'Faire une demande de rendez-vous', 'Send an appointment request')}</h2>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">{uiText(locale, 'L’équipe vous recontactera pour convenir d’un créneau adapté.', 'The team will contact you to discuss a suitable time.')}</p>
-        <AppointmentRequestForm phone={clinic.phone} email={clinic.email} />
+        <AppointmentRequestForm phone={clinic.phone} />
       </div>
     </section>
     <section className="wrap grid gap-8 pb-14 md:grid-cols-[1.2fr_.8fr] md:gap-10" aria-labelledby="quick-question-title" data-testid="contact-quick-question">
       <div>
         <h2 id="quick-question-title" className="font-display text-2xl font-semibold text-[#20213e] md:text-3xl">{uiText(locale, 'Une question rapide ?', 'A quick question?')}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{uiText(locale, 'Pas besoin de prendre RDV — écrivez-nous simplement.', 'No appointment needed — simply write to us.')}</p>
-         <QuickContactForm phone={clinic.phone} email={clinic.email} />
+         <QuickContactForm phone={clinic.phone} />
       </div>
       <aside aria-labelledby="contact-social-title">
         <h2 id="contact-social-title" className="font-display text-2xl font-semibold text-[#20213e] md:text-3xl">{uiText(locale, 'Suivez-nous', 'Follow us')}</h2>

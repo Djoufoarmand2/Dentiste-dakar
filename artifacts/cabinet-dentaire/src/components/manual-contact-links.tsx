@@ -1,21 +1,20 @@
 import { Mail, MessageCircle } from "lucide-react";
+import { PRACTICE_CONTACT_EMAIL } from "@/lib/contact-info";
 import { useSiteLocale } from "@/lib/site-locale";
 
 type ManualContactLinksProps = {
-  email?: string | null;
   phone?: string | null;
   tone?: "light" | "dark";
   className?: string;
 };
 
 export function ManualContactLinks({
-  email,
   phone,
   tone = "light",
   className = "",
 }: ManualContactLinksProps) {
   const locale = useSiteLocale();
-  const address = email?.trim();
+  const address = PRACTICE_CONTACT_EMAIL;
   const phoneDigits = phone?.replace(/\D/g, "") ?? "";
   const whatsappNumber = phoneDigits.length === 9 ? `237${phoneDigits}` : phoneDigits;
   const gmailUrl = address

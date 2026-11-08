@@ -1,31 +1,22 @@
 import type { BlogPost, SiteContent } from '@workspace/api-client-react';
+import { replaceLegacyPracticeEmail } from './contact-info';
 import sourcePosts from './editorial-blog.json';
 import sourceRelations from './editorial-blog-relations.json';
 
 const baseUrl = import.meta.env.BASE_URL;
 
-function replaceLegacyContactEmail(value: unknown): unknown {
-  if (typeof value === 'string') {
-    return value.replace(/bienveillanceclinique4@gmail\.com/gi, 'bienveillanceclinique4@dentiste-sourireserein.cm');
-  }
-  if (Array.isArray(value)) return value.map(replaceLegacyContactEmail);
-  if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, replaceLegacyContactEmail(entry)]));
-  }
-  return value;
-}
-
-export const editorialBlogPosts = replaceLegacyContactEmail(sourcePosts) as BlogPost[];
+export const editorialBlogPosts = replaceLegacyPracticeEmail(sourcePosts) as BlogPost[];
 export const editorialBlogRelations = sourceRelations as Record<string, Pick<BlogPost, 'relatedServiceSlugs' | 'relatedArticleSlugs'>>;
 
 export function withEditorialBlogPosts(content: SiteContent): SiteContent {
   const existingPosts = content.blogPosts.map((post) => {
+    const normalizedPost = replaceLegacyPracticeEmail(post) as BlogPost;
     const relations = editorialBlogRelations[post.slug];
-    if (!relations) return post;
+    if (!relations) return normalizedPost;
     return {
-      ...post,
-      relatedServiceSlugs: post.relatedServiceSlugs ?? relations.relatedServiceSlugs,
-      relatedArticleSlugs: post.relatedArticleSlugs ?? relations.relatedArticleSlugs,
+      ...normalizedPost,
+      relatedServiceSlugs: normalizedPost.relatedServiceSlugs ?? relations.relatedServiceSlugs,
+      relatedArticleSlugs: normalizedPost.relatedArticleSlugs ?? relations.relatedArticleSlugs,
     };
   });
   if (content.editorialBlogLibraryManaged) {

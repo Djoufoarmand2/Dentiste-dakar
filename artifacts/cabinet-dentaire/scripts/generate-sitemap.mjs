@@ -11,12 +11,16 @@ const robotsPath = path.join(outputDirectory, 'robots.txt');
 const rawBasePath = process.env.BASE_PATH?.trim() || '/';
 const basePath = `/${rawBasePath.split('/').filter(Boolean).join('/')}${rawBasePath.split('/').filter(Boolean).length ? '/' : ''}`;
 const appPath = (route) => `${basePath}${String(route).replace(/^\/+/, '')}`;
+const practiceContactEmail = 'bienveillanceclinique4@dentiste-sourireserein.cm';
 const viteEnv = loadEnv('production', process.cwd(), 'VITE_');
 const viteSetting = (name) => process.env[name]?.trim() || viteEnv[name]?.trim();
 const cmsTranslations = JSON.parse(await readFile(new URL('../src/lib/cms-translations.json', import.meta.url), 'utf8'));
 function replaceLegacyContactEmail(value) {
   if (typeof value === 'string') {
-    return value.replace(/bienveillanceclinique4@gmail\.com/gi, 'bienveillanceclinique4@dentiste-sourireserein.cm');
+    return value.replace(
+      /bienveillanceclinique4@(gmail\.com|cabinet-sourireserein\.com)/gi,
+      practiceContactEmail,
+    );
   }
   if (Array.isArray(value)) return value.map(replaceLegacyContactEmail);
   if (value && typeof value === 'object') {
@@ -213,6 +217,11 @@ function youtubeVideoDetails(value) {
   } catch {
     return undefined;
   }
+}
+
+if (publicContent?.clinic) {
+  publicContent = replaceLegacyContactEmail(publicContent);
+  publicContent.clinic.email = practiceContactEmail;
 }
 
 const clinicName = publicContent?.clinic?.name?.trim() || 'Cabinet Sourire Serein';

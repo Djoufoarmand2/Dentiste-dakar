@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import type { ContactAppointmentInput } from "@workspace/api-client-react";
-import { ArrowRight, CheckCircle2, LoaderCircle } from "lucide-react";
+import { ArrowRight, LoaderCircle } from "lucide-react";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -15,16 +15,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ManualContactLinks } from "@/components/manual-contact-links";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ContactSubmissionReceipt } from "@/components/contact-submission-receipt";
 import {
   submitAppointmentRequest,
 } from "@/lib/appointment-delivery";
@@ -63,10 +54,8 @@ const defaultValues: AppointmentFormValues = {
 
 export function AppointmentRequestForm({
   phone = "+237 677 87 34 42",
-  email,
 }: {
   phone?: string;
-  email?: string;
 }) {
   const locale = useSiteLocale();
   const en = locale === "en";
@@ -89,6 +78,7 @@ export function AppointmentRequestForm({
   const submit = async (values: AppointmentFormValues) => {
     // React Hook Form invokes this from the submit button or keyboard submit;
     // the API stores the request for the practice to review and answer manually.
+    if (request.isPending || requestReceived) return;
     request.reset();
     setSubmissionAccepted(null);
     setRequestReceived(false);
@@ -127,32 +117,17 @@ export function AppointmentRequestForm({
     }
   };
 
+  if (requestReceived) {
+    return (
+      <ContactSubmissionReceipt
+        kind="appointment"
+        phone={phone}
+        formboldWarning={formboldWarning}
+      />
+    );
+  }
+
   return (
-    <>
-    {requestReceived && (
-      <div className="mb-5 space-y-3">
-        <p
-          role="status"
-          className="rounded-md border border-emerald-700/20 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900"
-          data-testid="status-appointment-received-inline"
-        >
-          {en
-            ? <>We received your request. Please allow up to 24 hours for a reply and appointment confirmation. This request does not reserve a time slot. For urgent concerns, call <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>
-            : <>Nous avons bien reçu votre demande. Merci de patienter jusqu’à 24 h pour une réponse et la confirmation d’un créneau. Cette demande ne réserve pas de rendez-vous. En cas d’urgence, appelez le <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>}
-        </p>
-        {formboldWarning && (
-          <p
-            role="status"
-            className="rounded-md border border-amber-700/25 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950"
-            data-testid="status-appointment-formbold-warning"
-          >
-            {en
-              ? "Your request is saved, but its FormBold notification could not be confirmed. The practice can still view it in the admin inbox."
-              : "Votre demande est bien enregistrée, mais sa notification FormBold n’a pas été confirmée. Le cabinet peut toujours la consulter dans sa boîte admin."}
-          </p>
-        )}
-      </div>
-    )}
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(submit)}
@@ -555,50 +530,5 @@ export function AppointmentRequestForm({
         </div>
       </form>
     </Form>
-    <Dialog
-      open={submissionAccepted === true}
-      onOpenChange={(open) => {
-        if (!open) setSubmissionAccepted(null);
-      }}
-    >
-      <DialogContent className="confirmation-in max-w-md border-[#073e53]/10 bg-white">
-        <DialogHeader className="items-center text-center">
-          <span className="mb-2 grid h-14 w-14 place-items-center rounded-full bg-[#e6e3eb] text-[#5d7f46]">
-            <CheckCircle2 size={27} aria-hidden="true" />
-          </span>
-          <DialogTitle className="font-display text-2xl text-[#073e53]">
-            {en ? "Request received" : "Demande enregistrée"}
-          </DialogTitle>
-          <DialogDescription
-            role="status"
-            className="pt-2 text-sm leading-6"
-            data-testid="status-appointment-success"
-          >
-            {en
-              ? "We received your request. Please allow up to 24 hours for a reply and appointment confirmation. This request does not reserve a time slot."
-              : "Nous avons bien reçu votre demande. Merci de patienter jusqu’à 24 h pour une réponse et la confirmation d’un créneau. Cette demande ne réserve pas de rendez-vous."}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="pt-1">
-          <p className="mb-2 text-center text-xs text-muted-foreground">
-            {en ? "You can also contact us directly:" : "Vous pouvez aussi nous contacter directement :"}
-          </p>
-          <ManualContactLinks email={email} phone={phone} className="justify-center" />
-        </div>
-        <DialogFooter className="sm:justify-center">
-          <DialogClose asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              className="btn-gold w-full sm:w-auto"
-              data-testid="button-close-appointment-confirmation"
-            >
-              {en ? "Done" : "Terminé"}
-            </Button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-    </>
   );
 }

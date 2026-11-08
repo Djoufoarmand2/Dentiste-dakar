@@ -4,6 +4,7 @@ import { Link } from 'wouter';
 import { SiteShell } from '@/components/public-site';
 import { defaultPrivacyPolicyContent } from '@/lib/site-page-defaults';
 import { useSiteLocale } from '@/lib/site-locale';
+import { PRACTICE_CONTACT_EMAIL, replaceLegacyPracticeEmail } from '@/lib/contact-info';
 
 export function PrivacyPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
@@ -12,10 +13,12 @@ export function PrivacyPage({ content }: { content: SiteContent }) {
   const policySections = policy.sections.some((section) => section.id === 'contact-questions')
     ? policy.sections
     : [...policy.sections, defaultPrivacyPolicyContent.sections.find((section) => section.id === 'contact-questions')!];
-  const privacyEmail = content.clinic.email?.trim() || 'bienveillanceclinique4@dentiste-sourireserein.cm';
+  const privacyEmail = PRACTICE_CONTACT_EMAIL;
   const phone = content.clinic.phone?.trim() || '+237 677 873 442';
   const contactHref = `mailto:${privacyEmail}`;
-  const localized = (fr: string, en?: string) => english ? en?.trim() || 'English translation not yet available.' : fr;
+  const localized = (fr: string, en?: string) => replaceLegacyPracticeEmail(
+    english ? en?.trim() || 'English translation not yet available.' : fr,
+  ) as string;
   const paragraphs = (value: string) => value.split(/\n{2,}/).map((part) => part.trim()).filter(Boolean);
   return <SiteShell clinic={content.clinic} content={content}>
     <main id="contenu-principal">

@@ -2,6 +2,7 @@ import { ArrowDownRight, ArrowRight, Mail, MapPin, MessageCircle, Phone, ShieldC
 import { FaWhatsapp } from 'react-icons/fa';
 import type { SiteContent } from '@workspace/api-client-react';
 import { defaultWhyChooseContent } from '@/lib/site-page-defaults';
+import { PRACTICE_CONTACT_EMAIL } from '@/lib/contact-info';
 
 type Locale = 'fr' | 'en';
 
@@ -181,14 +182,14 @@ function ContactDetails({ clinic, locale }: { clinic: PatientClinic; locale: Loc
         </span>
         <ArrowRight size={16} aria-hidden="true" className="shrink-0 text-[#555c9c] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#24234c] motion-reduce:transition-none" />
       </a>}
-      {clinic.email && <a href={`mailto:${clinic.email}`} className={cardClass} data-testid="link-why-email">
+      <a href={`mailto:${PRACTICE_CONTACT_EMAIL}`} className={cardClass} data-testid="link-why-email">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#c8c7ff] text-[#24234c] shadow-[0_0_22px_rgba(200,199,255,.2)] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"><Mail size={19} aria-hidden="true" /></span>
         <span className="min-w-0 flex-1">
           <span className="block text-[10px] font-bold uppercase tracking-[.15em] text-[#555c9c]">{isEnglish ? 'Send an email' : 'Envoyer un e-mail'}</span>
-          <span className="mt-1 block break-all text-sm font-semibold leading-5">{clinic.email}</span>
+          <span className="mt-1 block break-all text-sm font-semibold leading-5">{PRACTICE_CONTACT_EMAIL}</span>
         </span>
         <ArrowRight size={16} aria-hidden="true" className="shrink-0 text-[#555c9c] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#24234c] motion-reduce:transition-none" />
-      </a>}
+      </a>
       {phoneDigits && <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className={cardClass} data-testid="link-why-whatsapp">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#25d366] text-[#073b2b] shadow-[0_0_22px_rgba(37,211,102,.22)] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"><FaWhatsapp size={20} aria-hidden="true" /></span>
         <span className="min-w-0 flex-1">
@@ -360,14 +361,14 @@ export function ServiceDetailContent({ clinic, service, locale }: ServiceDetailC
             <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm bg-[#d8d9ff] px-5 text-sm font-semibold text-[#24234c] transition-transform duration-200 hover:-translate-y-0.5 hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#d8d9ff]">
               <MessageCircle size={17} aria-hidden="true" />{t.whatsapp}
             </a>
-            <a href={`mailto:${clinic.email}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm border border-white/35 px-5 text-sm font-semibold text-white transition-colors duration-200 hover:border-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#d8d9ff]">
+            <a href={`mailto:${PRACTICE_CONTACT_EMAIL}`} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm border border-white/35 px-5 text-sm font-semibold text-white transition-colors duration-200 hover:border-white hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#d8d9ff]">
               <Mail size={17} aria-hidden="true" />{t.email}
             </a>
           </div>
         </div>
         <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 border-t border-white/15 pt-5 text-xs text-white/55">
           {clinic.phone && <a href={`tel:${clinic.phone}`} className="transition-colors hover:text-white">{clinic.phone}</a>}
-          {clinic.email && <a href={`mailto:${clinic.email}`} className="transition-colors hover:text-white">{clinic.email}</a>}
+          <a href={`mailto:${PRACTICE_CONTACT_EMAIL}`} className="transition-colors hover:text-white">{PRACTICE_CONTACT_EMAIL}</a>
           <span>{clinic.city}</span>
         </div>
       </div>

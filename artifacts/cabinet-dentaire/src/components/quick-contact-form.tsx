@@ -1,15 +1,13 @@
 import { useRef, useState, type FormEvent } from "react";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { submitQuickContactQuestion } from "@/lib/appointment-delivery";
-import { ManualContactLinks } from "@/components/manual-contact-links";
+import { ContactSubmissionReceipt } from "@/components/contact-submission-receipt";
 import { useSiteLocale } from "@/lib/site-locale";
 
 export function QuickContactForm({
   phone = "+237 677 87 34 42",
-  email,
 }: {
   phone?: string;
-  email?: string;
 }) {
   const locale = useSiteLocale();
   const en = locale === "en";
@@ -19,12 +17,12 @@ export function QuickContactForm({
   const [formboldWarning, setFormboldWarning] = useState(false);
   const [channel, setChannel] = useState<"email" | "whatsapp" | "both">("email");
   const submissionId = useRef<string | null>(null);
-  const phoneLink = phone.replace(/[^\d+]/g, "");
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     // The submit event covers both the button click and Enter; the backend saves
     // the request for the practice to review and answer manually.
     event.preventDefault();
+    if (status === "sending" || status === "success") return;
     const form = event.currentTarget;
     const data = new FormData(form);
     const firstName = String(data.get("name") ?? "").trim();
@@ -79,6 +77,16 @@ export function QuickContactForm({
       setStatus("error");
     }
   };
+
+  if (status === "success") {
+    return (
+      <ContactSubmissionReceipt
+        kind="question"
+        phone={phone}
+        formboldWarning={formboldWarning}
+      />
+    );
+  }
 
   return (
     <form
@@ -201,32 +209,6 @@ export function QuickContactForm({
           ? <>Your request is stored by the practice and sent to FormBold for processing. See our <a className="font-semibold underline underline-offset-2" href="/en/privacy">privacy policy</a>. Do not include medical records or other sensitive information.</>
           : <>Votre demande est enregistrée par le cabinet et transmise à FormBold pour traitement. Consultez notre <a className="font-semibold underline underline-offset-2" href="/confidentialite">politique de confidentialité</a>. N’indiquez pas de dossier médical ni d’information sensible.</>}
       </p>
-
-      {status === "success" && (
-        <div className="space-y-3">
-          <p
-            role="status"
-            className="rounded-md border border-emerald-700/20 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900"
-            data-testid="status-quick-contact-success"
-          >
-            {en
-              ? <>We received your question. Please allow up to 24 hours for a reply. For urgent concerns, call <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>
-              : <>Nous avons bien reçu votre question. Merci de patienter jusqu’à 24 h pour une réponse. En cas d’urgence, appelez le <a className="font-semibold underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.</>}
-          </p>
-          {formboldWarning && (
-            <p
-              role="status"
-              className="rounded-md border border-amber-700/25 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950"
-              data-testid="status-quick-contact-formbold-warning"
-            >
-              {en
-                ? "Your question is saved, but its FormBold notification could not be confirmed. The practice can still view it in the admin inbox."
-                : "Votre question est bien enregistrée, mais sa notification FormBold n’a pas été confirmée. Le cabinet peut toujours la consulter dans sa boîte admin."}
-            </p>
-          )}
-          <ManualContactLinks email={email} phone={phone} />
-        </div>
-      )}
 
       {status === "error" && (
         <p

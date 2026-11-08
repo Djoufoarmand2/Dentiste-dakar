@@ -6,7 +6,7 @@ Site vitrine en français pour la Clinique Sourire Serein, cabinet dentaire situ
 
 - Adresse : Ancienne gare routière, Dakar, Douala, Cameroun.
 - Téléphone / WhatsApp : +237 677 87 34 42.
-- Courriel : bienveillanceclinique4@gmail.com.
+- Courriel : bienveillanceclinique4@dentiste-sourireserein.cm.
 - Horaires communiqués : 24 h/24, 7 j/7 ; inviter les visiteurs à appeler pour confirmer la disponibilité dentaire.
 - Carte : lien Google Maps officiel fourni dans le contenu Supabase.
 - Établissement d’accueil : Clinique La Bienveillance — https://cliniquelabienveillance.com.
