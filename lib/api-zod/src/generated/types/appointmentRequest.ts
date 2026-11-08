@@ -5,13 +5,18 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { AppointmentRequestContactChannel } from './appointmentRequestContactChannel';
+import type { AppointmentRequestEmailStatus } from './appointmentRequestEmailStatus';
 import type { AppointmentRequestPreferredWindow } from './appointmentRequestPreferredWindow';
+import type { AppointmentRequestReplyStatus } from './appointmentRequestReplyStatus';
+import type { AppointmentRequestWhatsappStatus } from './appointmentRequestWhatsappStatus';
 
 export interface AppointmentRequest {
   id: string;
   name: string;
   phone: string;
-  email: string;
+  /** @nullable */
+  email?: string | null;
   service: string;
   /** @nullable */
   preferredDate?: string | null;
@@ -19,5 +24,11 @@ export interface AppointmentRequest {
   preferredWindow?: AppointmentRequestPreferredWindow;
   /** @nullable */
   message?: string | null;
+  contactChannel: AppointmentRequestContactChannel;
+  whatsappConsent: boolean;
+  emailStatus: AppointmentRequestEmailStatus;
+  whatsappStatus: AppointmentRequestWhatsappStatus;
+  contactValidated: boolean;
+  replyStatus: AppointmentRequestReplyStatus;
   createdAt: Date;
 }

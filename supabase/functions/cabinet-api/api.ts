@@ -554,6 +554,8 @@ export const submitContactAppointmentBodyPhoneMax = 40;
 
 export const submitContactAppointmentBodyEmailMax = 254;
 
+export const submitContactAppointmentBodyContactChannelDefault = `email`;
+export const submitContactAppointmentBodyWhatsappConsentDefault = false;
 export const submitContactAppointmentBodyMessageMax = 2000;
 
 export const submitContactAppointmentBodyWebsiteMax = 200;
@@ -563,10 +565,12 @@ export const submitContactAppointmentBodyWebsiteMax = 200;
 export const SubmitContactAppointmentBody = zod.object({
   "name": zod.string().min(1).max(submitContactAppointmentBodyNameMax),
   "phone": zod.string().min(1).max(submitContactAppointmentBodyPhoneMax),
-  "email": zod.string().email().max(submitContactAppointmentBodyEmailMax),
+  "email": zod.string().email().max(submitContactAppointmentBodyEmailMax).optional(),
   "service": zod.enum(['Consultation dentaire', 'Détartrage et polissage', 'Traitement des caries', 'Plombage / composite', 'Kinésithérapie dentaire / maxillo-faciale', 'Laboratoire prothétique', 'Chirurgie dentaire']),
   "preferredDate": zod.coerce.date().optional(),
   "preferredWindow": zod.enum(['weekdays', 'saturday']).optional(),
+  "contactChannel": zod.enum(['email', 'whatsapp', 'both']).default(submitContactAppointmentBodyContactChannelDefault),
+  "whatsappConsent": zod.boolean().default(submitContactAppointmentBodyWhatsappConsentDefault),
   "message": zod.string().max(submitContactAppointmentBodyMessageMax).optional(),
   "website": zod.string().max(submitContactAppointmentBodyWebsiteMax).optional(),
   "submissionId": zod.string().uuid().optional()
@@ -575,22 +579,98 @@ export const SubmitContactAppointmentBody = zod.object({
 export const SubmitContactAppointmentResponse = zod.object({
   "accepted": zod.boolean(),
   "requestId": zod.string().uuid().optional(),
-  "notificationSent": zod.boolean().optional()
+  "notificationSent": zod.boolean().optional(),
+  "statusToken": zod.string().optional(),
+  "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional(),
+  "whatsappStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional()
 })
+
+
+/**
+ * @summary Persist a public contact question privately
+ */
+export const submitContactQuestionBodyNameMax = 120;
+
+export const submitContactQuestionBodyEmailMax = 254;
+
+export const submitContactQuestionBodyPhoneMax = 40;
+
+export const submitContactQuestionBodyMessageMin = 5;
+export const submitContactQuestionBodyMessageMax = 2000;
+
+export const submitContactQuestionBodyWhatsappConsentDefault = false;
+export const submitContactQuestionBodyWebsiteMax = 200;
+
+
+
+export const SubmitContactQuestionBody = zod.object({
+  "submissionId": zod.string().uuid(),
+  "name": zod.string().max(submitContactQuestionBodyNameMax).optional(),
+  "email": zod.string().email().max(submitContactQuestionBodyEmailMax).optional(),
+  "phone": zod.string().max(submitContactQuestionBodyPhoneMax).optional(),
+  "message": zod.string().min(submitContactQuestionBodyMessageMin).max(submitContactQuestionBodyMessageMax),
+  "contactChannel": zod.enum(['email', 'whatsapp', 'both']),
+  "whatsappConsent": zod.boolean().default(submitContactQuestionBodyWhatsappConsentDefault),
+  "website": zod.string().max(submitContactQuestionBodyWebsiteMax).optional()
+})
+
+export const SubmitContactQuestionResponse = zod.object({
+  "accepted": zod.boolean(),
+  "requestId": zod.string().uuid(),
+  "statusToken": zod.string(),
+  "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional(),
+  "whatsappStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']).optional()
+})
+
+
+/**
+ * @summary Record a provider acceptance or failure for a saved request
+ */
+export const updateContactNotificationStatusBodyStatusTokenMin = 32;
+export const updateContactNotificationStatusBodyStatusTokenMax = 128;
+
+
+
+export const UpdateContactNotificationStatusBody = zod.object({
+  "requestId": zod.string().uuid(),
+  "requestType": zod.enum(['appointment', 'question']),
+  "statusToken": zod.string().min(updateContactNotificationStatusBodyStatusTokenMin).max(updateContactNotificationStatusBodyStatusTokenMax),
+  "emailStatus": zod.enum(['accepted', 'failed'])
+})
+
+export const UpdateContactNotificationStatusResponse = zod.void()
 
 
 export const GetAdminAppointmentsResponseItem = zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
   "phone": zod.string(),
-  "email": zod.string(),
+  "email": zod.string().nullish(),
   "service": zod.string(),
   "preferredDate": zod.string().nullish(),
   "preferredWindow": zod.union([zod.literal('weekdays'),zod.literal('saturday'),zod.literal(null)]).nullish(),
   "message": zod.string().nullish(),
+  "contactChannel": zod.enum(['email', 'whatsapp', 'both']),
+  "whatsappConsent": zod.boolean(),
+  "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']),
+  "whatsappStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']),
+  "contactValidated": zod.boolean(),
+  "replyStatus": zod.enum(['not_replied', 'draft_opened', 'replied']),
   "createdAt": zod.coerce.date()
 })
 export const GetAdminAppointmentsResponse = zod.array(GetAdminAppointmentsResponseItem)
+
+
+export const UpdateAdminAppointmentParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const UpdateAdminAppointmentBody = zod.object({
+  "contactValidated": zod.boolean().optional(),
+  "replyStatus": zod.enum(['not_replied', 'draft_opened', 'replied']).optional()
+})
+
+export const UpdateAdminAppointmentResponse = zod.unknown()
 
 
 export const DeleteAdminAppointmentParams = zod.object({
@@ -598,6 +678,87 @@ export const DeleteAdminAppointmentParams = zod.object({
 })
 
 export const DeleteAdminAppointmentResponse = zod.void()
+
+
+export const GetAdminContactQuestionsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "email": zod.string().nullable(),
+  "phone": zod.string().nullable(),
+  "message": zod.string(),
+  "contactChannel": zod.enum(['email', 'whatsapp', 'both']),
+  "whatsappConsent": zod.boolean(),
+  "emailStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']),
+  "whatsappStatus": zod.enum(['pending', 'accepted', 'failed', 'not_requested', 'not_configured']),
+  "contactValidated": zod.boolean(),
+  "replyStatus": zod.enum(['not_replied', 'draft_opened', 'replied']),
+  "createdAt": zod.coerce.date()
+})
+export const GetAdminContactQuestionsResponse = zod.array(GetAdminContactQuestionsResponseItem)
+
+
+export const UpdateAdminContactQuestionParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const UpdateAdminContactQuestionBody = zod.object({
+  "contactValidated": zod.boolean().optional(),
+  "replyStatus": zod.enum(['not_replied', 'draft_opened', 'replied']).optional()
+})
+
+export const UpdateAdminContactQuestionResponse = zod.unknown()
+
+
+export const DeleteAdminContactQuestionParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const DeleteAdminContactQuestionResponse = zod.void()
+
+
+export const GetAdminMessagingSettingsResponse = zod.object({
+  "emailAutoResponderActive": zod.boolean(),
+  "whatsappEnabled": zod.boolean(),
+  "whatsappPhoneNumberId": zod.string().nullable(),
+  "whatsappTemplateName": zod.string().nullable(),
+  "whatsappTemplateLanguage": zod.string(),
+  "whatsappValidated": zod.boolean(),
+  "whatsappCredentialsReady": zod.boolean()
+})
+
+
+export const updateAdminMessagingSettingsBodyWhatsappPhoneNumberIdMax = 100;
+
+export const updateAdminMessagingSettingsBodyWhatsappTemplateNameMax = 120;
+
+export const updateAdminMessagingSettingsBodyWhatsappTemplateLanguageMin = 2;
+export const updateAdminMessagingSettingsBodyWhatsappTemplateLanguageMax = 20;
+
+
+
+export const UpdateAdminMessagingSettingsBody = zod.object({
+  "emailAutoResponderActive": zod.boolean(),
+  "whatsappEnabled": zod.boolean(),
+  "whatsappPhoneNumberId": zod.string().max(updateAdminMessagingSettingsBodyWhatsappPhoneNumberIdMax).nullable(),
+  "whatsappTemplateName": zod.string().max(updateAdminMessagingSettingsBodyWhatsappTemplateNameMax).nullable(),
+  "whatsappTemplateLanguage": zod.string().min(updateAdminMessagingSettingsBodyWhatsappTemplateLanguageMin).max(updateAdminMessagingSettingsBodyWhatsappTemplateLanguageMax)
+})
+
+export const UpdateAdminMessagingSettingsResponse = zod.object({
+  "emailAutoResponderActive": zod.boolean(),
+  "whatsappEnabled": zod.boolean(),
+  "whatsappPhoneNumberId": zod.string().nullable(),
+  "whatsappTemplateName": zod.string().nullable(),
+  "whatsappTemplateLanguage": zod.string(),
+  "whatsappValidated": zod.boolean(),
+  "whatsappCredentialsReady": zod.boolean()
+})
+
+
+export const ValidateAdminWhatsAppSettingsResponse = zod.object({
+  "valid": zod.boolean(),
+  "message": zod.string()
+})
 
 
 /**

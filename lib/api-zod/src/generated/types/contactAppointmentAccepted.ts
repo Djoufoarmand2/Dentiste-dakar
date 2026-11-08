@@ -5,9 +5,14 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ContactAppointmentAcceptedEmailStatus } from './contactAppointmentAcceptedEmailStatus';
+import type { ContactAppointmentAcceptedWhatsappStatus } from './contactAppointmentAcceptedWhatsappStatus';
 
 export interface ContactAppointmentAccepted {
   accepted: boolean;
   requestId?: string;
   notificationSent?: boolean;
+  statusToken?: string;
+  emailStatus?: ContactAppointmentAcceptedEmailStatus;
+  whatsappStatus?: ContactAppointmentAcceptedWhatsappStatus;
 }

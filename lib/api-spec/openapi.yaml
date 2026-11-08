@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: site
     description: Public website content and administrator access
+  - name: admin
+    description: Private cabinet administration
 paths:
   /healthz:
     get:
@@ -84,6 +86,41 @@ paths:
         "403": { description: Origin not allowed }
         "429": { description: Submission rate exceeded }
         "503": { description: Storage unavailable }
+  /contact/question:
+    post:
+      operationId: submitContactQuestion
+      tags: [site]
+      summary: Persist a public contact question privately
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactQuestionInput" }
+      responses:
+        "201":
+          description: Contact question saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ContactQuestionAccepted" }
+        "400": { description: Invalid request or missing channel consent }
+        "403": { description: Origin not allowed }
+        "429": { description: Submission rate exceeded }
+        "503": { description: Storage unavailable }
+  /contact/notification-status:
+    post:
+      operationId: updateContactNotificationStatus
+      tags: [site]
+      summary: Record a provider acceptance or failure for a saved request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactNotificationStatusInput" }
+      responses:
+        "204": { description: Notification status recorded }
+        "400": { description: Invalid request or status token }
+        "403": { description: Origin not allowed }
+        "404": { description: Request not found }
   /admin/appointments:
     get:
       operationId: getAdminAppointments
@@ -99,6 +136,25 @@ paths:
         "401": { description: Sign-in required }
         "403": { description: Administrator required }
   /admin/appointments/{id}:
+    patch:
+      operationId: updateAdminAppointment
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactRequestAdminUpdate" }
+      responses:
+        "200": { description: Appointment request updated }
+        "400": { description: Invalid update }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+        "404": { description: Request not found }
     delete:
       operationId: deleteAdminAppointment
       tags: [admin]
@@ -111,6 +167,94 @@ paths:
         "204": { description: Request deleted }
         "401": { description: Sign-in required }
         "403": { description: Administrator required }
+  /admin/contact-questions:
+    get:
+      operationId: getAdminContactQuestions
+      tags: [admin]
+      responses:
+        "200":
+          description: Private contact questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ContactQuestion" }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+  /admin/contact-questions/{id}:
+    patch:
+      operationId: updateAdminContactQuestion
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ContactRequestAdminUpdate" }
+      responses:
+        "200": { description: Contact question updated }
+        "400": { description: Invalid update }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+        "404": { description: Request not found }
+    delete:
+      operationId: deleteAdminContactQuestion
+      tags: [admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204": { description: Contact question deleted }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+  /admin/messaging-settings:
+    get:
+      operationId: getAdminMessagingSettings
+      tags: [admin]
+      responses:
+        "200":
+          description: Private notification channel settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MessagingSettings" }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+    put:
+      operationId: updateAdminMessagingSettings
+      tags: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MessagingSettingsInput" }
+      responses:
+        "200":
+          description: Notification channel settings saved
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MessagingSettings" }
+        "400": { description: Invalid settings or channel not validated }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+  /admin/messaging-settings/validate-whatsapp:
+    post:
+      operationId: validateAdminWhatsAppSettings
+      tags: [admin]
+      responses:
+        "200":
+          description: WhatsApp number and approved template validation result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MessagingValidationResponse" }
+        "401": { description: Sign-in required }
+        "403": { description: Administrator required }
+        "503": { description: WhatsApp API configuration unavailable }
   /reviews:
     get:
       operationId: getPublicReviews
@@ -296,7 +440,7 @@ components:
   schemas:
     ContactAppointmentInput:
       type: object
-      required: [name, phone, email, service]
+      required: [name, phone, service]
       properties:
         name: { type: string, minLength: 1, maxLength: 120 }
         phone: { type: string, minLength: 1, maxLength: 40 }
@@ -315,6 +459,11 @@ components:
         preferredWindow:
           type: string
           enum: [weekdays, saturday]
+        contactChannel:
+          type: string
+          enum: [email, whatsapp, both]
+          default: email
+        whatsappConsent: { type: boolean, default: false }
         message: { type: string, maxLength: 2000 }
         website: { type: string, maxLength: 200 }
         submissionId: { type: string, format: uuid }
@@ -325,21 +474,107 @@ components:
         accepted: { type: boolean }
         requestId: { type: string, format: uuid }
         notificationSent: { type: boolean }
+        statusToken: { type: string }
+        emailStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+        whatsappStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
     AppointmentRequest:
       type: object
-      required: [id, name, phone, email, service, createdAt]
+      required: [id, name, phone, service, createdAt, contactChannel, whatsappConsent, emailStatus, whatsappStatus, contactValidated, replyStatus]
       properties:
         id: { type: string, format: uuid }
         name: { type: string }
         phone: { type: string }
-        email: { type: string }
+        email: { type: ["string", "null"] }
         service: { type: string }
         preferredDate: { type: string, nullable: true }
         preferredWindow:
           type: ["string", "null"]
           enum: [weekdays, saturday, null]
         message: { type: string, nullable: true }
+        contactChannel: { type: string, enum: [email, whatsapp, both] }
+        whatsappConsent: { type: boolean }
+        emailStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+        whatsappStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+        contactValidated: { type: boolean }
+        replyStatus: { type: string, enum: [not_replied, draft_opened, replied] }
         createdAt: { type: string, format: date-time }
+    ContactQuestionInput:
+      type: object
+      required: [submissionId, message, contactChannel]
+      properties:
+        submissionId: { type: string, format: uuid }
+        name: { type: string, maxLength: 120 }
+        email: { type: string, format: email, maxLength: 254 }
+        phone: { type: string, maxLength: 40 }
+        message: { type: string, minLength: 5, maxLength: 2000 }
+        contactChannel: { type: string, enum: [email, whatsapp, both] }
+        whatsappConsent: { type: boolean, default: false }
+        website: { type: string, maxLength: 200 }
+    ContactQuestionAccepted:
+      type: object
+      required: [accepted, requestId, statusToken]
+      properties:
+        accepted: { type: boolean }
+        requestId: { type: string, format: uuid }
+        statusToken: { type: string }
+        emailStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+        whatsappStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+    ContactQuestion:
+      type: object
+      required: [id, name, email, phone, message, contactChannel, whatsappConsent, emailStatus, whatsappStatus, contactValidated, replyStatus, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
+        message: { type: string }
+        contactChannel: { type: string, enum: [email, whatsapp, both] }
+        whatsappConsent: { type: boolean }
+        emailStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+        whatsappStatus: { type: string, enum: [pending, accepted, failed, not_requested, not_configured] }
+        contactValidated: { type: boolean }
+        replyStatus: { type: string, enum: [not_replied, draft_opened, replied] }
+        createdAt: { type: string, format: date-time }
+    ContactNotificationStatusInput:
+      type: object
+      required: [requestId, requestType, statusToken, emailStatus]
+      properties:
+        requestId: { type: string, format: uuid }
+        requestType: { type: string, enum: [appointment, question] }
+        statusToken: { type: string, minLength: 32, maxLength: 128 }
+        emailStatus: { type: string, enum: [accepted, failed] }
+    ContactRequestAdminUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        contactValidated: { type: boolean }
+        replyStatus: { type: string, enum: [not_replied, draft_opened, replied] }
+    MessagingSettings:
+      type: object
+      required: [emailAutoResponderActive, whatsappEnabled, whatsappPhoneNumberId, whatsappTemplateName, whatsappTemplateLanguage, whatsappValidated, whatsappCredentialsReady]
+      properties:
+        emailAutoResponderActive: { type: boolean }
+        whatsappEnabled: { type: boolean }
+        whatsappPhoneNumberId: { type: ["string", "null"] }
+        whatsappTemplateName: { type: ["string", "null"] }
+        whatsappTemplateLanguage: { type: string }
+        whatsappValidated: { type: boolean }
+        whatsappCredentialsReady: { type: boolean }
+    MessagingSettingsInput:
+      type: object
+      required: [emailAutoResponderActive, whatsappEnabled, whatsappPhoneNumberId, whatsappTemplateName, whatsappTemplateLanguage]
+      properties:
+        emailAutoResponderActive: { type: boolean }
+        whatsappEnabled: { type: boolean }
+        whatsappPhoneNumberId: { type: ["string", "null"], maxLength: 100 }
+        whatsappTemplateName: { type: ["string", "null"], maxLength: 120 }
+        whatsappTemplateLanguage: { type: string, minLength: 2, maxLength: 20 }
+    MessagingValidationResponse:
+      type: object
+      required: [valid, message]
+      properties:
+        valid: { type: boolean }
+        message: { type: string }
     Review:
       type: object
       required: [id, name, service, quote, rating, createdAt, source]

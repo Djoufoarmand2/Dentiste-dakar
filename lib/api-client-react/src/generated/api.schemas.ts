@@ -26,6 +26,15 @@ export const ContactAppointmentInputPreferredWindow = {
   saturday: 'saturday',
 } as const;
 
+export type ContactAppointmentInputContactChannel = typeof ContactAppointmentInputContactChannel[keyof typeof ContactAppointmentInputContactChannel];
+
+
+export const ContactAppointmentInputContactChannel = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+  both: 'both',
+} as const;
+
 export interface ContactAppointmentInput {
   /**
      * @minLength 1
@@ -38,10 +47,12 @@ export interface ContactAppointmentInput {
      */
   phone: string;
   /** @maxLength 254 */
-  email: string;
+  email?: string;
   service: ContactAppointmentInputService;
   preferredDate?: string;
   preferredWindow?: ContactAppointmentInputPreferredWindow;
+  contactChannel?: ContactAppointmentInputContactChannel;
+  whatsappConsent?: boolean;
   /** @maxLength 2000 */
   message?: string;
   /** @maxLength 200 */
@@ -49,10 +60,35 @@ export interface ContactAppointmentInput {
   submissionId?: string;
 }
 
+export type ContactAppointmentAcceptedEmailStatus = typeof ContactAppointmentAcceptedEmailStatus[keyof typeof ContactAppointmentAcceptedEmailStatus];
+
+
+export const ContactAppointmentAcceptedEmailStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  failed: 'failed',
+  not_requested: 'not_requested',
+  not_configured: 'not_configured',
+} as const;
+
+export type ContactAppointmentAcceptedWhatsappStatus = typeof ContactAppointmentAcceptedWhatsappStatus[keyof typeof ContactAppointmentAcceptedWhatsappStatus];
+
+
+export const ContactAppointmentAcceptedWhatsappStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  failed: 'failed',
+  not_requested: 'not_requested',
+  not_configured: 'not_configured',
+} as const;
+
 export interface ContactAppointmentAccepted {
   accepted: boolean;
   requestId?: string;
   notificationSent?: boolean;
+  statusToken?: string;
+  emailStatus?: ContactAppointmentAcceptedEmailStatus;
+  whatsappStatus?: ContactAppointmentAcceptedWhatsappStatus;
 }
 
 /**
@@ -66,11 +102,52 @@ export const AppointmentRequestPreferredWindow = {
   saturday: 'saturday',
 } as const;
 
+export type AppointmentRequestContactChannel = typeof AppointmentRequestContactChannel[keyof typeof AppointmentRequestContactChannel];
+
+
+export const AppointmentRequestContactChannel = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+  both: 'both',
+} as const;
+
+export type AppointmentRequestEmailStatus = typeof AppointmentRequestEmailStatus[keyof typeof AppointmentRequestEmailStatus];
+
+
+export const AppointmentRequestEmailStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  failed: 'failed',
+  not_requested: 'not_requested',
+  not_configured: 'not_configured',
+} as const;
+
+export type AppointmentRequestWhatsappStatus = typeof AppointmentRequestWhatsappStatus[keyof typeof AppointmentRequestWhatsappStatus];
+
+
+export const AppointmentRequestWhatsappStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  failed: 'failed',
+  not_requested: 'not_requested',
+  not_configured: 'not_configured',
+} as const;
+
+export type AppointmentRequestReplyStatus = typeof AppointmentRequestReplyStatus[keyof typeof AppointmentRequestReplyStatus];
+
+
+export const AppointmentRequestReplyStatus = {
+  not_replied: 'not_replied',
+  draft_opened: 'draft_opened',
+  replied: 'replied',
+} as const;
+
 export interface AppointmentRequest {
   id: string;
   name: string;
   phone: string;
-  email: string;
+  /** @nullable */
+  email?: string | null;
   service: string;
   /** @nullable */
   preferredDate?: string | null;
@@ -78,7 +155,206 @@ export interface AppointmentRequest {
   preferredWindow?: AppointmentRequestPreferredWindow;
   /** @nullable */
   message?: string | null;
+  contactChannel: AppointmentRequestContactChannel;
+  whatsappConsent: boolean;
+  emailStatus: AppointmentRequestEmailStatus;
+  whatsappStatus: AppointmentRequestWhatsappStatus;
+  contactValidated: boolean;
+  replyStatus: AppointmentRequestReplyStatus;
   createdAt: string;
+}
+
+export type ContactQuestionInputContactChannel = typeof ContactQuestionInputContactChannel[keyof typeof ContactQuestionInputContactChannel];
+
+
+export const ContactQuestionInputContactChannel = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+  both: 'both',
+} as const;
+
+export interface ContactQuestionInput {
+  submissionId: string;
+  /** @maxLength 120 */
+  name?: string;
+  /** @maxLength 254 */
+  email?: string;
+  /** @maxLength 40 */
+  phone?: string;
+  /**
+     * @minLength 5
+     * @maxLength 2000
+     */
+  message: string;
+  contactChannel: ContactQuestionInputContactChannel;
+  whatsappConsent?: boolean;
+  /** @maxLength 200 */
+  website?: string;
+}
+
+export type ContactQuestionAcceptedEmailStatus = typeof ContactQuestionAcceptedEmailStatus[keyof typeof ContactQuestionAcceptedEmailStatus];
+
+
+export const ContactQuestionAcceptedEmailStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  failed: 'failed',
+  not_requested: 'not_requested',
+  not_configured: 'not_configured',
+} as const;
+
+export type ContactQuestionAcceptedWhatsappStatus = typeof ContactQuestionAcceptedWhatsappStatus[keyof typeof ContactQuestionAcceptedWhatsappStatus];
+
+
+export const ContactQuestionAcceptedWhatsappStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  failed: 'failed',
+  not_requested: 'not_requested',
+  not_configured: 'not_configured',
+} as const;
+
+export interface ContactQuestionAccepted {
+  accepted: boolean;
+  requestId: string;
+  statusToken: string;
+  emailStatus?: ContactQuestionAcceptedEmailStatus;
+  whatsappStatus?: ContactQuestionAcceptedWhatsappStatus;
+}
+
+export type ContactQuestionContactChannel = typeof ContactQuestionContactChannel[keyof typeof ContactQuestionContactChannel];
+
+
+export const ContactQuestionContactChannel = {
+  email: 'email',
+  whatsapp: 'whatsapp',
+  both: 'both',
+} as const;
+
+export type ContactQuestionEmailStatus = typeof ContactQuestionEmailStatus[keyof typeof ContactQuestionEmailStatus];
+
+
+export const ContactQuestionEmailStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  failed: 'failed',
+  not_requested: 'not_requested',
+  not_configured: 'not_configured',
+} as const;
+
+export type ContactQuestionWhatsappStatus = typeof ContactQuestionWhatsappStatus[keyof typeof ContactQuestionWhatsappStatus];
+
+
+export const ContactQuestionWhatsappStatus = {
+  pending: 'pending',
+  accepted: 'accepted',
+  failed: 'failed',
+  not_requested: 'not_requested',
+  not_configured: 'not_configured',
+} as const;
+
+export type ContactQuestionReplyStatus = typeof ContactQuestionReplyStatus[keyof typeof ContactQuestionReplyStatus];
+
+
+export const ContactQuestionReplyStatus = {
+  not_replied: 'not_replied',
+  draft_opened: 'draft_opened',
+  replied: 'replied',
+} as const;
+
+export interface ContactQuestion {
+  id: string;
+  name: string;
+  /** @nullable */
+  email: string | null;
+  /** @nullable */
+  phone: string | null;
+  message: string;
+  contactChannel: ContactQuestionContactChannel;
+  whatsappConsent: boolean;
+  emailStatus: ContactQuestionEmailStatus;
+  whatsappStatus: ContactQuestionWhatsappStatus;
+  contactValidated: boolean;
+  replyStatus: ContactQuestionReplyStatus;
+  createdAt: string;
+}
+
+export type ContactNotificationStatusInputRequestType = typeof ContactNotificationStatusInputRequestType[keyof typeof ContactNotificationStatusInputRequestType];
+
+
+export const ContactNotificationStatusInputRequestType = {
+  appointment: 'appointment',
+  question: 'question',
+} as const;
+
+export type ContactNotificationStatusInputEmailStatus = typeof ContactNotificationStatusInputEmailStatus[keyof typeof ContactNotificationStatusInputEmailStatus];
+
+
+export const ContactNotificationStatusInputEmailStatus = {
+  accepted: 'accepted',
+  failed: 'failed',
+} as const;
+
+export interface ContactNotificationStatusInput {
+  requestId: string;
+  requestType: ContactNotificationStatusInputRequestType;
+  /**
+     * @minLength 32
+     * @maxLength 128
+     */
+  statusToken: string;
+  emailStatus: ContactNotificationStatusInputEmailStatus;
+}
+
+export type ContactRequestAdminUpdateReplyStatus = typeof ContactRequestAdminUpdateReplyStatus[keyof typeof ContactRequestAdminUpdateReplyStatus];
+
+
+export const ContactRequestAdminUpdateReplyStatus = {
+  not_replied: 'not_replied',
+  draft_opened: 'draft_opened',
+  replied: 'replied',
+} as const;
+
+export interface ContactRequestAdminUpdate {
+  contactValidated?: boolean;
+  replyStatus?: ContactRequestAdminUpdateReplyStatus;
+}
+
+export interface MessagingSettings {
+  emailAutoResponderActive: boolean;
+  whatsappEnabled: boolean;
+  /** @nullable */
+  whatsappPhoneNumberId: string | null;
+  /** @nullable */
+  whatsappTemplateName: string | null;
+  whatsappTemplateLanguage: string;
+  whatsappValidated: boolean;
+  whatsappCredentialsReady: boolean;
+}
+
+export interface MessagingSettingsInput {
+  emailAutoResponderActive: boolean;
+  whatsappEnabled: boolean;
+  /**
+     * @maxLength 100
+     * @nullable
+     */
+  whatsappPhoneNumberId: string | null;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  whatsappTemplateName: string | null;
+  /**
+     * @minLength 2
+     * @maxLength 20
+     */
+  whatsappTemplateLanguage: string;
+}
+
+export interface MessagingValidationResponse {
+  valid: boolean;
+  message: string;
 }
 
 export type ReviewSource = typeof ReviewSource[keyof typeof ReviewSource];

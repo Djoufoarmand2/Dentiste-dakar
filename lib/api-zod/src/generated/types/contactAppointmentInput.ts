@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ContactAppointmentInputContactChannel } from './contactAppointmentInputContactChannel';
 import type { ContactAppointmentInputPreferredWindow } from './contactAppointmentInputPreferredWindow';
 import type { ContactAppointmentInputService } from './contactAppointmentInputService';
 
@@ -20,10 +21,12 @@ export interface ContactAppointmentInput {
      */
   phone: string;
   /** @maxLength 254 */
-  email: string;
+  email?: string;
   service: ContactAppointmentInputService;
   preferredDate?: Date;
   preferredWindow?: ContactAppointmentInputPreferredWindow;
+  contactChannel?: ContactAppointmentInputContactChannel;
+  whatsappConsent?: boolean;
   /** @maxLength 2000 */
   message?: string;
   /** @maxLength 200 */
