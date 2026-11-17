@@ -1,0 +1,4 @@
+# L’administration a été déplacée de /admin vers /arm.
+/admin /arm/ 301
+/admin/ /arm/ 301
+/admin/* /arm/ 301

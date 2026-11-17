@@ -137,7 +137,7 @@ const fixedRoutes = [
   '/en/faq/', '/en/blog/', '/en/information/', '/en/contact/', '/en/privacy/',
 ];
 const routes = new Set(fixedRoutes);
-const privateRoutes = ['/arm', '/admin', '/sign-in', '/sign-up', '/forgot-password', '/auth/callback'];
+const privateRoutes = ['/arm', '/sign-in', '/sign-up', '/forgot-password', '/auth/callback'];
 let publicContent;
 const supabaseUrl = viteSetting('VITE_SUPABASE_URL');
 const publishableKey = viteSetting('VITE_SUPABASE_PUBLISHABLE_KEY');
