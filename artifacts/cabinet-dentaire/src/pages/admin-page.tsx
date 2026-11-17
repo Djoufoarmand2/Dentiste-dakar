@@ -7,6 +7,7 @@ import { AdminReviewsPanel } from '@/components/admin-reviews-panel';
 import { AdminAppointmentsPanel } from '@/components/admin-appointments-panel';
 import { AdminMessagingPanel } from '@/components/admin-messaging-panel';
 import { MediaField } from '@/components/media-field';
+import { AdminConfirmDelete } from '@/components/admin-confirm-delete';
 import { LogoWordmark } from '@/components/public-site';
 import {
   adminAccessKey,
@@ -25,7 +26,8 @@ import { defaultPrivacyPolicyContent, defaultWhyChooseContent } from '@/lib/site
 import { Link } from 'wouter';
 
 type ArraySection = 'services' | 'team' | 'gallery' | 'testimonials' | 'faqs' | 'blogPosts' | 'campaigns' | 'socialLinks';
-type AdminSection = ArraySection | 'clinic' | 'hero' | 'whyChoose' | 'privacyPolicy';
+type AdminSection = ArraySection | 'clinic' | 'hero' | 'whyChoose' | 'privacyPolicy' | 'inbox';
+type LanguageView = 'fr' | 'en' | 'all';
 
 const sections: { key: ArraySection; label: string }[] = [
   { key: 'services', label: 'Soins' },
@@ -43,6 +45,7 @@ const sectionLabels: Record<AdminSection, string> = {
   hero: 'Accueil',
   whyChoose: 'Pourquoi nous choisir',
   privacyPolicy: 'Confidentialité',
+  inbox: 'Demandes reçues',
   services: 'Soins',
   team: 'Équipe',
   gallery: 'Galerie',
@@ -57,6 +60,7 @@ const adminTabs: { key: AdminSection; label: string }[] = [
   { key: 'hero', label: sectionLabels.hero },
   { key: 'whyChoose', label: sectionLabels.whyChoose },
   { key: 'privacyPolicy', label: sectionLabels.privacyPolicy },
+  { key: 'inbox', label: sectionLabels.inbox },
   ...sections,
 ];
 
@@ -213,6 +217,7 @@ function missingEnglishContent(content: SiteContent): TranslationGap[] {
     blogPosts: [['title', 'titleEn'], ['slug', 'slugEn'], ['excerpt', 'excerptEn'], ['content', 'contentEn'], ['author', 'authorEn'], ['imageAlt', 'imageAltEn']],
     campaigns: [['title', 'titleEn'], ['description', 'descriptionEn'], ['transcript', 'transcriptEn']],
     socialLinks: [],
+    inbox: [],
   };
 
   for (const section of ['clinic', 'hero', 'whyChoose', 'privacyPolicy'] as const) {
@@ -230,6 +235,15 @@ function missingEnglishContent(content: SiteContent): TranslationGap[] {
   return gaps;
 }
 
+function shouldShowField(name: string, fields: Record<string, unknown>, view: LanguageView) {
+  if (view === 'all') return true;
+  const hasEnglishPair = name.endsWith('En')
+    ? name.slice(0, -2) in fields
+    : `${name}En` in fields;
+  if (!hasEnglishPair) return true;
+  return name.endsWith('En') === (view === 'en');
+}
+
 export default function AdminPage() {
   const { session } = useCabinetSession();
   const access = useAdminAccess();
@@ -240,6 +254,9 @@ export default function AdminPage() {
   const [version, setVersion] = useState<number | null>(null);
   const [section, setSection] = useState<AdminSection>('clinic');
   const [saved, setSaved] = useState(false);
+  const [draftChanged, setDraftChanged] = useState(false);
+  const [languageView, setLanguageView] = useState<LanguageView>('fr');
+  const [translationListOpen, setTranslationListOpen] = useState(false);
   const [publicationValidationError, setPublicationValidationError] = useState<string | null>(null);
   const [seoRefreshStatus, setSeoRefreshStatus] = useState<'idle' | 'preview' | 'triggering' | 'started' | 'failed'>('idle');
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
@@ -268,10 +285,15 @@ export default function AdminPage() {
         ? draft.privacyPolicy?.sections as unknown as Record<string, unknown>[] || []
         : section === 'clinic' || section === 'hero'
           ? []
-          : draft[section] as unknown as Record<string, unknown>[];
+          : section === 'inbox'
+            ? []
+            : draft[section] as unknown as Record<string, unknown>[];
   const translationGaps = draft ? missingEnglishContent(draft) : [];
   const busy = update.isPending;
-  const protectedUrls = collectMediaUrls(draft);
+  const protectedUrls = Array.from(new Set([
+    ...collectMediaUrls(contentQuery.data?.content),
+    ...collectMediaUrls(draft),
+  ]));
   const seoRefreshMessage = seoRefreshStatus === 'preview'
     ? 'Contenu publié. Le sitemap sera régénéré au prochain build.'
     : seoRefreshStatus === 'triggering'
@@ -284,6 +306,7 @@ export default function AdminPage() {
 
   function markDraftChanged() {
     setSaved(false);
+    setDraftChanged(true);
     setPublicationValidationError(null);
     setSeoRefreshStatus('idle');
   }
@@ -308,7 +331,7 @@ export default function AdminPage() {
   }
 
   function setArrayField(index: number, key: string, raw: string) {
-    if (busy || !draft || section === 'clinic' || section === 'hero') return;
+    if (busy || !draft || section === 'clinic' || section === 'hero' || section === 'inbox') return;
     const source = section === 'whyChoose'
       ? draft.whyChoose?.values ?? []
       : section === 'privacyPolicy'
@@ -332,7 +355,7 @@ export default function AdminPage() {
   }
 
   function addItem() {
-    if (busy || !draft || section === 'clinic' || section === 'hero') return;
+    if (busy || !draft || section === 'clinic' || section === 'hero' || section === 'inbox') return;
     const id = `${section}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     if (section === 'whyChoose') {
       const values = [...(draft.whyChoose?.values ?? []), { id, title: '', body: '', titleEn: '', bodyEn: '' }];
@@ -347,20 +370,21 @@ export default function AdminPage() {
     markDraftChanged();
   }
 
-  function removeItem(index: number) {
-    if (busy || !draft || section === 'clinic' || section === 'hero') return;
+  function removeItem(id: string) {
+    if (busy || !draft || section === 'clinic' || section === 'hero' || section === 'inbox') return;
     const source = section === 'whyChoose'
       ? draft.whyChoose?.values ?? []
       : section === 'privacyPolicy'
         ? draft.privacyPolicy?.sections ?? []
         : draft[section];
     const current = source as unknown as Record<string, unknown>[];
-    if (section === 'privacyPolicy' && current[index]?.required === true) {
+    const item = current.find((candidate) => String(candidate.id) === id);
+    if (!item) return;
+    if (section === 'privacyPolicy' && item.required === true) {
       window.alert('Cette rubrique de confidentialité est requise et ne peut pas être supprimée.');
       return;
     }
-    if (!window.confirm('Supprimer cet élément ? Cette action sera appliquée après publication.')) return;
-    const next = current.filter((_, i) => i !== index);
+    const next = current.filter((candidate) => String(candidate.id) !== id);
     if (section === 'whyChoose') {
       setDraft({ ...draft, whyChoose: { ...draft.whyChoose!, values: next as unknown as NonNullable<SiteContent['whyChoose']>['values'] } });
     } else if (section === 'privacyPolicy') {
@@ -393,6 +417,7 @@ export default function AdminPage() {
         setDraft(ensureTranslationFields(JSON.parse(JSON.stringify(document.content)) as SiteContent));
         setVersion(document.version);
         setSaved(true);
+        setDraftChanged(false);
         if (!import.meta.env.PROD) {
           setSeoRefreshStatus('preview');
           return;
@@ -423,7 +448,10 @@ export default function AdminPage() {
     if (result.data) {
       setDraft(ensureTranslationFields(structuredClone(result.data.content)));
       setVersion(result.data.version);
-      markDraftChanged();
+      setSaved(false);
+      setDraftChanged(false);
+      setPublicationValidationError(null);
+      setSeoRefreshStatus('idle');
       update.reset();
     }
   }
@@ -434,44 +462,45 @@ export default function AdminPage() {
   if (contentQuery.isLoading || !draft) return <div className="min-h-[100dvh] bg-[#e6e3eb] p-6"><div className="mx-auto max-w-6xl"><div className="h-12 w-56 animate-pulse rounded bg-secondary" /><div className="mt-8 h-96 rounded-3xl bg-secondary/60" /></div></div>;
 
   return <div className="min-h-[100dvh] bg-[#e6e3eb] text-foreground">
-    <header className="sticky top-0 z-20 border-b border-border bg-[#e6e3eb]/95 backdrop-blur"><div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-5 py-4 md:px-8"><div className="flex items-center gap-3"><LogoWordmark clinic={draft.clinic} /><div className="border-l border-border pl-3"><p className="text-[9px] font-bold uppercase tracking-[.2em] text-primary">Administration</p><h1 className="mt-1 font-display text-xl md:text-2xl">Espace de publication</h1></div></div><div className="flex flex-wrap items-center gap-3"><Link href="/" className="hidden text-xs text-muted-foreground hover:text-primary sm:block" data-testid="link-admin-preview">Voir le site <ArrowUpRight className="ml-1 inline" size={13} /></Link><Link href="/sign-in" className="text-xs text-primary" data-testid="link-admin-account">Mon compte / déconnexion</Link><button onClick={publish} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-bold uppercase tracking-[.13em] text-primary-foreground disabled:opacity-60" data-testid="button-publish-site">{busy ? 'Publication…' : saved ? <><Check size={14} /> Publié</> : 'Publier les changements'} <ArrowUpRight size={14} /></button></div></div></header>
-    <div className="mx-auto grid max-w-[1500px] gap-7 px-4 py-6 md:grid-cols-[220px_1fr] md:px-8 md:py-9">
-      <aside className="md:sticky md:top-[90px] md:h-fit"><div className="flex gap-2 overflow-x-auto pb-2 md:flex-col md:overflow-visible">
+     <header className="sticky top-0 z-20 border-b border-border bg-[#e6e3eb]/95 backdrop-blur"><div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-5 md:px-8 md:py-4"><div className="flex min-w-0 items-center gap-3"><LogoWordmark clinic={draft.clinic} /><div className="min-w-0 border-l border-border pl-3"><p className="text-[9px] font-bold uppercase tracking-[.2em] text-primary">Administration</p><h1 className="mt-1 break-words font-display text-lg sm:text-xl md:text-2xl">Espace de publication</h1></div></div><div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3"><Link href="/" className="hidden text-xs text-muted-foreground hover:text-primary sm:block" data-testid="link-admin-preview">Voir le site <ArrowUpRight className="ml-1 inline" size={13} /></Link><Link href="/sign-in" className="text-xs text-primary" data-testid="link-admin-account">Mon compte / déconnexion</Link>{section !== 'inbox' && <button onClick={publish} disabled={busy || !draftChanged} className="ml-auto inline-flex min-h-10 items-center gap-2 rounded-full bg-primary px-4 py-2 text-[10px] font-bold uppercase tracking-[.1em] text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60 sm:ml-0 sm:px-5 sm:py-3 sm:tracking-[.13em]" data-testid="button-publish-site">{busy ? 'Publication…' : saved ? <><Check size={14} /> Publié</> : draftChanged ? 'Publier les changements' : 'Aucune modification'} <ArrowUpRight size={14} /></button>}</div></div></header>
+     <div className="mx-auto grid max-w-[1500px] gap-5 px-4 py-5 sm:px-5 md:px-8 md:py-7 lg:grid-cols-[220px_1fr] lg:gap-7 lg:py-9">
+       <aside className="min-w-0 lg:sticky lg:top-[90px] lg:h-fit"><div className="flex gap-2 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible">
         {adminTabs.map(({ key, label }) => {
           const missingCount = translationGaps.filter((gap) => gap.section === key).length;
-          return <button key={key} onClick={() => setSection(key)} className={`shrink-0 rounded-full px-4 py-3 text-left text-xs font-medium transition-colors md:w-full md:rounded-xl ${section === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary'}`} data-testid={`button-admin-tab-${key}`}>{label}{missingCount > 0 && <span className="ml-2 rounded-full bg-[#b94f5b]/15 px-2 py-0.5 text-[10px] font-bold text-[#8a3440]" aria-label={`${missingCount} contenus à traduire`}>{missingCount}</span>}</button>;
+          return <button key={key} type="button" onClick={() => setSection(key)} className={`min-h-10 shrink-0 rounded-full px-4 py-3 text-left text-xs font-medium transition-colors lg:w-full lg:rounded-xl ${section === key ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary'}`} data-testid={`button-admin-tab-${key}`}>{label}{missingCount > 0 && <span className="ml-2 rounded-full bg-[#b94f5b]/15 px-2 py-0.5 text-[10px] font-bold text-[#8a3440]" aria-label={`${missingCount} contenus à traduire`}>{missingCount}</span>}</button>;
         })}
-      </div><p className="mt-6 hidden rounded-2xl border border-border bg-card p-4 text-[11px] leading-5 text-muted-foreground md:block">Les changements sont enregistrés ensemble et deviennent visibles dès leur publication.</p></aside>
-      <main className="min-w-0">
-        <div className="mb-6 flex flex-col justify-between gap-2 md:flex-row md:items-end"><div><p className="text-[10px] uppercase tracking-[.2em] text-primary">{section === 'clinic' ? 'Coordonnées & identité' : section === 'hero' ? 'Première impression' : sectionLabels[section]}</p><h2 className="mt-2 font-display text-3xl md:text-4xl">{section === 'clinic' ? 'Informations du cabinet' : section === 'hero' ? 'Contenu de l’accueil' : sectionLabels[section]}</h2></div><p className="text-xs text-muted-foreground">Modifications non publiées : enregistrées dans cette session</p></div>
+       </div><p className="mt-6 hidden rounded-2xl border border-border bg-card p-4 text-[11px] leading-5 text-muted-foreground lg:block">Les changements sont enregistrés ensemble et deviennent visibles dès leur publication.</p></aside>
+       <main className="min-w-0">
+         <div className="mb-6 flex flex-col justify-between gap-3 md:flex-row md:items-end"><div><p className="text-[10px] uppercase tracking-[.2em] text-primary">{section === 'clinic' ? 'Coordonnées & identité' : section === 'hero' ? 'Première impression' : sectionLabels[section]}</p><h2 className="mt-2 font-display text-3xl md:text-4xl">{section === 'clinic' ? 'Informations du cabinet' : section === 'hero' ? 'Contenu de l’accueil' : sectionLabels[section]}</h2></div>{section !== 'inbox' && <div className="flex flex-wrap items-center gap-3"><p role="status" className="text-xs text-muted-foreground">{draftChanged ? 'Modifications en attente de publication.' : saved ? 'Toutes les modifications sont publiées.' : 'Aucune modification en attente.'}</p><div className="flex rounded-lg border border-border bg-white p-1" role="group" aria-label="Champs à afficher"><button type="button" onClick={() => setLanguageView('fr')} aria-pressed={languageView === 'fr'} className={`min-h-9 rounded-md px-3 text-xs font-semibold ${languageView === 'fr' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary'}`}>Français</button><button type="button" onClick={() => setLanguageView('en')} aria-pressed={languageView === 'en'} className={`min-h-9 rounded-md px-3 text-xs font-semibold ${languageView === 'en' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary'}`}>English</button><button type="button" onClick={() => setLanguageView('all')} aria-pressed={languageView === 'all'} className={`min-h-9 rounded-md px-3 text-xs font-semibold ${languageView === 'all' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary'}`}>Tout</button></div></div>}</div>
         {section === 'blogPosts' && !contentQuery.data?.content.editorialBlogLibraryManaged && <div className="mb-6 rounded-2xl border border-[#8c6f0b]/25 bg-[#fff9e8] p-5 text-sm leading-6 text-[#4d432a]" role="status" data-testid="notice-editorial-blog-import">Les {editorialBlogPosts.length} nouveaux articles et leurs liens vers les soins sont préchargés dans ce brouillon. Publiez une première fois pour les enregistrer dans le CMS ; vous pourrez ensuite les modifier, les dépublier ou les supprimer ici sans qu’ils réapparaissent depuis les fichiers du site.</div>}
-        {translationGaps.length > 0 && <section className="mb-7 rounded-2xl border border-[#8c6f0b]/25 bg-[#fff9e8] p-5 md:p-6" aria-labelledby="translation-gaps-title" data-testid="translation-gaps">
-          <div className="flex flex-wrap items-start justify-between gap-3"><div><h3 id="translation-gaps-title" className="font-display text-xl text-[#073e53]">Traductions anglaises à compléter</h3><p className="mt-1 text-sm text-muted-foreground">{translationGaps.length} contenu(s) ont des champs anglais vides. Ouvrez un élément pour les compléter, puis publiez les changements.</p></div><span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8c6f0b]">{translationGaps.length} à vérifier</span></div>
-          <ul className="mt-4 grid gap-2 md:grid-cols-2">{translationGaps.slice(0, 16).map((gap) => {
+         {section !== 'inbox' && translationGaps.length > 0 && <section className="mb-7 rounded-2xl border border-[#8c6f0b]/25 bg-[#fff9e8] p-4 md:p-5" aria-labelledby="translation-gaps-title" data-testid="translation-gaps">
+           <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 id="translation-gaps-title" className="font-display text-lg text-[#073e53]">Traductions anglaises à compléter</h3><p className="mt-1 text-xs text-muted-foreground">{translationGaps.length} contenu(s) à vérifier. Ouvrez un élément pour modifier ses champs anglais.</p></div><button type="button" aria-expanded={translationListOpen} aria-controls="translation-gap-list" onClick={() => setTranslationListOpen((open) => !open)} className="min-h-10 rounded-lg border border-[#8c6f0b]/30 bg-white px-4 text-xs font-semibold text-[#073e53] hover:bg-[#fffdfa]">{translationListOpen ? 'Masquer la liste' : 'Afficher la liste'} · {translationGaps.length}</button></div>
+           {translationListOpen && <ul id="translation-gap-list" className="mt-4 grid gap-2 md:grid-cols-2">{translationGaps.slice(0, 16).map((gap) => {
             const targetId = gap.id
               ? `admin-entry-${gap.section}-${gap.id}`
               : `admin-singleton-${gap.section}`;
-            return <li key={`${gap.section}-${gap.id || gap.label}`}><button type="button" onClick={() => { setSection(gap.section); setFocusTarget(targetId); }} className="w-full rounded-xl border border-[#8c6f0b]/15 bg-white px-4 py-3 text-left transition-colors hover:border-[#8c6f0b]/45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#8c6f0b]" data-testid="button-open-translation-gap"><span className="block text-xs font-semibold text-[#073e53]">{gap.label} · {sectionLabels[gap.section]}</span><span className="mt-1 block text-[11px] leading-5 text-muted-foreground">{gap.missing.join(' · ')}</span></button></li>;
+             return <li key={`${gap.section}-${gap.id || gap.label}`}><button type="button" onClick={() => { setSection(gap.section); setLanguageView('en'); setFocusTarget(targetId); setTranslationListOpen(false); }} className="w-full rounded-xl border border-[#8c6f0b]/15 bg-white px-4 py-3 text-left transition-colors hover:border-[#8c6f0b]/45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#8c6f0b]" data-testid="button-open-translation-gap"><span className="block text-xs font-semibold text-[#073e53]">{gap.label} · {sectionLabels[gap.section]}</span><span className="mt-1 block text-[11px] leading-5 text-muted-foreground">{gap.missing.join(' · ')}</span></button></li>;
           })}</ul>
-          {translationGaps.length > 16 && <p className="mt-3 text-xs text-muted-foreground">Les autres éléments sont signalés dans leurs onglets respectifs.</p>}
+           }
+           {translationListOpen && translationGaps.length > 16 && <p className="mt-3 text-xs text-muted-foreground">Les autres éléments sont signalés dans leurs onglets respectifs.</p>}
         </section>}
+         {section === 'inbox' && <div className="mb-6 rounded-2xl border border-[#18365f]/15 bg-white p-4 text-sm leading-6 text-muted-foreground">Les rendez-vous et questions reçus sont regroupés dans cet onglet. Les autres rubriques restent dédiées au contenu du site.</div>}
         {section === 'testimonials' && <div className="mb-5 rounded-2xl border border-[#b94f5b]/40 bg-[#f7e9ec] p-4 text-xs leading-5 text-[#070116]" data-testid="notice-admin-sample-content"><b>Consentement :</b> les témoignages historiques du CMS ne comportent pas de preuve de consentement enregistrée. Faites confirmer l’autorisation par le cabinet avant tout transfert ou nouvelle publication. Les exemples fictifs identifiés sont masqués du site public.</div>}
          {section === 'socialLinks' && <p className="mb-5 rounded-2xl border border-border bg-card p-4 text-sm leading-6 text-muted-foreground" data-testid="notice-social-links-help">Ajoutez les profils officiels du cabinet. Si le champ logo est vide, le site affiche l’icône intégrée correspondant à la plateforme. Les changements deviennent visibles après publication.</p>}
-        <AdminAppointmentsPanel />
-         <AdminMessagingPanel />
+         {section === 'inbox' && <><AdminAppointmentsPanel /><AdminMessagingPanel /></>}
         {section === 'testimonials' && <div className="mb-8"><AdminReviewsPanel /></div>}
-        {(section === 'clinic' || section === 'hero' || section === 'whyChoose' || section === 'privacyPolicy') && <div id={`admin-singleton-${section}`} className="grid gap-4 md:grid-cols-2" data-testid={`admin-singleton-${section}`}>
-          {Object.entries(currentFields || {}).filter(([key]) => key !== 'values' && key !== 'sections').map(([key, value]) => <AdminField key={`${section}-${key}`} name={key} value={value} onChange={(raw) => setObjectField(key, raw)} wide={['description', 'openingHours', 'intro', 'partnerBody', 'contactIntro'].includes(key)} protectedUrls={protectedUrls} disabled={busy} />)}
+         {(section === 'clinic' || section === 'hero' || section === 'whyChoose' || section === 'privacyPolicy') && <div id={`admin-singleton-${section}`} className="grid gap-4 md:grid-cols-2" data-testid={`admin-singleton-${section}`}>
+           {Object.entries(currentFields || {}).filter(([key]) => key !== 'values' && key !== 'sections' && shouldShowField(key, currentFields as unknown as Record<string, unknown>, languageView)).map(([key, value]) => <AdminField key={`${section}-${key}`} name={key} value={value} onChange={(raw) => setObjectField(key, raw)} wide={['description', 'openingHours', 'intro', 'partnerBody', 'contactIntro'].includes(key)} protectedUrls={protectedUrls} disabled={busy} />)}
         </div>}
-        {section !== 'clinic' && section !== 'hero' && <div className="space-y-5">
+         {section !== 'clinic' && section !== 'hero' && section !== 'inbox' && <div className="space-y-5">
           {section === 'testimonials' && <section className="rounded-2xl border border-border bg-card p-5 md:p-7" data-testid="cms-testimonials-section">
             <p className="eyebrow">Document CMS du site</p>
             <h3 className="mt-2 font-display text-2xl text-[#073e53]">Témoignages historiques</h3>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">Gérez ici les témoignages déjà présents dans le contenu du site. Les avis du formulaire et ceux publiés par le cabinet se gèrent dans la liste ci-dessus. Après confirmation du consentement, ajoutez l’ancien témoignage dans la liste d’avis gérés ci-dessus, puis retirez son entrée CMS. Les doublons temporaires sont masqués sur le site public.</p>
           </section>}
-          {entries.map((item, index) => <section key={String(item.id ?? index)} id={`admin-entry-${section}-${String(item.id ?? index)}`} className="rounded-[22px] border border-border bg-card p-5 md:p-6" data-testid={`admin-entry-${section}-${String(item.id ?? index)}`}>
-             <div className="mb-5 flex items-center justify-between border-b border-border pb-4"><div><p className="text-[9px] uppercase tracking-[.18em] text-muted-foreground">{sectionLabels[section]} · {String(item.id || `Élément ${index + 1}`)}</p><h3 className="mt-1 font-display text-xl">{String(item.title || item.name || item.label || item.question || item.alt || `Élément ${index + 1}`)}</h3></div><button type="button" onClick={() => removeItem(index)} disabled={busy || (section === 'privacyPolicy' && item.required === true)} title={section === 'privacyPolicy' && item.required === true ? 'Cette rubrique est nécessaire à la page de confidentialité.' : 'Supprimer cet élément'} aria-label="Supprimer cet élément" className="grid h-9 w-9 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:cursor-not-allowed disabled:opacity-30" data-testid={`button-remove-${section}-${index}`}><Trash2 size={16} /></button></div>
-             <div className="grid gap-4 md:grid-cols-2">{Object.entries(item).filter(([key]) => !(section === 'privacyPolicy' && key === 'required')).map(([key, value]) => {
+          {entries.map((item, index) => <section key={String(item.id ?? index)} id={`admin-entry-${section}-${String(item.id ?? index)}`} className="min-w-0 rounded-[22px] border border-border bg-card p-4 sm:p-5 md:p-6" data-testid={`admin-entry-${section}-${String(item.id ?? index)}`}>
+             <div className="mb-5 flex min-w-0 items-start justify-between gap-3 border-b border-border pb-4"><div className="min-w-0"><p className="break-all text-[9px] uppercase tracking-[.18em] text-muted-foreground">{sectionLabels[section]} · {String(item.id || `Élément ${index + 1}`)}</p><h3 className="mt-1 break-words font-display text-xl">{String(item.title || item.name || item.label || item.question || item.alt || `Élément ${index + 1}`)}</h3></div>{section !== 'privacyPolicy' || item.required !== true ? <AdminConfirmDelete title="Retirer cet élément ?" description="La suppression sera enregistrée dans le brouillon et deviendra visible sur le site après publication." confirmLabel="Retirer du brouillon" onConfirm={() => removeItem(String(item.id))}><button type="button" disabled={busy} title="Retirer cet élément" aria-label={`Retirer ${String(item.title || item.name || item.label || item.question || item.alt || `l’élément ${index + 1}`)}`} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-destructive/20 text-destructive hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-30" data-testid={`button-remove-${section}-${index}`}><Trash2 size={16} /></button></AdminConfirmDelete> : <span title="Cette rubrique est nécessaire à la page de confidentialité." className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border text-muted-foreground/40" aria-label="Rubrique obligatoire"><Trash2 size={16} /></span>}</div>
+              <div className="grid min-w-0 gap-4 md:grid-cols-2">{Object.entries(item).filter(([key]) => !(section === 'privacyPolicy' && key === 'required') && shouldShowField(key, item, languageView)).map(([key, value]) => {
                const videoDateField = section === 'campaigns' && key === 'publishedAt' && item.mediaType === 'video';
                return <AdminField
                  key={`${String(item.id)}-${key}`}
@@ -496,9 +525,9 @@ export default function AdminPage() {
             {typeof item.imageUrl === 'string' && item.imageUrl && <div className="mt-4"><p className="mb-2 text-[10px] uppercase tracking-[.16em] text-muted-foreground">Aperçu</p><div className="h-48 overflow-hidden rounded-xl bg-secondary"><img src={item.imageUrl} alt="Aperçu du visuel" loading="lazy" className="h-full w-full object-cover" /></div></div>}
           </section>)}
           {!entries.length && <div className="rounded-[22px] border border-dashed border-border bg-card/60 p-10 text-center" data-testid={`empty-admin-${section}`}><ImageIcon className="mx-auto text-primary/70" size={24} /><h3 className="mt-4 font-display text-xl">Aucun élément pour le moment</h3><p className="mt-2 text-sm text-muted-foreground">Ajoutez un premier élément. Les URL d’images sont facultatives.</p></div>}
-          <button onClick={addItem} className="inline-flex items-center gap-2 rounded-full border border-primary/30 px-5 py-3 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground" data-testid={`button-add-${section}`}><Plus size={15} /> Ajouter {sectionLabels[section].toLowerCase()}</button>
+          <button onClick={addItem} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-primary/30 px-5 py-3 text-xs font-semibold text-primary transition-colors hover:bg-primary hover:text-primary-foreground" data-testid={`button-add-${section}`}><Plus size={15} /> Ajouter {sectionLabels[section].toLowerCase()}</button>
         </div>}
-         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-[#e6e3eb] p-4 md:px-6"><div><p className="text-xs font-semibold">Publication immédiate</p><p role={publicationValidationError || update.isError || seoRefreshStatus === 'failed' ? 'alert' : 'status'} className={`mt-1 text-[11px] ${publicationValidationError ? 'font-semibold text-destructive' : 'text-muted-foreground'}`}>{publicationValidationError || (update.isError ? update.error.message : seoRefreshMessage || (saved ? 'Le site public affiche les changements.' : 'Publiez pour rendre vos modifications visibles sur le site.'))}</p>{update.error instanceof CmsError && update.error.status === 409 && <button className="mt-3 text-xs font-semibold text-primary underline" onClick={() => void reloadDraft()} data-testid="button-reload-conflict">Recharger la dernière publication</button>}</div><button onClick={publish} disabled={busy} className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-bold uppercase tracking-[.13em] text-primary-foreground disabled:opacity-60" data-testid="button-publish-bottom">{busy ? 'Publication…' : 'Publier maintenant'} <ArrowUpRight size={14} /></button></div>
+          {section !== 'inbox' && <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-border bg-[#e6e3eb] p-4 md:px-6"><div><p className="text-xs font-semibold">{draftChanged ? 'Modifications en attente' : 'État du contenu'}</p><p role={publicationValidationError || update.isError || seoRefreshStatus === 'failed' ? 'alert' : 'status'} className={`mt-1 text-[11px] ${publicationValidationError ? 'font-semibold text-destructive' : 'text-muted-foreground'}`}>{publicationValidationError || (update.isError ? update.error.message : seoRefreshMessage || (saved ? 'Le site public affiche les changements.' : draftChanged ? 'Publiez pour afficher ces modifications sur le site.' : 'Aucune modification en attente.'))}</p>{update.error instanceof CmsError && update.error.status === 409 && <button className="mt-3 text-xs font-semibold text-primary underline" onClick={() => void reloadDraft()} data-testid="button-reload-conflict">Recharger la dernière publication</button>}</div><button onClick={publish} disabled={busy || !draftChanged} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-3 text-[10px] font-bold uppercase tracking-[.13em] text-primary-foreground disabled:cursor-not-allowed disabled:opacity-60" data-testid="button-publish-bottom">{busy ? 'Publication…' : saved ? <><Check size={14} /> Publié</> : 'Publier maintenant'} <ArrowUpRight size={14} /></button></div>}
       </main>
     </div>
   </div>;

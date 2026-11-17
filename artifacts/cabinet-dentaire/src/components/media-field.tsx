@@ -2,6 +2,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ChangeEvent } fro
 import { FolderOpen, Trash2, Upload, X } from 'lucide-react';
 import { deleteMedia, imageAccept, listMedia, uploadMedia, videoAccept, type MediaAsset } from '@/lib/media';
 import { VideoPlayer } from './video-player';
+import { AdminConfirmDelete } from '@/components/admin-confirm-delete';
 
 type Props = { value: string; onChange: (url: string) => void; kind: 'image' | 'video'; protectedUrls: string[]; disabled?: boolean };
 
@@ -63,7 +64,6 @@ export function MediaField({ value, onChange, kind, protectedUrls, disabled = fa
 
   async function remove(asset: MediaAsset) {
     if (protectedUrls.includes(asset.url) || asset.url === value) return;
-    if (!window.confirm(`Supprimer définitivement « ${asset.name} » de la médiathèque ?`)) return;
     setDeleting(asset.path); setError(null); setSuccess(null);
     try { await deleteMedia(asset.path); setSuccess('Fichier supprimé.'); await refresh(); }
     catch (e) { setError(errText(e)); }
@@ -94,6 +94,7 @@ export function MediaField({ value, onChange, kind, protectedUrls, disabled = fa
     </div>}
     {open && <div id={`${id}-lib`} className="rounded-xl border border-border bg-card p-3" data-testid={`library-${kind}`}>
       <div className="mb-2 flex items-center justify-between"><p className="text-[10px] font-bold uppercase tracking-[.16em] text-primary">Médiathèque · {kind === 'image' ? 'images' : 'vidéos'}</p><button type="button" className="text-xs text-primary hover:underline disabled:opacity-60" disabled={loadingLib} onClick={() => void refresh()} data-testid="button-refresh-library">Actualiser</button></div>
+      {visible.some((asset) => protectedUrls.includes(asset.url)) && <p className="mb-3 rounded-lg bg-secondary/60 p-3 text-xs leading-5 text-muted-foreground">Les fichiers utilisés sur le site sont verrouillés. Retirez leurs références dans le contenu, puis publiez avant de les supprimer de la médiathèque.</p>}
       {loadingLib && !assets ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="h-24 animate-pulse rounded-lg bg-secondary" />)}</div>
         : !visible.length ? <p className="py-6 text-center text-xs text-muted-foreground" data-testid="text-library-empty">Aucun fichier pour le moment. Téléversez un premier {kind === 'image' ? 'visuel' : 'clip'}.</p>
         : <ul className="grid max-h-80 grid-cols-2 gap-2 overflow-y-auto sm:grid-cols-3">{visible.map((a) => {
@@ -105,7 +106,7 @@ export function MediaField({ value, onChange, kind, protectedUrls, disabled = fa
               <span className="block truncate px-2 pt-1 text-[11px]">{a.name}</span>
               <span className="block px-2 text-[10px] text-muted-foreground">{size(a.size)}{locked ? ' · utilisé' : ''}</span>
             </button>
-            <div className="flex justify-end px-1 pb-1"><button type="button" disabled={locked || deleting === a.path || disabled} onClick={() => void remove(a)} title={locked ? 'Utilisé dans le contenu : impossible de supprimer' : 'Supprimer'} aria-label={`Supprimer ${a.name}`} className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-30" data-testid={`button-delete-asset-${a.path}`}><Trash2 size={13} /></button></div>
+            <div className="flex justify-end px-1 pb-1">{locked ? <button type="button" disabled title="Utilisé dans le contenu : impossible de supprimer" aria-label={`Supprimer ${a.name}`} className="grid h-7 w-7 place-items-center rounded-full text-muted-foreground/40" data-testid={`button-delete-asset-${a.path}`}><Trash2 size={13} /></button> : <AdminConfirmDelete title="Supprimer ce fichier ?" description={`Le fichier « ${a.name} » sera supprimé définitivement de la médiathèque.`} onConfirm={() => void remove(a)}><button type="button" disabled={deleting === a.path || disabled} title="Supprimer" aria-label={`Supprimer ${a.name}`} className="grid h-8 w-8 place-items-center rounded-full border border-destructive/20 text-destructive hover:bg-destructive/10 disabled:opacity-40" data-testid={`button-delete-asset-${a.path}`}><Trash2 size={13} /></button></AdminConfirmDelete>}</div>
           </li>;
         })}</ul>}
     </div>}

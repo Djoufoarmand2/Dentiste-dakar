@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ContactQuestion, ContactRequestAdminUpdate } from "@workspace/api-client-react";
 import { Check, Mail, MessageCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AdminConfirmDelete } from "@/components/admin-confirm-delete";
 import { useCabinetSession } from "@/components/auth-provider";
 import { cmsRequest } from "@/lib/supabase";
 
@@ -168,19 +169,22 @@ export function AdminMessagingPanel() {
                 </p>
                 <p className="mt-3 whitespace-pre-wrap rounded-lg bg-[#fbfaf7] p-3 text-sm leading-6">{item.message}</p>
               </div>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                disabled={remove.isPending}
-                onClick={() => {
-                  if (window.confirm("Supprimer définitivement cette question et ses coordonnées ?")) remove.mutate(item.id);
-                }}
-                aria-label="Supprimer cette question"
-                data-testid={`button-delete-question-${item.id}`}
+              <AdminConfirmDelete
+                title="Supprimer cette question ?"
+                description="Cette action supprime définitivement la question et les coordonnées associées de la base du cabinet."
+                onConfirm={() => remove.mutate(item.id)}
               >
-                <Trash2 size={14} className="mr-1" /> Supprimer
-              </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  disabled={remove.isPending}
+                  aria-label="Supprimer cette question"
+                  data-testid={`button-delete-question-${item.id}`}
+                >
+                  <Trash2 size={14} className="mr-1" /> Supprimer
+                </Button>
+              </AdminConfirmDelete>
             </div>
             <ContactReplyActions
               id={item.id}

@@ -4,6 +4,7 @@ import { useCabinetSession } from '@/components/auth-provider';
 import { cmsRequest } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { ContactReplyActions } from '@/components/admin-messaging-panel';
+import { AdminConfirmDelete } from '@/components/admin-confirm-delete';
 
 export function AdminAppointmentsPanel() {
   const { session } = useCabinetSession();
@@ -45,9 +46,13 @@ export function AdminAppointmentsPanel() {
             </p>
             {item.message && <p className="mt-2 whitespace-pre-wrap text-sm">{item.message}</p>}
           </div>
-          <Button variant="destructive" disabled={remove.isPending} onClick={() => {
-            if (window.confirm('Supprimer définitivement cette demande et ses coordonnées ?')) remove.mutate(item.id);
-          }}>Supprimer</Button>
+          <AdminConfirmDelete
+            title="Supprimer cette demande ?"
+            description="Cette action supprime définitivement la demande et ses coordonnées de la base du cabinet."
+            onConfirm={() => remove.mutate(item.id)}
+          >
+            <Button type="button" variant="destructive" disabled={remove.isPending}>Supprimer</Button>
+          </AdminConfirmDelete>
         </div>
           <ContactReplyActions
             id={item.id}

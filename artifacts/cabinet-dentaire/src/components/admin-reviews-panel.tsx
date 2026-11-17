@@ -5,6 +5,7 @@ import { z } from 'zod';
 import type { AdminReviewInput } from '@workspace/api-client-react';
 import { useAdminReviews, useCreateAdminReview, useDeleteAdminReview } from '@/lib/reviews';
 import { Button } from '@/components/ui/button';
+import { AdminConfirmDelete } from '@/components/admin-confirm-delete';
 import {
   Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage,
 } from '@/components/ui/form';
@@ -43,10 +44,6 @@ export function AdminReviewsPanel() {
     } catch {
       // The mutation state below displays the server error.
     }
-  }
-
-  function deleteReview(id: string) {
-    if (window.confirm('Supprimer définitivement cet avis ?')) remove.mutate(id);
   }
 
   return <div className="admin-reviews-panel space-y-7" data-testid="admin-reviews-panel">
@@ -113,9 +110,15 @@ export function AdminReviewsPanel() {
               <h4 className="font-semibold text-[#073e53]">{review.name}</h4>
               <p className="mt-1 text-xs text-muted-foreground">{review.service || 'Sans soin précisé'} · {review.source === 'visitor' ? 'Avis visiteur' : 'Créé par le cabinet'}</p>
             </div>
-            <button type="button" onClick={() => deleteReview(review.id)} disabled={remove.isPending} aria-label={`Supprimer l’avis de ${review.name}`} className="admin-delete-review grid h-10 w-10 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-50" data-testid={`button-admin-delete-review-${review.id}`}>
-              <Trash2 size={17} aria-hidden="true" />
-            </button>
+            <AdminConfirmDelete
+              title="Supprimer cet avis ?"
+              description={`L’avis de ${review.name} sera retiré immédiatement du site et de la liste d’administration.`}
+              onConfirm={() => remove.mutate(review.id)}
+            >
+              <button type="button" disabled={remove.isPending} aria-label={`Supprimer l’avis de ${review.name}`} className="admin-delete-review grid h-10 w-10 shrink-0 place-items-center rounded-full border border-destructive/20 text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50" data-testid={`button-admin-delete-review-${review.id}`}>
+                <Trash2 size={17} aria-hidden="true" />
+              </button>
+            </AdminConfirmDelete>
           </div>
           <p className="my-4 text-sm leading-6 text-foreground/80">« {review.quote} »</p>
           <div className="flex items-center justify-between border-t border-border pt-3">
