@@ -144,7 +144,13 @@ const routes = [
 ];
 
 for (const route of routes) {
-  const response = await fetch(new URL(route.replace(/^\//, ''), baseUrl));
+  const routeUrl = new URL(route.replace(/^\//, ''), baseUrl);
+  const response = await fetch(routeUrl, { redirect: route === '/admin' ? 'manual' : 'follow' });
+  if (route === '/admin') {
+    assert.equal(response.status, 301, 'The retired /admin URL should permanently redirect.');
+    assert.equal(new URL(response.headers.get('location') || '', routeUrl).pathname, '/arm/', 'The retired admin path should redirect to /arm/.');
+    continue;
+  }
   assert.equal(response.status, 200, `${route} should serve the SPA shell`);
   assert.match(response.headers.get('content-type') || '', /text\/html/i, `${route} should return HTML`);
   const html = await response.text();

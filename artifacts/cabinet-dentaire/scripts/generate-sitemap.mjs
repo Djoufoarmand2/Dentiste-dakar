@@ -630,7 +630,7 @@ function structuredDataTags(meta) {
 }
 
 function withPrivateNoindex(template, route) {
-  const pageTitle = route === '/arm' || route === '/admin'
+  const pageTitle = route === '/arm'
     ? 'Espace administrateur'
     : 'Connexion';
   let html = template.replace(/<title>[^<]*<\/title>/i, `<title>${escapeAttribute(pageTitle)} | ${escapeAttribute(clinicName)}</title>`);
