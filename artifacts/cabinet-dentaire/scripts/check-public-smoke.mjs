@@ -139,7 +139,7 @@ const routes = [
   '/informations/', '/contact/', '/confidentialite/',
   '/en/', '/en/services/', '/en/why-choose-us/', '/en/team/', '/en/gallery/', '/en/reviews/',
   '/en/faq/', '/en/blog/', '/en/information/', '/en/contact/', '/en/privacy/',
-  '/arm', '/admin', '/sign-in',
+  '/arm/', '/admin', '/sign-in',
   '/sign-up', '/forgot-password', '/auth/callback',
   ...publicContent.blogPosts.filter((post) => post.published && /^[a-z0-9-]+$/.test(post.slug || '')).map((post) => `/blog/${post.slug}/`),
   ...publicContent.blogPosts.filter((post) => post.published && /^[a-z0-9-]+$/.test(englishBlogPost(post).slug || '')).map((post) => `/en/blog/${englishBlogPost(post).slug}/`),
@@ -162,7 +162,7 @@ for (const route of routes) {
   for (const icon of iconResources) {
     assert.ok(html.includes(`href="${icon.url.pathname}"`), `${route} should reference the ${icon.label}`);
   }
-  const privateRoute = ['/arm', '/admin', '/sign-in', '/sign-up', '/forgot-password', '/auth/callback'].includes(route);
+  const privateRoute = ['/arm/', '/arm', '/admin', '/sign-in', '/sign-up', '/forgot-password', '/auth/callback'].includes(route);
   if (!indexingEnabled || privateRoute) {
     assert.match(html, /<meta name="robots" content="noindex, nofollow"/i, `${route} should remain noindex until public SEO is enabled`);
   } else {

@@ -11,3 +11,4 @@
 - [Vérification des fichiers Cloudflare](cloudflare-static-assets.md) — vérifier la taille d’un fichier statique avec les octets reçus, pas seulement l’en-tête `Content-Length`.
 - [Bundle Supabase Edge](supabase-edge-bundling.md) — garder le contrat généré dans le dossier de fonction et les imports Deno explicites pour le déploiement distant.
 - [Noms des contraintes PostgreSQL](supabase-migration-constraint-names.md) — éviter de réutiliser le nom automatique d’un CHECK de colonne pour une contrainte de table.
+- [Préproduction et données Supabase](preproduction-shared-supabase.md) — les aperçus partagent Supabase de production; éviter les écritures de test sans accord explicite.

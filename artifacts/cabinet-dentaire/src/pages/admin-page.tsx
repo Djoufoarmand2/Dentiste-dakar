@@ -396,6 +396,18 @@ export default function AdminPage() {
     markDraftChanged();
   }
 
+  function requiresDateForNewActiveVideo(campaignId: string, videoUrl: string, publishedAt: string) {
+    const savedCampaign = contentQuery.data?.content.campaigns.find(
+      (campaign) => String(campaign.id) === campaignId,
+    );
+    const unchangedLegacyVideo = savedCampaign?.active === true
+      && savedCampaign.mediaType === 'video'
+      && String(savedCampaign.videoUrl ?? '') === videoUrl
+      && String(savedCampaign.publishedAt ?? '') === publishedAt
+      && !isValidCampaignPublicationDate(String(savedCampaign.publishedAt ?? ''));
+    return !unchangedLegacyVideo;
+  }
+
   function publish() {
     if (!draft || version === null) return;
     if (!isValidClinicPhone(draft.clinic.phone)) {
@@ -405,7 +417,14 @@ export default function AdminPage() {
       return;
     }
     const videoMissingDate = draft.campaigns.find(
-      (campaign) => campaign.mediaType === 'video' && campaign.active && !isValidCampaignPublicationDate(campaign.publishedAt),
+      (campaign) => campaign.mediaType === 'video'
+        && campaign.active
+        && !isValidCampaignPublicationDate(String(campaign.publishedAt ?? ''))
+        && requiresDateForNewActiveVideo(
+          String(campaign.id),
+          String(campaign.videoUrl ?? ''),
+          String(campaign.publishedAt ?? ''),
+        ),
     );
     if (videoMissingDate) {
       setSection('campaigns');
@@ -509,6 +528,14 @@ export default function AdminPage() {
              <div className="mb-5 flex min-w-0 items-start justify-between gap-3 border-b border-border pb-4"><div className="min-w-0"><p className="break-all text-[9px] uppercase tracking-[.18em] text-muted-foreground">{sectionLabels[section]} · {String(item.id || `Élément ${index + 1}`)}</p><h3 className="mt-1 break-words font-display text-xl">{String(item.title || item.name || item.label || item.question || item.alt || `Élément ${index + 1}`)}</h3></div>{section !== 'privacyPolicy' || item.required !== true ? <AdminConfirmDelete title="Retirer cet élément ?" description="La suppression sera enregistrée dans le brouillon et deviendra visible sur le site après publication." confirmLabel="Retirer du brouillon" onConfirm={() => removeItem(String(item.id))}><button type="button" disabled={busy} title="Retirer cet élément" aria-label={`Retirer ${String(item.title || item.name || item.label || item.question || item.alt || `l’élément ${index + 1}`)}`} className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-destructive/20 text-destructive hover:bg-destructive/10 disabled:cursor-not-allowed disabled:opacity-30" data-testid={`button-remove-${section}-${index}`}><Trash2 size={16} /></button></AdminConfirmDelete> : <span title="Cette rubrique est nécessaire à la page de confidentialité." className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-border text-muted-foreground/40" aria-label="Rubrique obligatoire"><Trash2 size={16} /></span>}</div>
               <div className="grid min-w-0 gap-4 md:grid-cols-2">{Object.entries(item).filter(([key]) => !(section === 'privacyPolicy' && key === 'required') && shouldShowField(key, item, languageView)).map(([key, value]) => {
                const videoDateField = section === 'campaigns' && key === 'publishedAt' && item.mediaType === 'video';
+               const videoDateRequired = videoDateField
+                 && item.active === true
+                 && !isValidCampaignPublicationDate(String(item.publishedAt ?? ''))
+                 && requiresDateForNewActiveVideo(
+                   String(item.id),
+                   String(item.videoUrl ?? ''),
+                   String(item.publishedAt ?? ''),
+                 );
                return <AdminField
                  key={`${String(item.id)}-${key}`}
                  name={key}
@@ -517,9 +544,9 @@ export default function AdminPage() {
                  wide={['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'body', 'transcript', 'transcriptEn', 'relatedServiceSlugs', 'relatedArticleSlugs'].includes(key)}
                  protectedUrls={protectedUrls}
                  disabled={busy}
-                  required={videoDateField && item.active === true || section === 'socialLinks' && ['id', 'label', 'url'].includes(key)}
+                  required={videoDateRequired || section === 'socialLinks' && ['id', 'label', 'url'].includes(key)}
                  helperText={videoDateField
-                   ? 'Utilisez la date réelle de publication de la vidéo sur YouTube. Obligatoire avant publication si la vidéo est active.'
+                   ? 'Pour une nouvelle vidéo active, saisissez sa date originale de publication YouTube. Les anciennes vidéos sans date ne bloquent pas les autres modifications.'
                     : section === 'socialLinks' && key === 'logoUrl'
                       ? 'Facultatif : si le logo est vide, le site affiche automatiquement l’icône intégrée de la plateforme.'
                    : key === 'relatedServiceSlugs'

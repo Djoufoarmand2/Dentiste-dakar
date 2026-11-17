@@ -83,12 +83,44 @@ function metaText(value: string, maximumLength: number) {
   return `${shortened || normalized.slice(0, maximumLength - 1).trimEnd()}…`;
 }
 
-function seoTitle(pageName: string, clinicName: string) {
+function extendMetaDescription(value: string, suffix: string, maximumLength = 160) {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length >= 140) return metaText(normalized, maximumLength);
+  const cleanSuffix = suffix.replace(/\s+/g, ' ').trim();
+  const primaryBudget = Math.max(24, maximumLength - cleanSuffix.length - 2);
+  const primary = metaText(normalized, primaryBudget);
+  const separator = /[.!?…]$/.test(primary) ? ' ' : '. ';
+  return metaText(`${primary}${separator}${cleanSuffix}`, maximumLength);
+}
+
+function seoTitle(pageName: string, clinicName: string, city: string, locale: SiteLocale) {
   const suffix = ` | ${clinicName}`;
   const maximumPrefix = Math.max(12, 60 - suffix.length);
-  if (pageName.length <= maximumPrefix) return `${pageName}${suffix}`;
-  const shortened = pageName.slice(0, maximumPrefix - 1).replace(/\s+\S*$/, '').trimEnd();
-  return `${shortened || pageName.slice(0, maximumPrefix - 1).trimEnd()}…${suffix}`;
+  const firstClause = pageName.split(/\s*[:|·—–]\s*/)[0].trim();
+  const shortenedQuestion = locale === 'en'
+    ? firstClause.split(/\s+(?:with|at)\s+/i)[0]
+      .replace(/\s+and composite\b.*$/i, '')
+      .replace(/^How much does (?:a|an|the)\s+/i, '')
+    : firstClause
+      .replace(/^Comment se passe (?:un|une|le|la)\s+/i, '')
+      .replace(/^Comment reconnaître (?:un|une|le|la)\s+/i, '')
+      .replace(/^Combien coûte (?:un|une|le|la)\s+/i, 'Coût du ');
+  const lead = shortenedQuestion.replace(/[?!.,]+$/, '').trim();
+  const normalizedLead = lead ? `${lead.charAt(0).toLocaleUpperCase()}${lead.slice(1)}` : firstClause;
+  const localizedLead = lead.toLocaleLowerCase().includes(city.toLocaleLowerCase())
+    ? normalizedLead
+    : `${normalizedLead} ${locale === 'en' ? 'in' : 'à'} ${city}`;
+  const hasCompactBreak = /[:|·—–]/.test(pageName) || normalizedLead !== firstClause || pageName.length > maximumPrefix;
+  const preferredName = hasCompactBreak && normalizedLead.length >= 8
+    ? localizedLead.length <= maximumPrefix
+      ? localizedLead
+      : normalizedLead.length <= maximumPrefix
+        ? normalizedLead
+        : pageName
+    : pageName;
+  if (preferredName.length <= maximumPrefix) return `${preferredName}${suffix}`;
+  const shortened = preferredName.slice(0, maximumPrefix - 1).replace(/\s+\S*$/, '').trimEnd();
+  return `${shortened || preferredName.slice(0, maximumPrefix - 1).trimEnd()}…${suffix}`;
 }
 
 function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => ReactNode; locale?: SiteLocale }) {
@@ -116,10 +148,10 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
     '/pourquoi-nous-choisir': 'Pourquoi choisir notre cabinet',
     '/equipe': 'Équipe du cabinet dentaire',
     '/galerie': 'Photos du cabinet dentaire',
-    '/avis': 'Avis sur le cabinet dentaire',
-    '/faq': 'Questions fréquentes',
+    '/avis': 'Avis patients',
+    '/faq': 'FAQ dentaire',
     '/blog': 'Conseils dentaires',
-    '/informations': 'Informations pratiques',
+    '/informations': 'Actualités et vidéos',
     '/contact': 'Contact et rendez-vous',
     '/confidentialite': 'Confidentialité',
     },
@@ -130,9 +162,9 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
       '/team': 'Our dental team',
       '/gallery': 'Practice photos',
       '/reviews': 'Patient reviews',
-      '/faq': 'Frequently asked questions',
+      '/faq': 'Dental care FAQs',
       '/blog': 'Dental health articles',
-      '/information': 'Practice information',
+      '/information': 'Practice videos and news',
       '/contact': 'Contact and appointments',
       '/privacy': 'Privacy policy',
     },
@@ -145,7 +177,7 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
     : isPrivacyRoute
       ? (locale === 'en' ? content.privacyPolicy?.titleEn?.trim() : content.privacyPolicy?.title?.trim())
       : isInformationRoute
-        ? (locale === 'en' ? `Dental practice news and videos in ${content.clinic.city}` : `Actualités et vidéos du cabinet dentaire à ${content.clinic.city}`)
+        ? (locale === 'en' ? 'Practice videos and news' : `Actualités et vidéos à ${content.clinic.city}`)
       : '';
   const pageName = (locale === 'en' ? (article ? englishBlogPost(article).title : service ? englishService(service).title : '') : article?.title || service?.title)
     || cmsPageTitle
@@ -154,40 +186,35 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
   const clinicName = content.clinic.name;
   const city = content.clinic.city;
   const activeCampaigns = content.campaigns.filter((campaign) => campaign.active);
-  const campaignText = activeCampaigns
-    .slice(0, 2)
-    .map((campaign) => locale === 'en'
-      ? [campaign.titleEn?.trim(), campaign.descriptionEn?.trim()].filter(Boolean).join(' — ')
-      : [campaign.title?.trim(), campaign.description?.trim()].filter(Boolean).join(' — '))
-    .filter(Boolean)
-    .join(' ');
   const informationDescription = locale === 'en'
-    ? `Watch practice videos and read current campaigns from ${clinicName} in ${city}.${campaignText ? ` ${campaignText}` : ''}`
-    : `Regardez les vidéos et actualités de ${clinicName}, cabinet dentaire à ${city}.${campaignText ? ` ${campaignText}` : ''}`;
+    ? `Find practice news, practical information and videos from ${clinicName} in ${city}. Prepare for your visit and explore oral health topics.`
+    : `Vidéos, actualités et informations pratiques de ${clinicName} à ${city} pour préparer votre visite et découvrir des sujets de santé bucco-dentaire.`;
   const routeDescriptions: Record<SiteLocale, Record<string, string>> = {
     fr: {
-    '/soins': `Découvrez les soins dentaires présentés par ${clinicName} à ${city}. Contactez le cabinet pour organiser une consultation.`,
-    '/pourquoi-nous-choisir': `Découvrez la façon dont ${clinicName}, cabinet dentaire à ${city}, vous accompagne et répond à vos questions.`,
-    '/equipe': `Découvrez l’équipe et les informations présentées par ${clinicName}, cabinet dentaire à ${city}.`,
-    '/galerie': `Découvrez en images les espaces et la vie du cabinet dentaire ${clinicName} à ${city}.`,
-    '/avis': `Lisez les avis publiés sur ${clinicName}, cabinet dentaire à ${city}, et partagez votre expérience.`,
-    '/faq': `Réponses aux questions fréquentes sur les soins dentaires, les rendez-vous et la première visite à ${city}.`,
-    '/blog': `Articles et informations générales sur l’hygiène bucco-dentaire et les soins dentaires à ${city}.`,
+    '/': `Cabinet dentaire à ${city} : ${clinicName} vous accueille à la Clinique La Bienveillance pour vos consultations, soins et conseils bucco-dentaires.`,
+    '/soins': `Découvrez les soins dentaires présentés par ${clinicName} à ${city}. Informez-vous sur les étapes générales et préparez votre consultation à la Clinique La Bienveillance.`,
+    '/pourquoi-nous-choisir': `Découvrez ${clinicName} à ${city} : soins dentaires, informations utiles pour les patients et accompagnement au sein de la Clinique La Bienveillance.`,
+    '/equipe': `Découvrez l’équipe de ${clinicName} à ${city}, ses rôles et les informations utiles pour préparer votre visite à la Clinique La Bienveillance.`,
+    '/galerie': `Découvrez en images les espaces de ${clinicName} à ${city} et les informations pratiques pour préparer votre visite à la Clinique La Bienveillance.`,
+    '/avis': `Consultez les avis publiés sur ${clinicName} à ${city} et partagez votre expérience. Retrouvez les informations pour contacter le cabinet.`,
+    '/faq': `Réponses aux questions sur les rendez-vous, la première visite, les soins dentaires et l’hygiène bucco-dentaire chez ${clinicName} à ${city}.`,
+    '/blog': `Articles et conseils sur la santé bucco-dentaire, les douleurs et les soins dentaires proposés par ${clinicName}, cabinet dentaire à ${city}.`,
     '/informations': informationDescription,
-    '/contact': `Contactez ${clinicName}, cabinet dentaire à ${city}, pour demander des renseignements ou un rendez-vous.`,
-    '/confidentialite': 'Informations sur la collecte, l’utilisation et la protection de vos données personnelles sur le site.',
+    '/contact': `Contactez ${clinicName} à ${city} pour une question ou un rendez-vous. Retrouvez l’adresse, les horaires et les moyens de joindre le cabinet.`,
+    '/confidentialite': `Informations sur la collecte, l’utilisation et la protection de vos données personnelles sur le site de ${clinicName} à ${city}. Découvrez vos droits.`,
     },
     en: {
-      '/services': `Explore dental services presented by ${clinicName} in ${city}. Contact the practice to request a consultation.`,
-      '/why-choose-us': `Learn how ${clinicName}, a dental practice in ${city}, approaches patient care and communication.`,
-      '/team': `Meet the team and learn about ${clinicName}, a dental practice in ${city}.`,
-      '/gallery': `View photos and visual information about ${clinicName} in ${city}.`,
-      '/reviews': `Read visitor reviews shared about ${clinicName}, a dental practice in ${city}.`,
-      '/faq': `Answers to common questions about dental care, appointments and first visits in ${city}.`,
-      '/blog': `General information about oral health and dental care in ${city}.`,
+      '/': `Dental care in ${city}: ${clinicName} welcomes you at Clinique La Bienveillance for consultations, dental services and oral health guidance.`,
+      '/services': `Explore dental services offered by ${clinicName} in ${city}. Learn about general care steps and prepare for a visit at Clinique La Bienveillance.`,
+      '/why-choose-us': `Learn about ${clinicName} in ${city}, its dental services, patient information and care at Clinique La Bienveillance. Find practical details for your visit.`,
+      '/team': `Meet the team at ${clinicName} in ${city}, learn about their roles and find practical information to prepare for your visit at Clinique La Bienveillance.`,
+      '/gallery': `View photos of ${clinicName} in ${city} and learn about the practice. Find practical information to prepare for your visit at Clinique La Bienveillance.`,
+      '/reviews': `Read reviews shared about ${clinicName} in ${city} and share your experience. Find practical information and ways to contact the practice.`,
+      '/faq': `Answers about appointments, first visits, dental care and oral hygiene at ${clinicName} in ${city}. Find useful details before contacting the practice.`,
+      '/blog': `Articles and advice about oral health, tooth pain and dental care in ${city}. Read general information from ${clinicName} and prepare for a visit.`,
       '/information': informationDescription,
-      '/contact': `Contact ${clinicName}, a dental practice in ${city}, to ask a question or request an appointment.`,
-      '/privacy': `Information about how this website collects, uses and protects personal data.`,
+      '/contact': `Contact ${clinicName} in ${city} with a question or appointment request. Find the address, opening hours and ways to reach the practice.`,
+      '/privacy': `Learn what personal data the ${clinicName} website in ${city} collects, how it is used and protected, and what choices you have as a website user.`,
     },
   };
   const cmsPageDescription = isWhyChooseRoute
@@ -200,12 +227,29 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
   const contentDescription = locale === 'en'
     ? (article ? englishBlogPost(article).excerpt : service ? englishService(service).summary : cmsPageDescription)
     : article?.excerpt || service?.summary || cmsPageDescription;
-  const description = metaText(contentDescription || (localizedRoute === '/'
-    ? (locale === 'en' ? content.hero.descriptionEn?.trim() || content.hero.description : content.hero.description)
-    : routeDescriptions[locale][localizedRoute] || (locale === 'en'
+  const routeDescription = routeDescriptions[locale][localizedRoute]
+    || (locale === 'en'
       ? `${pageName} at ${clinicName} in ${city}. Contact the practice for information.`
-      : `${pageName} au ${clinicName}, à ${city}. Informations et contact.`)), 160);
-  const title = seoTitle(localizedRoute === '/' ? (locale === 'en' ? `Dentist in ${city}` : `Cabinet dentaire à ${city}`) : pageName, content.clinic.name);
+      : `${pageName} au ${clinicName}, à ${city}. Informations et contact.`);
+  const serviceDescriptionSuffix = locale === 'en'
+    ? `Learn about general steps and questions to discuss with the dental team in ${city} before your visit.`
+    : `Découvrez les étapes générales et les questions à poser à l’équipe dentaire de ${city} avant votre visite.`;
+  const articleDescriptionSuffix = locale === 'en'
+    ? `General guidance and questions to discuss with a dental professional in ${city}.`
+    : `Repères généraux et conseils à demander au cabinet dentaire de ${city}.`;
+  const description = article
+    ? extendMetaDescription(contentDescription || routeDescription, articleDescriptionSuffix)
+    : service
+      ? extendMetaDescription(contentDescription || routeDescription, serviceDescriptionSuffix)
+      : metaText(
+        localizedRoute === '/'
+          ? routeDescription
+          : contentDescription && contentDescription.length >= 140
+            ? contentDescription
+            : routeDescription,
+        160,
+      );
+  const title = seoTitle(localizedRoute === '/' ? (locale === 'en' ? `Dentist in ${city}` : `Cabinet dentaire à ${city}`) : pageName, content.clinic.name, city, locale);
   const informationCampaign = activeCampaigns.find((campaign) => campaign.mediaType === 'video') || activeCampaigns[0];
   const informationPoster = informationCampaign?.imageUrl?.trim()
     || (informationCampaign?.videoUrl ? getYouTubeThumbnailUrl(informationCampaign.videoUrl) || undefined : undefined);

@@ -415,12 +415,44 @@ function truncateMeta(value, maximum) {
   return `${shortened || normalized.slice(0, maximum - 1).trimEnd()}…`;
 }
 
-function seoTitle(pageName, clinicName) {
+function extendMetaDescription(value, suffix, maximum = 160) {
+  const normalized = String(value ?? '').replace(/\s+/g, ' ').trim();
+  if (normalized.length >= 140) return truncateMeta(normalized, maximum);
+  const cleanSuffix = String(suffix ?? '').replace(/\s+/g, ' ').trim();
+  const primaryBudget = Math.max(24, maximum - cleanSuffix.length - 2);
+  const primary = truncateMeta(normalized, primaryBudget);
+  const separator = /[.!?…]$/.test(primary) ? ' ' : '. ';
+  return truncateMeta(`${primary}${separator}${cleanSuffix}`, maximum);
+}
+
+function seoTitle(pageName, clinicName, city, locale) {
   const suffix = ` | ${clinicName}`;
   const maximumPrefix = Math.max(12, 60 - suffix.length);
-  if (pageName.length <= maximumPrefix) return `${pageName}${suffix}`;
-  const shortened = pageName.slice(0, maximumPrefix - 1).replace(/\s+\S*$/, '').trimEnd();
-  return `${shortened || pageName.slice(0, maximumPrefix - 1).trimEnd()}…${suffix}`;
+  const firstClause = pageName.split(/\s*[:|·—–]\s*/)[0].trim();
+  const shortenedQuestion = locale === 'en'
+    ? firstClause.split(/\s+(?:with|at)\s+/i)[0]
+      .replace(/\s+and composite\b.*$/i, '')
+      .replace(/^How much does (?:a|an|the)\s+/i, '')
+    : firstClause
+      .replace(/^Comment se passe (?:un|une|le|la)\s+/i, '')
+      .replace(/^Comment reconnaître (?:un|une|le|la)\s+/i, '')
+      .replace(/^Combien coûte (?:un|une|le|la)\s+/i, 'Coût du ');
+  const lead = shortenedQuestion.replace(/[?!.,]+$/, '').trim();
+  const normalizedLead = lead ? `${lead.charAt(0).toLocaleUpperCase()}${lead.slice(1)}` : firstClause;
+  const localizedLead = lead.toLocaleLowerCase().includes(city.toLocaleLowerCase())
+    ? normalizedLead
+    : `${normalizedLead} ${locale === 'en' ? 'in' : 'à'} ${city}`;
+  const hasCompactBreak = /[:|·—–]/.test(pageName) || normalizedLead !== firstClause || pageName.length > maximumPrefix;
+  const preferredName = hasCompactBreak && normalizedLead.length >= 8
+    ? localizedLead.length <= maximumPrefix
+      ? localizedLead
+      : normalizedLead.length <= maximumPrefix
+        ? normalizedLead
+        : pageName
+    : pageName;
+  if (preferredName.length <= maximumPrefix) return `${preferredName}${suffix}`;
+  const shortened = preferredName.slice(0, maximumPrefix - 1).replace(/\s+\S*$/, '').trimEnd();
+  return `${shortened || preferredName.slice(0, maximumPrefix - 1).trimEnd()}…${suffix}`;
 }
 
 function escapeAttribute(value) {
@@ -462,21 +494,18 @@ function pageMetadata(route) {
   const translatedService = service ? englishService(service) : undefined;
   const activeCampaigns = (publicContent?.campaigns ?? []).filter((campaign) => campaign.active);
   const activeVideoCampaigns = activeCampaigns.filter((campaign) => campaign.mediaType === 'video' && campaign.videoUrl);
-  const videoCampaignSummary = activeCampaigns.slice(0, 2).map((campaign) => english
-    ? [campaign.titleEn?.trim(), campaign.descriptionEn?.trim()].filter(Boolean).join(' — ')
-    : [campaign.title?.trim(), campaign.description?.trim()].filter(Boolean).join(' — ')).filter(Boolean).join(' ');
   const informationDescription = english
-    ? `Watch practice videos and read current campaigns from ${name} in ${city}.${videoCampaignSummary ? ` ${videoCampaignSummary}` : ''}`
-    : `Regardez les vidéos et actualités de ${name}, cabinet dentaire à ${city}.${videoCampaignSummary ? ` ${videoCampaignSummary}` : ''}`;
+    ? `Find practice news, practical information and videos from ${name} in ${city}. Prepare for your visit and explore oral health topics.`
+    : `Vidéos, actualités et informations pratiques de ${name} à ${city} pour préparer votre visite et découvrir des sujets de santé bucco-dentaire.`;
   const pageNames = english ? {
     '/services': `Dental services in ${city}`,
     '/why-choose-us': 'Why choose our practice',
     '/team': `Dental team in ${city}`,
     '/gallery': `Practice photos in ${city}`,
-    '/reviews': `Reviews of the dental practice in ${city}`,
-    '/faq': 'Dental care frequently asked questions',
+    '/reviews': `Patient reviews in ${city}`,
+    '/faq': 'Dental care FAQs',
     '/blog': `Dental health articles in ${city}`,
-    '/information': `Dental practice news and videos in ${city}`,
+    '/information': `Practice videos and news in ${city}`,
     '/contact': `Contact and appointments in ${city}`,
     '/privacy': 'Privacy policy',
   } : {
@@ -484,46 +513,62 @@ function pageMetadata(route) {
     '/pourquoi-nous-choisir': 'Pourquoi choisir notre cabinet',
     '/equipe': `Équipe du cabinet dentaire à ${city}`,
     '/galerie': `Photos du cabinet dentaire à ${city}`,
-    '/avis': `Avis sur le cabinet dentaire à ${city}`,
-    '/faq': 'Questions fréquentes sur les soins dentaires',
+    '/avis': `Avis patients à ${city}`,
+    '/faq': 'FAQ dentaire',
     '/blog': `Conseils dentaires à ${city}`,
-    '/informations': `Actualités et vidéos du cabinet dentaire à ${city}`,
+    '/informations': `Vidéos et actualités à ${city}`,
     '/contact': `Contact et rendez-vous à ${city}`,
     '/confidentialite': 'Politique de confidentialité',
   };
   const pageName = (english ? translatedArticle?.title || translatedService?.title : article?.title || service?.title)
     || (normalizedRoute === '/' ? (english ? `Dentist in ${city}` : `Cabinet dentaire à ${city}`) : pageNames[normalizedRoute] || (english ? (article ? 'Dental health article' : service ? 'Dental service' : 'Dental practice') : 'Cabinet dentaire'));
-  const title = seoTitle(pageName, name);
+  const title = seoTitle(pageName, name, city, english ? 'en' : 'fr');
   const descriptions = english ? {
-    '/services': `Explore dental services presented by ${name} in ${city}. Contact the practice to request a consultation.`,
-    '/why-choose-us': `Learn how ${name}, a dental practice in ${city}, approaches patient care and communication.`,
-    '/team': `Meet the team and learn about ${name}, a dental practice in ${city}.`,
-    '/gallery': `View photos and visual information about ${name} in ${city}.`,
-    '/reviews': `Read visitor reviews shared about ${name}, a dental practice in ${city}.`,
-    '/faq': `Answers to common questions about dental care, appointments and first visits in ${city}.`,
-    '/blog': `General information about oral health and dental care in ${city}.`,
+    '/': `Dental care in ${city}: ${name} welcomes you at Clinique La Bienveillance for consultations, dental services and oral health guidance.`,
+    '/services': `Explore dental services offered by ${name} in ${city}. Learn about general care steps and prepare for a visit at Clinique La Bienveillance.`,
+    '/why-choose-us': `Learn about ${name} in ${city}, its dental services, patient information and care at Clinique La Bienveillance. Find practical details for your visit.`,
+    '/team': `Meet the team at ${name} in ${city}, learn about their roles and find practical information to prepare for your visit at Clinique La Bienveillance.`,
+    '/gallery': `View photos of ${name} in ${city} and learn about the practice. Find practical information to prepare for your visit at Clinique La Bienveillance.`,
+    '/reviews': `Read reviews shared about ${name} in ${city} and share your experience. Find practical information and ways to contact the practice.`,
+    '/faq': `Answers about appointments, first visits, dental care and oral hygiene at ${name} in ${city}. Find useful details before contacting the practice.`,
+    '/blog': `Articles and advice about oral health, tooth pain and dental care in ${city}. Read general information from ${name} and prepare for a visit.`,
     '/information': informationDescription,
-    '/contact': `Contact ${name}, a dental practice in ${city}, to ask a question or request an appointment.`,
-    '/privacy': 'Information about how this website collects, uses and protects personal data.',
+    '/contact': `Contact ${name} in ${city} with a question or appointment request. Find the address, opening hours and ways to reach the practice.`,
+    '/privacy': `Learn what personal data the ${name} website in ${city} collects, how it is used and protected, and what choices you have as a website user.`,
   } : {
-    '/soins': `Découvrez les soins dentaires présentés par ${name} à ${city}. Contactez le cabinet pour organiser une consultation.`,
-    '/pourquoi-nous-choisir': `Découvrez la façon dont ${name}, cabinet dentaire à ${city}, vous accompagne et répond à vos questions.`,
-    '/equipe': `Découvrez l’équipe et les informations présentées par ${name}, cabinet dentaire à ${city}.`,
-    '/galerie': `Découvrez en images les espaces et la vie du cabinet dentaire ${name} à ${city}.`,
-    '/avis': `Lisez les avis publiés sur ${name}, cabinet dentaire à ${city}, et partagez votre expérience.`,
-    '/faq': `Réponses aux questions fréquentes sur les soins dentaires, les rendez-vous et la première visite à ${city}.`,
-    '/blog': `Articles et informations générales sur l’hygiène bucco-dentaire et les soins dentaires à ${city}.`,
+    '/': `Cabinet dentaire à ${city} : ${name} vous accueille à la Clinique La Bienveillance pour vos consultations, soins et conseils bucco-dentaires.`,
+    '/soins': `Découvrez les soins dentaires présentés par ${name} à ${city}. Informez-vous sur les étapes générales et préparez votre consultation à la Clinique La Bienveillance.`,
+    '/pourquoi-nous-choisir': `Découvrez ${name} à ${city} : soins dentaires, informations utiles pour les patients et accompagnement au sein de la Clinique La Bienveillance.`,
+    '/equipe': `Découvrez l’équipe de ${name} à ${city}, ses rôles et les informations utiles pour préparer votre visite à la Clinique La Bienveillance.`,
+    '/galerie': `Découvrez en images les espaces de ${name} à ${city} et les informations pratiques pour préparer votre visite à la Clinique La Bienveillance.`,
+    '/avis': `Consultez les avis publiés sur ${name} à ${city} et partagez votre expérience. Retrouvez les informations pour contacter le cabinet.`,
+    '/faq': `Réponses aux questions sur les rendez-vous, la première visite, les soins dentaires et l’hygiène bucco-dentaire chez ${name} à ${city}.`,
+    '/blog': `Articles et conseils sur la santé bucco-dentaire, les douleurs et les soins dentaires proposés par ${name}, cabinet dentaire à ${city}.`,
     '/informations': informationDescription,
-    '/contact': `Contactez ${name}, cabinet dentaire à ${city}, pour demander des renseignements ou un rendez-vous.`,
-    '/confidentialite': 'Informations sur la collecte, l’utilisation et la protection de vos données personnelles sur le site.',
+    '/contact': `Contactez ${name} à ${city} pour une question ou un rendez-vous. Retrouvez l’adresse, les horaires et les moyens de joindre le cabinet.`,
+    '/confidentialite': `Informations sur la collecte, l’utilisation et la protection de vos données personnelles sur le site de ${name} à ${city}. Découvrez vos droits.`,
   };
-  const description = truncateMeta(
-    (english ? translatedArticle?.excerpt || translatedService?.summary : article?.excerpt || service?.summary)
-      || (normalizedRoute === '/' ? (english ? publicContent?.hero?.descriptionEn?.trim() || publicContent?.hero?.description : publicContent?.hero?.description) : undefined)
-      || descriptions[normalizedRoute]
-      || (english ? `${pageName} at ${name} in ${city}. Contact the practice for information.` : `${pageName} au ${name}, à ${city}. Informations et contact.`),
-    160,
-  );
+  const routeDescription = descriptions[normalizedRoute]
+    || (english ? `${pageName} at ${name} in ${city}. Contact the practice for information.` : `${pageName} au ${name}, à ${city}. Informations et contact.`);
+  const contentDescription = english
+    ? translatedArticle?.excerpt || translatedService?.summary
+    : article?.excerpt || service?.summary;
+  const serviceDescriptionSuffix = english
+    ? `Learn about general steps and questions to discuss with the dental team in ${city} before your visit.`
+    : `Découvrez les étapes générales et les questions à poser à l’équipe dentaire de ${city} avant votre visite.`;
+  const articleDescriptionSuffix = english
+    ? `General guidance and questions to discuss with a dental professional in ${city}.`
+    : `Repères généraux et conseils à demander au cabinet dentaire de ${city}.`;
+  const description = article
+    ? extendMetaDescription(contentDescription || routeDescription, articleDescriptionSuffix)
+    : service
+      ? extendMetaDescription(contentDescription || routeDescription, serviceDescriptionSuffix)
+      : truncateMeta(
+        normalizedRoute === '/'
+          ? routeDescription
+          : (contentDescription && contentDescription.length >= 140 ? contentDescription : routeDescription),
+        160,
+      );
   const informationCampaign = activeCampaigns.find((campaign) => campaign.mediaType === 'video') || activeCampaigns[0];
   const videoThumbnail = informationCampaign?.videoUrl ? youtubeVideoDetails(informationCampaign.videoUrl)?.thumbnailUrl : undefined;
   const socialImage = httpsImageUrl(article?.imageUrl)
