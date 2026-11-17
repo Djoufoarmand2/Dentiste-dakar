@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ContactReplyActions } from '@/components/admin-messaging-panel';
 import { AdminConfirmDelete } from '@/components/admin-confirm-delete';
 
-export function AdminAppointmentsPanel() {
+export function AdminAppointmentsPanel({ practicePhone }: { practicePhone: string }) {
   const { session } = useCabinetSession();
   const client = useQueryClient();
   const key = ['cabinet', 'appointments', session?.user.id];
@@ -64,6 +64,7 @@ export function AdminAppointmentsPanel() {
             contactValidated={item.contactValidated}
             replyStatus={item.replyStatus}
             requestType="appointment"
+            practicePhone={practicePhone}
           />
       </article>)}
     </div>

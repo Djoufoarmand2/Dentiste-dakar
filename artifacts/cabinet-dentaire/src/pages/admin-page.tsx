@@ -24,6 +24,7 @@ import { fillEnglishFieldsForAdmin, fillEnglishFieldsForBlogAdmin, fillEnglishFi
 import { editorialBlogPosts, editorialBlogRelations } from '@/lib/editorial-blog';
 import { defaultPrivacyPolicyContent, defaultWhyChooseContent } from '@/lib/site-page-defaults';
 import { Link } from 'wouter';
+import { isValidClinicPhone } from '@/lib/clinic-phone';
 
 type ArraySection = 'services' | 'team' | 'gallery' | 'testimonials' | 'faqs' | 'blogPosts' | 'campaigns' | 'socialLinks';
 type AdminSection = ArraySection | 'clinic' | 'hero' | 'whyChoose' | 'privacyPolicy' | 'inbox';
@@ -76,7 +77,7 @@ const newItem: Record<ArraySection, Record<string, unknown>> = {
 };
 
 const fieldLabels: Record<string, string> = {
-  name: 'Nom', city: 'Ville', address: 'Adresse', phone: 'Téléphone', email: 'Courriel',
+  name: 'Nom', city: 'Ville', address: 'Adresse', phone: 'Téléphone / WhatsApp', email: 'Courriel',
   openingHours: 'Horaires', bookingUrl: 'Lien de réservation', mapUrl: 'Lien de carte / intégration',
   logoUrl: 'URL du logo', eyebrow: 'Accroche courte', title: 'Titre', description: 'Description',
   primaryAction: 'Action principale', secondaryAction: 'Action secondaire', imageUrl: 'URL de l’image',
@@ -397,6 +398,12 @@ export default function AdminPage() {
 
   function publish() {
     if (!draft || version === null) return;
+    if (!isValidClinicPhone(draft.clinic.phone)) {
+      setSection('clinic');
+      setFocusTarget('admin-singleton-clinic');
+      setPublicationValidationError('Saisissez un numéro de téléphone valide avec son indicatif pays. Il sera utilisé pour les appels et WhatsApp sur tout le site.');
+      return;
+    }
     const videoMissingDate = draft.campaigns.find(
       (campaign) => campaign.mediaType === 'video' && campaign.active && !isValidCampaignPublicationDate(campaign.publishedAt),
     );
@@ -487,10 +494,10 @@ export default function AdminPage() {
          {section === 'inbox' && <div className="mb-6 rounded-2xl border border-[#18365f]/15 bg-white p-4 text-sm leading-6 text-muted-foreground">Les rendez-vous et questions reçus sont regroupés dans cet onglet. Les autres rubriques restent dédiées au contenu du site.</div>}
         {section === 'testimonials' && <div className="mb-5 rounded-2xl border border-[#b94f5b]/40 bg-[#f7e9ec] p-4 text-xs leading-5 text-[#070116]" data-testid="notice-admin-sample-content"><b>Consentement :</b> les témoignages historiques du CMS ne comportent pas de preuve de consentement enregistrée. Faites confirmer l’autorisation par le cabinet avant tout transfert ou nouvelle publication. Les exemples fictifs identifiés sont masqués du site public.</div>}
          {section === 'socialLinks' && <p className="mb-5 rounded-2xl border border-border bg-card p-4 text-sm leading-6 text-muted-foreground" data-testid="notice-social-links-help">Ajoutez les profils officiels du cabinet. Si le champ logo est vide, le site affiche l’icône intégrée correspondant à la plateforme. Les changements deviennent visibles après publication.</p>}
-         {section === 'inbox' && <><AdminAppointmentsPanel /><AdminMessagingPanel /></>}
+         {section === 'inbox' && <><AdminAppointmentsPanel practicePhone={draft.clinic.phone} /><AdminMessagingPanel practicePhone={draft.clinic.phone} /></>}
         {section === 'testimonials' && <div className="mb-8"><AdminReviewsPanel /></div>}
          {(section === 'clinic' || section === 'hero' || section === 'whyChoose' || section === 'privacyPolicy') && <div id={`admin-singleton-${section}`} className="grid gap-4 md:grid-cols-2" data-testid={`admin-singleton-${section}`}>
-           {Object.entries(currentFields || {}).filter(([key]) => key !== 'values' && key !== 'sections' && shouldShowField(key, currentFields as unknown as Record<string, unknown>, languageView)).map(([key, value]) => <AdminField key={`${section}-${key}`} name={key} value={value} onChange={(raw) => setObjectField(key, raw)} wide={['description', 'openingHours', 'intro', 'partnerBody', 'contactIntro'].includes(key)} protectedUrls={protectedUrls} disabled={busy} />)}
+           {Object.entries(currentFields || {}).filter(([key]) => key !== 'values' && key !== 'sections' && shouldShowField(key, currentFields as unknown as Record<string, unknown>, languageView)).map(([key, value]) => <AdminField key={`${section}-${key}`} name={key} value={value} onChange={(raw) => setObjectField(key, raw)} wide={['description', 'openingHours', 'intro', 'partnerBody', 'contactIntro'].includes(key)} protectedUrls={protectedUrls} disabled={busy} required={section === 'clinic' && key === 'phone'} helperText={section === 'clinic' && key === 'phone' ? 'Utilisez le format international, par exemple +237 6XX XX XX XX. Ce numéro pilote les appels et WhatsApp sur toutes les pages.' : undefined} />)}
         </div>}
          {section !== 'clinic' && section !== 'hero' && section !== 'inbox' && <div className="space-y-5">
           {section === 'testimonials' && <section className="rounded-2xl border border-border bg-card p-5 md:p-7" data-testid="cms-testimonials-section">
@@ -540,7 +547,7 @@ function AdminField({ name, value, onChange, wide = false, protectedUrls, disabl
   const isLong = wide || ['description', 'biography', 'quote', 'answer', 'content', 'excerpt', 'purpose', 'procedureSteps', 'descriptionEn', 'biographyEn', 'answerEn', 'contentEn', 'excerptEn', 'purposeEn', 'procedureStepsEn', 'quoteEn', 'relatedServiceSlugs', 'relatedArticleSlugs'].includes(name);
   const isSelect = name === 'mediaType';
   const isSocialPlatform = name === 'platform';
-  const inputType = name === 'publishedAt' ? 'date' : name === 'rating' ? 'number' : name === 'date' ? 'date' : name.toLowerCase().includes('url') ? 'url' : 'text';
+  const inputType = name === 'publishedAt' ? 'date' : name === 'rating' ? 'number' : name === 'date' ? 'date' : name === 'phone' ? 'tel' : name.toLowerCase().includes('url') ? 'url' : 'text';
   const inputValue = name === 'publishedAt' && typeof value === 'string' ? value.slice(0, 10) : String(value ?? '');
   return <label className={`block text-xs font-medium text-foreground/80 ${wide ? 'md:col-span-2' : ''}`} data-testid={`field-${name}`}>
     <span className="mb-2 block">{label}</span>

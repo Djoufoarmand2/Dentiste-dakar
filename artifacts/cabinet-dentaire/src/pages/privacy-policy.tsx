@@ -5,6 +5,7 @@ import { SiteShell } from '@/components/public-site';
 import { defaultPrivacyPolicyContent } from '@/lib/site-page-defaults';
 import { useSiteLocale } from '@/lib/site-locale';
 import { PRACTICE_CONTACT_EMAIL, replaceLegacyPracticeEmail } from '@/lib/contact-info';
+import { clinicPhoneLink, formatClinicPhone } from '@/lib/clinic-phone';
 
 export function PrivacyPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
@@ -14,7 +15,8 @@ export function PrivacyPage({ content }: { content: SiteContent }) {
     ? policy.sections
     : [...policy.sections, defaultPrivacyPolicyContent.sections.find((section) => section.id === 'contact-questions')!];
   const privacyEmail = PRACTICE_CONTACT_EMAIL;
-  const phone = content.clinic.phone?.trim() || '+237 677 873 442';
+  const phone = formatClinicPhone(content.clinic.phone);
+  const phoneHref = clinicPhoneLink(content.clinic.phone);
   const contactHref = `mailto:${privacyEmail}`;
   const localized = (fr: string, en?: string) => replaceLegacyPracticeEmail(
     english ? en?.trim() || 'English translation not yet available.' : fr,
@@ -37,7 +39,7 @@ export function PrivacyPage({ content }: { content: SiteContent }) {
             <div className="mt-3 space-y-2 text-sm leading-7 text-muted-foreground">
                <p>{english ? 'Public name:' : 'Nom public :'} <strong className="text-foreground">{content.clinic.name}</strong></p>
                <p>{english ? 'Address:' : 'Adresse :'} <strong className="text-foreground">{content.clinic.address}</strong></p>
-               <p>{english ? 'Phone:' : 'Téléphone :'} <a className="font-semibold text-foreground underline underline-offset-4" href={`tel:${phone}`}>{phone}</a></p>
+               <p>{english ? 'Phone:' : 'Téléphone :'} <a className="font-semibold text-foreground underline underline-offset-4" href={phoneHref}>{phone}</a></p>
                <p>{english ? 'Email:' : 'E-mail :'} <a className="font-semibold text-foreground underline underline-offset-4" href={contactHref}>{privacyEmail}</a></p>
                 <p>{english ? 'Data controller:' : 'Responsable légal du traitement :'} <strong className="text-foreground">{policy.controllerName}</strong></p>
             </div>
@@ -52,7 +54,7 @@ export function PrivacyPage({ content }: { content: SiteContent }) {
 
           <section className="rounded-2xl border border-border bg-card p-6 md:p-8">
             <h2 className="font-display text-2xl text-[#073e53]">{localized(policy.contactTitle, policy.contactTitleEn)}</h2>
-           <p className="mt-3 text-sm leading-7 text-muted-foreground">{localized(policy.contactIntro, policy.contactIntroEn)} <a className="font-semibold text-foreground underline underline-offset-4" href={contactHref}>{privacyEmail}</a> {english ? 'or' : 'ou'} <a className="font-semibold text-foreground underline underline-offset-4" href={`tel:${phone}`}>{phone}</a>.</p>
+           <p className="mt-3 text-sm leading-7 text-muted-foreground">{localized(policy.contactIntro, policy.contactIntroEn)} <a className="font-semibold text-foreground underline underline-offset-4" href={contactHref}>{privacyEmail}</a> {english ? 'or' : 'ou'} <a className="font-semibold text-foreground underline underline-offset-4" href={phoneHref}>{phone}</a>.</p>
           </section>
 
           <Link href={english ? '/en' : '/'} className="inline-flex items-center gap-2 text-sm font-semibold text-[#073e53] transition-colors hover:text-[#8c6f0b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#073e53]">

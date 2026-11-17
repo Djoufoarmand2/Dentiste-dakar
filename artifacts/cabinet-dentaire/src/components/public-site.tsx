@@ -22,6 +22,12 @@ import clinicFaqs from '@/data/clinic-faqs.json';
 import { supabaseUrl } from '@/lib/supabase';
 import { localizedPath, useSiteLocale } from '@/lib/site-locale';
 import { englishBlogPost, englishFaq, englishService } from '@/lib/cms-translations';
+import {
+  applyClinicPhoneToContent,
+  clinicPhoneLink,
+  clinicWhatsAppLink,
+  formatClinicPhone,
+} from '@/lib/clinic-phone';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 
 const navItemsFr = [
@@ -35,10 +41,11 @@ const navItemsEn = [
 const uiText = (locale: 'fr' | 'en', fr: string, en: string) => locale === 'en' ? en : fr;
 const cmsText = (locale: 'fr' | 'en', fr?: string, en?: string) =>
   locale === 'fr' ? fr?.trim() || '' : en?.trim() || 'English translation not yet available.';
-const faqsForDisplay = (faqs: SiteContent['faqs']) => {
+const faqsForDisplay = (faqs: SiteContent['faqs'], phone: string) => {
   if (!import.meta.env.DEV) return faqs;
   const existingIds = new Set(faqs.map((faq) => faq.id));
-  const previewFaqs = clinicFaqs.filter((faq) => !existingIds.has(faq.id));
+  const previewFaqs = (applyClinicPhoneToContent(clinicFaqs, phone) as typeof clinicFaqs)
+    .filter((faq) => !existingIds.has(faq.id));
   return [...previewFaqs, ...faqs];
 };
 const routeFor = (href: string, locale: 'fr' | 'en', content?: SiteContent) => localizedPath(href, locale, content);
@@ -94,10 +101,12 @@ const contactSocialPlatforms = [
   { platform: 'snapchat', label: 'Snapchat' },
 ] as const;
 
-function SocialLinks({ links, className = '', variant = 'footer' }: { links?: SocialLink[]; className?: string; variant?: 'footer' | 'contact' }) {
+function SocialLinks({ links, clinicPhone, className = '', variant = 'footer' }: { links?: SocialLink[]; clinicPhone?: string; className?: string; variant?: 'footer' | 'contact' }) {
   const locale = useSiteLocale();
   const validLinks = (links ?? []).flatMap((link) => {
-    const href = safeExternalUrl(link.url);
+    const href = link.platform === 'whatsapp'
+      ? clinicWhatsAppLink(clinicPhone)
+      : safeExternalUrl(link.url);
     return href ? [{ ...link, href }] : [];
   });
   if (!validLinks.length && variant !== 'contact') return null;
@@ -305,7 +314,7 @@ export function Footer({ clinic, content }: { clinic?: SiteContent['clinic']; co
       <div><BrandLockup clinic={clinic} /><p className="mt-5 max-w-sm text-sm leading-7 text-white/65">{uiText(locale, 'Un lieu de soin où l’on prend le temps de vous écouter, de vous expliquer et de vous accompagner.', 'A place for care where we take time to listen, explain and support you.')}</p></div>
       <div><p className="footer-title">{uiText(locale, 'Navigation', 'Explore')}</p><ul className="space-y-2 text-sm text-white/70">{navItems.map(([label, href]) => <li key={href}><Link href={routeFor(href, locale, content)} className="hover:text-[#f0a0a6]" data-testid={`footer-nav-${href.slice(1)}`}>{label}</Link></li>)}<li><Link href={routeFor('/informations', locale)} className="hover:text-[#f0a0a6]" data-testid="footer-nav-informations">{uiText(locale, 'Informations', 'Updates')}</Link></li><li><Link href={routeFor('/confidentialite', locale)} className="hover:text-[#f0a0a6] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white" data-testid="footer-nav-confidentialite">{uiText(locale, 'Confidentialité', 'Privacy')}</Link></li></ul></div>
       <div><p className="footer-title">{uiText(locale, 'Nous trouver', 'Find us')}</p><p className="text-sm leading-7 text-white/70">{clinic?.address ? (locale === 'en' ? `Address supplied by the practice (not translated): ${clinic.address}` : clinic.address) : uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon')}<br />{safeCity(clinic?.city)}</p><a href={clinic?.mapUrl || mapsDirections} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-2 text-xs text-[#f0a0a6] hover:text-white" data-testid="link-footer-map">{uiText(locale, 'Itinéraire', 'Directions')} <ArrowRight size={14} /></a><a href={partnerSite} target="_blank" rel="noopener noreferrer" className="mt-3 block text-xs text-white/60 hover:text-white">{uiText(locale, 'Établissement partenaire : La Bienveillance', 'Partner clinic: La Bienveillance')}</a></div>
-      <div><p className="footer-title">{uiText(locale, 'Contact', 'Contact')}</p><a href={`tel:${clinic?.phone || ''}`} className="block text-base font-medium" data-testid="link-footer-phone">{clinic?.phone || uiText(locale, 'Contactez-nous', 'Contact us')}</a><a href={`mailto:${PRACTICE_CONTACT_EMAIL}`} className="mt-2 block text-sm text-white/70" data-testid="link-footer-email">{PRACTICE_CONTACT_EMAIL}</a><ManualContactLinks phone={clinic?.phone} tone="dark" className="mt-4" /><p className="mt-4 whitespace-pre-line text-xs leading-6 text-white/60">{clinic ? hoursLabel(clinic, locale) : uiText(locale, 'Horaires à renseigner', 'Practice hours to be added')}</p><SocialLinks links={content?.socialLinks} className="mt-5" /></div>
+      <div><p className="footer-title">{uiText(locale, 'Contact', 'Contact')}</p>{clinic?.phone ? <a href={clinicPhoneLink(clinic.phone)} className="block text-base font-medium" data-testid="link-footer-phone">{formatClinicPhone(clinic.phone)}</a> : <span className="block text-base font-medium">{uiText(locale, 'Contactez-nous', 'Contact us')}</span>}<a href={`mailto:${PRACTICE_CONTACT_EMAIL}`} className="mt-2 block text-sm text-white/70" data-testid="link-footer-email">{PRACTICE_CONTACT_EMAIL}</a><ManualContactLinks phone={clinic?.phone} tone="dark" className="mt-4" /><p className="mt-4 whitespace-pre-line text-xs leading-6 text-white/60">{clinic ? hoursLabel(clinic, locale) : uiText(locale, 'Horaires à renseigner', 'Practice hours to be added')}</p><SocialLinks links={content?.socialLinks} clinicPhone={clinic?.phone} className="mt-5" /></div>
     </div>
     <div className="border-t border-white/10">
       <div className="mx-auto flex max-w-[1240px] flex-col justify-between gap-3 px-5 py-5 text-[11px] text-white/75 sm:flex-row sm:flex-wrap sm:items-center md:px-8">
@@ -347,13 +356,15 @@ function AnnouncementBar({ clinic }: { clinic?: SiteContent['clinic'] }) {
 
 function FloatingCallButton({ clinic }: { clinic?: SiteContent['clinic'] }) {
   const locale = useSiteLocale();
-  const phoneDigits = clinic?.phone?.replace(/\D/g, '') || '237677873442';
+  const displayPhone = formatClinicPhone(clinic?.phone);
+  const whatsappHref = clinicWhatsAppLink(clinic?.phone);
+  const callHref = clinicPhoneLink(clinic?.phone);
   return <>
     <a
-      href={`https://wa.me/${phoneDigits}`}
+      href={whatsappHref}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={uiText(locale, `Écrire à ${safeName(clinic?.name)} sur WhatsApp au ${clinic?.phone || '+237 677 87 34 42'}`, `Message ${safeName(clinic?.name)} on WhatsApp at ${clinic?.phone || '+237 677 87 34 42'}`)}
+      aria-label={uiText(locale, `Écrire à ${safeName(clinic?.name)} sur WhatsApp au ${displayPhone}`, `Message ${safeName(clinic?.name)} on WhatsApp at ${displayPhone}`)}
       title={uiText(locale, 'Contacter le cabinet sur WhatsApp', 'Contact the practice on WhatsApp')}
       className="floating-call grid h-14 w-14 place-items-center rounded-full bg-[#073e53] text-white shadow-[0_8px_24px_rgba(7,1,22,.24)] transition-transform hover:-translate-y-1 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#f0a0a6]"
       data-testid="button-floating-whatsapp"
@@ -363,8 +374,8 @@ function FloatingCallButton({ clinic }: { clinic?: SiteContent['clinic'] }) {
       </svg>
     </a>
     <a
-      href="tel:+237677873442"
-      aria-label={uiText(locale, 'Appeler le cabinet au +237 677 87 34 42', 'Call the practice at +237 677 87 34 42')}
+      href={callHref}
+      aria-label={uiText(locale, `Appeler le cabinet au ${displayPhone}`, `Call the practice at ${displayPhone}`)}
       title={uiText(locale, 'Appeler le cabinet', 'Call the practice')}
       className="floating-phone grid h-14 w-14 place-items-center rounded-full bg-[#2563eb] text-white shadow-[0_8px_24px_rgba(37,99,235,.3)] transition-transform hover:-translate-y-1 focus-visible:outline focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#f0a0a6]"
       data-testid="button-floating-phone"
@@ -618,7 +629,7 @@ const visitSteps = [
 export function HomePage({ content }: { content: SiteContent }) {
   const { clinic, hero } = content;
   const locale = useSiteLocale();
-  const displayFaqs = faqsForDisplay(content.faqs);
+  const displayFaqs = faqsForDisplay(content.faqs, content.clinic.phone);
   const publicReviews = usePublicReviews();
   const testimonials = combinePublicReviews(publicReviews.data ?? [], content.testimonials);
   const lead = visibleTeamMembers(content.team)[0];
@@ -778,7 +789,7 @@ export function WhyChoosePage({ content }: { content: SiteContent }) {
   return <SiteShell clinic={content.clinic} content={content}>
     <WhyChooseBody
       locale={locale}
-      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: PRACTICE_CONTACT_EMAIL }}
+      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: content.clinic.phone, email: PRACTICE_CONTACT_EMAIL }}
       content={content.whyChoose}
     />
   </SiteShell>;
@@ -802,7 +813,7 @@ export function ServiceDetailPage({ content, slug }: { content: SiteContent; slu
     </div>
     <ServiceDetailBody
       locale={locale}
-      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: '+237 677 873 442', email: PRACTICE_CONTACT_EMAIL }}
+      clinic={{ name: content.clinic.name, city: content.clinic.city, phone: content.clinic.phone, email: PRACTICE_CONTACT_EMAIL }}
       service={{
         id: service.id,
          title: locale === 'en' ? translated.title : service.title,
@@ -974,7 +985,7 @@ export function ReviewsPage({ content }: { content: SiteContent }) {
 
 export function FAQPage({ content }: { content: SiteContent }) {
   const locale = useSiteLocale();
-  const displayFaqs = faqsForDisplay(content.faqs);
+  const displayFaqs = faqsForDisplay(content.faqs, content.clinic.phone);
   return <SiteShell clinic={content.clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Questions fréquentes', 'Frequently asked questions')} title={uiText(locale, 'Les réponses, sans détour.', 'Straightforward answers.')} text={uiText(locale, 'Vous préparer à votre visite, c’est déjà prendre soin de vous. Voici les réponses aux questions que l’on nous pose souvent.', 'Knowing what to expect can help you prepare for a visit. Here are answers to some common questions.')} />
     <section className="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">{displayFaqs.length ? <FaqList faqs={displayFaqs} /> : <EmptyInline title={uiText(locale, 'Une question particulière ?', 'Have a specific question?')} text={uiText(locale, 'Contactez-nous, nous serons heureux de vous répondre.', 'Contact us and we will be glad to help.')} />}
       <div className="mt-12 rounded-md bg-[#073e53] p-8 text-white"><h2 className="font-display text-2xl font-semibold">{uiText(locale, 'Votre question n’est pas ici ?', 'Did not find your answer?')}</h2><p className="mt-2 text-sm text-white/70">{uiText(locale, 'Notre équipe est à votre écoute.', 'Our team is here to listen.')}</p><div className="mt-5"><ActionLink href="/contact" testId="link-faq-contact">{uiText(locale, 'Nous contacter', 'Contact us')}</ActionLink></div></div>
@@ -1209,7 +1220,7 @@ export function ContactPage({ content }: { content: SiteContent }) {
   return <SiteShell clinic={clinic} content={content}><main><PageIntro eyebrow={uiText(locale, 'Prenons le temps d’échanger', 'Let’s talk')} title={uiText(locale, 'Nous sommes tout près.', 'We are here to help.')} text={uiText(locale, 'Un rendez-vous, une question, un besoin d’orientation ? Contactez-nous comme vous le souhaitez.', 'Have a question or need information about an appointment? Contact the practice in the way that suits you.')} />
     <section className="wrap section-pad grid gap-7 md:grid-cols-[.8fr_1.2fr]">
       <div className="rounded-md bg-[#073e53] p-7 text-white md:p-10"><p className="text-[11px] uppercase tracking-[.24em] text-[#f0a0a6]">{safeName(clinic.name)} · {safeCity(clinic.city)}</p><h2 className="mt-4 font-display text-3xl font-semibold">{uiText(locale, 'À votre écoute.', 'We are listening.')}</h2><div className="mt-8 space-y-6 text-sm">
-        <a href={`tel:${clinic.phone}`} className="flex items-start gap-4" data-testid="link-contact-phone">{row(<Phone size={17} />, uiText(locale, 'Téléphone', 'Phone'), clinic.phone || uiText(locale, 'À renseigner', 'To be added'))}</a>
+        <a href={clinicPhoneLink(clinic.phone)} className="flex items-start gap-4" data-testid="link-contact-phone">{row(<Phone size={17} />, uiText(locale, 'Téléphone', 'Phone'), formatClinicPhone(clinic.phone) || uiText(locale, 'À renseigner', 'To be added'))}</a>
         <a href={`mailto:${PRACTICE_CONTACT_EMAIL}`} className="flex items-start gap-4" data-testid="link-contact-email">{row(<MessageCircle size={17} />, uiText(locale, 'Courriel', 'Email'), PRACTICE_CONTACT_EMAIL)}</a>
         <div className="flex items-start gap-4" data-testid="text-contact-address">{row(<MapPin size={17} />, uiText(locale, 'Adresse', 'Address'), clinic.address ? (locale === 'en' ? `Address supplied by the practice (not translated): ${clinic.address}` : clinic.address) : uiText(locale, 'Douala, Cameroun', 'Douala, Cameroon'))}</div>
         <div className="flex items-start gap-4 whitespace-pre-line" data-testid="text-contact-hours">{row(<Clock3 size={17} />, uiText(locale, 'Horaires', 'Hours'), hoursLabel(clinic, locale))}</div>
@@ -1230,7 +1241,7 @@ export function ContactPage({ content }: { content: SiteContent }) {
       <aside aria-labelledby="contact-social-title">
         <h2 id="contact-social-title" className="font-display text-2xl font-semibold text-[#20213e] md:text-3xl">{uiText(locale, 'Suivez-nous', 'Follow us')}</h2>
         <p className="mt-2 text-sm text-muted-foreground">{uiText(locale, 'Découvrez nos derniers cas, conseils et coulisses.', 'Discover our latest cases, advice and behind-the-scenes moments.')}</p>
-        <div className="mt-5"><SocialLinks links={content.socialLinks} variant="contact" /></div>
+        <div className="mt-5"><SocialLinks links={content.socialLinks} clinicPhone={clinic.phone} variant="contact" /></div>
       </aside>
     </section>
     <section className="wrap pb-16">

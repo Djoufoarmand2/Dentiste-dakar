@@ -28,6 +28,49 @@ function replaceLegacyContactEmail(value) {
   }
   return value;
 }
+function normalizeClinicPhone(phone) {
+  let digits = String(phone ?? '').replace(/\D/g, '');
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.length === 9) digits = `237${digits}`;
+  return digits.length >= 8 && digits.length <= 15 ? digits : '';
+}
+function formatClinicPhone(phone) {
+  const raw = String(phone ?? '').trim() || '+237 677 873 442';
+  const digits = normalizeClinicPhone(raw);
+  if (!digits) return raw;
+  const local = digits.startsWith('237') && digits.length === 12 ? digits.slice(3) : '';
+  if (local) return `+237 ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`;
+  if (digits.length === 12 && !raw.startsWith('+') && !raw.startsWith('00')) return `+${digits}`;
+  return raw;
+}
+function clinicPhoneLink(phone) {
+  const digits = normalizeClinicPhone(phone || '+237 677 873 442');
+  return digits ? `tel:+${digits}` : '';
+}
+function clinicWhatsAppLink(phone) {
+  const digits = normalizeClinicPhone(phone || '+237 677 873 442');
+  return digits ? `https://wa.me/${digits}` : '';
+}
+function applyClinicPhoneToContent(value, phone) {
+  const formattedPhone = formatClinicPhone(phone);
+  const legacyPhonePattern = /(^|[^\d])(?:(?:\+|00)?237[\s().-]*)?677[\s().-]*(?:873[\s().-]*442|87[\s().-]*34[\s().-]*42)(?!\d)/g;
+  const visit = (entry) => {
+    if (typeof entry === 'string') {
+      return entry
+        .split(/(https?:\/\/[^\s<>"']+|tel:[^\s<>"']+)/gi)
+        .map((part) => /^(https?:\/\/|tel:)/i.test(part)
+          ? part
+          : part.replace(legacyPhonePattern, (_match, prefix) => `${prefix}${formattedPhone}`))
+        .join('');
+    }
+    if (Array.isArray(entry)) return entry.map(visit);
+    if (entry && typeof entry === 'object') {
+      return Object.fromEntries(Object.entries(entry).map(([key, child]) => [key, visit(child)]));
+    }
+    return entry;
+  };
+  return visit(value);
+}
 const editorialBlogPosts = replaceLegacyContactEmail(JSON.parse(await readFile(new URL('../src/lib/editorial-blog.json', import.meta.url), 'utf8')));
 const editorialBlogRelations = JSON.parse(await readFile(new URL('../src/lib/editorial-blog-relations.json', import.meta.url), 'utf8'));
 
@@ -220,6 +263,7 @@ function youtubeVideoDetails(value) {
 }
 
 if (publicContent?.clinic) {
+  publicContent = applyClinicPhoneToContent(publicContent, publicContent.clinic.phone);
   publicContent = replaceLegacyContactEmail(publicContent);
   publicContent.clinic.email = practiceContactEmail;
 }
@@ -533,7 +577,7 @@ function structuredDataTags(meta) {
     name: clinic.name || clinicName,
     url: origin,
     image: httpsImageUrl(meta.socialImage) || configuredImageUrl,
-    telephone: clinic.phone || undefined,
+    telephone: formatClinicPhone(clinic.phone) || undefined,
     email: clinic.email || undefined,
     address: clinic.address ? {
       '@type': 'PostalAddress',
@@ -771,9 +815,9 @@ function renderPublicMarkup(route, meta) {
     const purpose = english ? translated.purpose : service.purpose;
     const steps = (english ? translated.procedureSteps : service.procedureSteps)?.split(/\r?\n/).filter(Boolean) || [];
     const image = httpsImageUrl(service.imageUrl);
-    const whatsapp = 'https://wa.me/237677873442';
+    const whatsapp = clinicWhatsAppLink(publicContent.clinic.phone);
     const contactEmail = publicContent.clinic?.email || 'bienveillanceclinique4@dentiste-sourireserein.cm';
-    return `<main><a href="${escapeAttribute(appPath(english ? '/en/services/' : '/soins/'))}">${english ? 'All services' : 'Tous les soins'}</a><article><h1>${escapeXml(title)}</h1><p>${escapeXml(summary)}</p>${image ? `<img src="${escapeAttribute(image)}" alt="${escapeAttribute(english ? translated.imageAlt : service.imageAlt || title)}" fetchpriority="high" decoding="async" />` : ''}<h2>${english ? 'About this care' : 'À propos de ce soin'}</h2><p>${escapeXml(description)}</p>${purpose ? `<h2>${english ? 'What is this care for?' : 'À quoi sert ce soin ?'}</h2><p>${escapeXml(purpose)}</p>` : ''}<h2>${english ? 'Your visit, step by step' : 'Votre parcours, étape par étape'}</h2>${steps.length ? `<ol>${steps.map((step) => `<li>${escapeXml(step)}</li>`).join('')}</ol>` : `<p>${english ? 'The practice will explain the general steps and options based on your situation.' : 'Le cabinet vous expliquera les étapes générales et les options selon votre situation.'}</p>`}<h2>${english ? 'Questions about this service?' : 'Une question sur ce soin ?'}</h2><p>${english ? 'Contact the practice for information and to discuss your request.' : 'Contactez le cabinet pour obtenir des renseignements et échanger sur votre demande.'}</p><p><a href="${escapeAttribute(whatsapp)}" rel="noopener noreferrer" target="_blank">WhatsApp +237 677 873 442</a> · <a href="mailto:${escapeAttribute(contactEmail)}">${escapeXml(contactEmail)}</a></p></article></main>`;
+    return `<main><a href="${escapeAttribute(appPath(english ? '/en/services/' : '/soins/'))}">${english ? 'All services' : 'Tous les soins'}</a><article><h1>${escapeXml(title)}</h1><p>${escapeXml(summary)}</p>${image ? `<img src="${escapeAttribute(image)}" alt="${escapeAttribute(english ? translated.imageAlt : service.imageAlt || title)}" fetchpriority="high" decoding="async" />` : ''}<h2>${english ? 'About this care' : 'À propos de ce soin'}</h2><p>${escapeXml(description)}</p>${purpose ? `<h2>${english ? 'What is this care for?' : 'À quoi sert ce soin ?'}</h2><p>${escapeXml(purpose)}</p>` : ''}<h2>${english ? 'Your visit, step by step' : 'Votre parcours, étape par étape'}</h2>${steps.length ? `<ol>${steps.map((step) => `<li>${escapeXml(step)}</li>`).join('')}</ol>` : `<p>${english ? 'The practice will explain the general steps and options based on your situation.' : 'Le cabinet vous expliquera les étapes générales et les options selon votre situation.'}</p>`}<h2>${english ? 'Questions about this service?' : 'Une question sur ce soin ?'}</h2><p>${english ? 'Contact the practice for information and to discuss your request.' : 'Contactez le cabinet pour obtenir des renseignements et échanger sur votre demande.'}</p><p><a href="${escapeAttribute(whatsapp)}" rel="noopener noreferrer" target="_blank">WhatsApp ${escapeXml(formatClinicPhone(publicContent.clinic.phone))}</a> · <a href="mailto:${escapeAttribute(contactEmail)}">${escapeXml(contactEmail)}</a></p></article></main>`;
   }
   if (normalizedRoute === '/pourquoi-nous-choisir' || normalizedRoute === '/why-choose-us') {
     const page = publicContent.whyChoose ?? {
@@ -866,7 +910,7 @@ function renderPublicMarkup(route, meta) {
   if (normalizedRoute === '/contact') {
     const rows = [
       clinic.address ? `<p><strong>${english ? 'Address' : 'Adresse'}:</strong> ${escapeXml(clinic.address)}</p>` : '',
-      clinic.phone ? `<p><strong>${english ? 'Phone' : 'Téléphone'}:</strong> <a href="tel:${escapeAttribute(clinic.phone)}">${escapeXml(clinic.phone)}</a></p>` : '',
+      clinic.phone ? `<p><strong>${english ? 'Phone' : 'Téléphone'}:</strong> <a href="${escapeAttribute(clinicPhoneLink(clinic.phone))}">${escapeXml(formatClinicPhone(clinic.phone))}</a></p>` : '',
       clinic.email ? `<p><strong>Email:</strong> <a href="mailto:${escapeAttribute(clinic.email)}">${escapeXml(clinic.email)}</a></p>` : '',
       clinic.openingHours ? `<p><strong>${english ? 'Opening hours' : 'Horaires'}:</strong> ${escapeXml(clinic.openingHours)}</p>` : '',
     ].filter(Boolean).join('');

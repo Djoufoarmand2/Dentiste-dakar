@@ -3,9 +3,10 @@ import { ArrowRight, LoaderCircle } from "lucide-react";
 import { submitQuickContactQuestion } from "@/lib/appointment-delivery";
 import { ContactSubmissionReceipt } from "@/components/contact-submission-receipt";
 import { useSiteLocale } from "@/lib/site-locale";
+import { formatClinicPhone } from "@/lib/clinic-phone";
 
 export function QuickContactForm({
-  phone = "+237 677 87 34 42",
+  phone = formatClinicPhone(),
 }: {
   phone?: string;
 }) {

@@ -65,6 +65,10 @@ if (publicContent.editorialBlogLibraryManaged !== true) {
   ];
 }
 assert.ok(publicContent.clinic && typeof publicContent.clinic === 'object', 'Public content should include clinic information.');
+let internationalPhoneDigits = String(publicContent.clinic.phone || '').replace(/\D/g, '');
+if (internationalPhoneDigits.startsWith('00')) internationalPhoneDigits = internationalPhoneDigits.slice(2);
+if (internationalPhoneDigits.length === 9) internationalPhoneDigits = `237${internationalPhoneDigits}`;
+assert.ok(internationalPhoneDigits.length >= 8 && internationalPhoneDigits.length <= 15, 'Public content should include a valid clinic phone number.');
 assert.ok(publicContent.hero && typeof publicContent.hero === 'object', 'Public content should include hero content.');
 for (const collection of ['services', 'team', 'gallery', 'testimonials', 'faqs', 'blogPosts', 'campaigns']) {
   assert.ok(Array.isArray(publicContent[collection]), `Public content should include the ${collection} collection.`);
@@ -197,7 +201,7 @@ for (const route of routes) {
     assert.match(html, /<h1>[^<]+<\/h1>/i, `${route} should expose a service heading`);
     if (html.includes('data-seo-prerender=')) {
       assert.ok(html.includes('bienveillanceclinique4@dentiste-sourireserein.cm'), `${route} should expose the clinic email in its static snapshot`);
-      assert.ok(html.includes('677873442'), `${route} should expose the WhatsApp contact in its static snapshot`);
+      assert.ok(html.includes(`https://wa.me/${internationalPhoneDigits}`), `${route} should use the configured clinic number for WhatsApp`);
     }
   }
 }

@@ -20,6 +20,7 @@ import {
   submitAppointmentRequest,
 } from "@/lib/appointment-delivery";
 import { useSiteLocale } from "@/lib/site-locale";
+import { clinicPhoneLink, formatClinicPhone } from "@/lib/clinic-phone";
 
 type AppointmentWindow = NonNullable<ContactAppointmentInput["preferredWindow"]>;
 
@@ -53,7 +54,7 @@ const defaultValues: AppointmentFormValues = {
 };
 
 export function AppointmentRequestForm({
-  phone = "+237 677 87 34 42",
+  phone = formatClinicPhone(),
 }: {
   phone?: string;
 }) {
@@ -73,7 +74,7 @@ export function AppointmentRequestForm({
   const phoneDigits = phoneValue.replace(/\D/g, "");
   const phoneValid = phoneDigits.length >= 8 && phoneDigits.length <= 15;
   const emailValid = !emailValue || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
-  const phoneLink = phone.replace(/[^\d+]/g, "");
+  const phoneLink = clinicPhoneLink(phone);
 
   const submit = async (values: AppointmentFormValues) => {
     // React Hook Form invokes this from the submit button or keyboard submit;

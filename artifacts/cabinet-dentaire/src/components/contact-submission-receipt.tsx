@@ -1,6 +1,7 @@
 import { CheckCircle2, Clock3, RefreshCw } from "lucide-react";
 import { ManualContactLinks } from "@/components/manual-contact-links";
 import { PRACTICE_CONTACT_EMAIL } from "@/lib/contact-info";
+import { clinicPhoneLink, formatClinicPhone } from "@/lib/clinic-phone";
 import { useSiteLocale } from "@/lib/site-locale";
 
 export function ContactSubmissionReceipt({
@@ -13,7 +14,8 @@ export function ContactSubmissionReceipt({
   formboldWarning: boolean;
 }) {
   const en = useSiteLocale() === "en";
-  const phoneLink = phone.replace(/[^\d+]/g, "");
+  const phoneLink = clinicPhoneLink(phone);
+  const displayPhone = formatClinicPhone(phone);
   const isAppointment = kind === "appointment";
 
   return (
@@ -62,7 +64,7 @@ export function ContactSubmissionReceipt({
               {en
                 ? "We’ll review your message and contact you. For urgent concerns, call "
                 : "Nous allons examiner votre message et vous recontacter. En cas d’urgence, appelez le "}
-              <a className="font-semibold text-[#18365f] underline underline-offset-2" href={`tel:${phoneLink}`}>{phone}</a>.
+              <a className="font-semibold text-[#18365f] underline underline-offset-2" href={phoneLink}>{displayPhone}</a>.
             </p>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AdminConfirmDelete } from "@/components/admin-confirm-delete";
 import { useCabinetSession } from "@/components/auth-provider";
 import { cmsRequest } from "@/lib/supabase";
+import { formatClinicPhone } from "@/lib/clinic-phone";
 
 const questionsKey = ["cabinet", "contact-questions"] as const;
 const appointmentsKey = ["cabinet", "appointments"] as const;
@@ -27,6 +28,7 @@ export function ContactReplyActions({
   contactValidated,
   replyStatus,
   requestType,
+  practicePhone,
 }: {
   id: string;
   name: string;
@@ -37,6 +39,7 @@ export function ContactReplyActions({
   contactValidated: boolean;
   replyStatus: "not_replied" | "draft_opened" | "replied";
   requestType: "appointment" | "question";
+  practicePhone: string;
 }) {
   const client = useQueryClient();
   const route = requestType === "appointment" ? "appointments" : "contact-questions";
@@ -49,7 +52,7 @@ export function ContactReplyActions({
     },
   });
   const greeting = name.trim() || "Bonjour";
-  const message = `Bonjour ${greeting},\n\nMerci d’avoir contacté le Cabinet Sourire Serein. Nous avons bien reçu votre demande et vous répondrons dès que possible, au plus tard sous 24 h.\n\nCordialement,\nCabinet Sourire Serein\nDouala · +237 677 873 442\nhttps://dentiste-sourireserein.cm`;
+  const message = `Bonjour ${greeting},\n\nMerci d’avoir contacté le Cabinet Sourire Serein. Nous avons bien reçu votre demande et vous répondrons dès que possible, au plus tard sous 24 h.\n\nCordialement,\nCabinet Sourire Serein\nDouala · ${formatClinicPhone(practicePhone)}\nhttps://dentiste-sourireserein.cm`;
   const digits = (phone ?? "").replace(/\D/g, "");
   const whatsappNumber = digits.length === 9 ? `237${digits}` : digits;
   const gmailUrl = email
@@ -126,7 +129,7 @@ export function ContactReplyActions({
   );
 }
 
-export function AdminMessagingPanel() {
+export function AdminMessagingPanel({ practicePhone }: { practicePhone: string }) {
   const { session } = useCabinetSession();
   const client = useQueryClient();
   const requests = useQuery({
@@ -196,6 +199,7 @@ export function AdminMessagingPanel() {
               contactValidated={item.contactValidated}
               replyStatus={item.replyStatus}
               requestType="question"
+              practicePhone={practicePhone}
             />
           </article>
         ))}

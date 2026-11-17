@@ -11,6 +11,7 @@ import { localizedPath, rememberedSiteLocale, SiteLocaleProvider, type SiteLocal
 import { englishBlogPost, englishService } from '@/lib/cms-translations';
 import { withEditorialBlogPosts } from '@/lib/editorial-blog';
 import { getYouTubeThumbnailUrl } from '@/lib/video-url';
+import { applyClinicPhoneToContent } from '@/lib/clinic-phone';
 
 const queryClient = new QueryClient();
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -96,7 +97,8 @@ function PublicRoute({ page, locale = 'fr' }: { page: (content: SiteContent) => 
   if (query.isLoading) return <main className="grid min-h-[100dvh] place-items-center bg-background px-5" role="status" aria-live="polite"><p className="animate-pulse text-sm text-muted-foreground">{locale === 'en' ? 'Loading the website…' : 'Chargement du site…'}</p></main>;
   if (query.isError || !query.data) return <main className="grid min-h-[100dvh] place-items-center bg-background px-5"><section className="max-w-xl rounded-2xl border border-border bg-card p-8 text-center" role="alert"><h1 className="font-display text-2xl text-[#073e53]">{locale === 'en' ? 'The website could not load its information' : 'Le site n’a pas pu charger ses informations'}</h1><p className="mt-3 text-sm leading-6 text-muted-foreground">{locale === 'en' ? 'Please try again shortly.' : 'Réessayez dans quelques instants.'}</p><button onClick={() => void query.refetch()} className="btn-gold mt-6">{locale === 'en' ? 'Try again' : 'Réessayer'}</button></section></main>;
 
-  const content = withEditorialBlogPosts(query.data);
+  const editorialContent = withEditorialBlogPosts(query.data);
+  const content = applyClinicPhoneToContent(editorialContent, editorialContent.clinic.phone);
   const rawPath = location.split('?')[0] || '/';
   const path = rawPath.length > 1 ? rawPath.replace(/\/+$/, '') : rawPath;
   const localizedRoute = locale === 'en' ? path.replace(/^\/en(?=\/|$)/, '') || '/' : path;

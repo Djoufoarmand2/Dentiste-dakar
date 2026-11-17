@@ -1,5 +1,6 @@
 import { Mail, MessageCircle } from "lucide-react";
 import { PRACTICE_CONTACT_EMAIL } from "@/lib/contact-info";
+import { clinicWhatsAppLink } from "@/lib/clinic-phone";
 import { useSiteLocale } from "@/lib/site-locale";
 
 type ManualContactLinksProps = {
@@ -15,16 +16,13 @@ export function ManualContactLinks({
 }: ManualContactLinksProps) {
   const locale = useSiteLocale();
   const address = PRACTICE_CONTACT_EMAIL;
-  const phoneDigits = phone?.replace(/\D/g, "") ?? "";
-  const whatsappNumber = phoneDigits.length === 9 ? `237${phoneDigits}` : phoneDigits;
   const gmailUrl = address
     ? `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(address)}&su=${encodeURIComponent("Cabinet Sourire Serein")}`
     : "";
-  const whatsappUrl = whatsappNumber.length >= 8
-    ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
-        locale === "en" ? "Hello, I would like to contact the practice." : "Bonjour, je souhaite contacter le cabinet.",
-      )}`
-    : "";
+  const whatsappUrl = clinicWhatsAppLink(
+    phone,
+    locale === "en" ? "Hello, I would like to contact the practice." : "Bonjour, je souhaite contacter le cabinet.",
+  );
   const buttonClass = tone === "dark"
     ? "border-white/25 bg-white/[0.06] text-white hover:border-white/60 hover:bg-white/10"
     : "border-[#18365f]/15 bg-white text-[#18365f] hover:border-[#18365f]/50 hover:bg-[#edf2ff]";

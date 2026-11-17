@@ -3,6 +3,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 import type { SiteContent } from '@workspace/api-client-react';
 import { defaultWhyChooseContent } from '@/lib/site-page-defaults';
 import { PRACTICE_CONTACT_EMAIL } from '@/lib/contact-info';
+import { clinicPhoneLink, clinicWhatsAppLink, formatClinicPhone } from '@/lib/clinic-phone';
 
 type Locale = 'fr' | 'en';
 
@@ -163,8 +164,9 @@ function PageKicker({ children, light = false }: { children: string; light?: boo
 
 function ContactDetails({ clinic, locale }: { clinic: PatientClinic; locale: Locale }) {
   const isEnglish = locale === 'en';
-  const phoneDigits = clinic.phone.replace(/\D/g, '');
-  const whatsappHref = `https://wa.me/${phoneDigits}`;
+  const displayPhone = formatClinicPhone(clinic.phone);
+  const phoneHref = clinicPhoneLink(clinic.phone);
+  const whatsappHref = clinicWhatsAppLink(clinic.phone);
 
   const cardClass = 'group flex min-h-[82px] min-w-0 items-center gap-3 rounded-xl border border-[#24234c]/15 bg-white/90 px-4 py-3 text-[#24234c] shadow-[0_8px_24px_rgba(7,1,22,.10)] backdrop-blur-sm transition duration-300 hover:-translate-y-1 hover:border-[#555c9c]/50 hover:bg-white hover:shadow-[0_14px_32px_rgba(7,1,22,.16)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-[#555c9c] motion-reduce:transform-none motion-reduce:transition-none';
 
@@ -174,11 +176,11 @@ function ContactDetails({ clinic, locale }: { clinic: PatientClinic; locale: Loc
       {clinic.city || 'Douala'}
     </div>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {clinic.phone && <a href={`tel:${clinic.phone}`} className={cardClass} data-testid="link-why-phone">
+      {clinic.phone && <a href={phoneHref} className={cardClass} data-testid="link-why-phone">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#29c7c3] text-[#070116] shadow-[0_0_22px_rgba(41,199,195,.25)] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"><Phone size={19} aria-hidden="true" /></span>
         <span className="min-w-0 flex-1">
           <span className="block text-[10px] font-bold uppercase tracking-[.15em] text-[#555c9c]">{isEnglish ? 'Call the practice' : 'Appeler le cabinet'}</span>
-          <span className="mt-1 block break-words text-sm font-semibold leading-5">{clinic.phone}</span>
+          <span className="mt-1 block break-words text-sm font-semibold leading-5">{displayPhone}</span>
         </span>
         <ArrowRight size={16} aria-hidden="true" className="shrink-0 text-[#555c9c] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#24234c] motion-reduce:transition-none" />
       </a>}
@@ -190,7 +192,7 @@ function ContactDetails({ clinic, locale }: { clinic: PatientClinic; locale: Loc
         </span>
         <ArrowRight size={16} aria-hidden="true" className="shrink-0 text-[#555c9c] transition-transform duration-300 group-hover:translate-x-1 group-hover:text-[#24234c] motion-reduce:transition-none" />
       </a>
-      {phoneDigits && <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className={cardClass} data-testid="link-why-whatsapp">
+      {whatsappHref && <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className={cardClass} data-testid="link-why-whatsapp">
         <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#25d366] text-[#073b2b] shadow-[0_0_22px_rgba(37,211,102,.22)] transition-transform duration-300 group-hover:scale-110 motion-reduce:transition-none"><FaWhatsapp size={20} aria-hidden="true" /></span>
         <span className="min-w-0 flex-1">
           <span className="block text-[10px] font-bold uppercase tracking-[.15em] text-[#555c9c]">WhatsApp</span>
@@ -289,8 +291,7 @@ export function ServiceDetailContent({ clinic, service, locale }: ServiceDetailC
   const imageSrc = safeImageUrl(service.imageUrl);
   const descriptionParts = textParagraphs(description);
   const summaryParts = textParagraphs(summary);
-  const phoneDigits = clinic.phone.replace(/\D/g, '');
-  const whatsappHref = `https://wa.me/${phoneDigits}`;
+  const whatsappHref = clinicWhatsAppLink(clinic.phone);
 
   return <main className="overflow-hidden bg-[#f1f3f9] text-[#20213e]" data-testid={`page-service-${service.id}`}>
     <section className="relative isolate overflow-hidden bg-[#18365f] text-white">
