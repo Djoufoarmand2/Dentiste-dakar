@@ -26,3 +26,7 @@ VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_VnpQmbYTB6FvvOOnTY0Tqw_sIPysndv"
 VITE_SUPABASE_URL = "https://hiuhpajyjnivphnatqox.supabase.co"
 VITE_FORMBOLD_ENDPOINT = "https://formbold.com/s/9m51R"
 CLOUDFLARE_HOOK_URL = "https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/3825e60a-7046-4ff6-881d-343ac8773767"
+
+[nix]
+channel = "stable-25_05"
+packages = ["glib", "gtk3", "gtk4", "pango", "cairo", "gdk-pixbuf", "alsa-lib", "dbus", "nss", "nspr", "libxkbcommon", "libdrm", "mesa", "vulkan-loader", "libgbm", "libevent", "libopus", "libxml2", "sqlite", "libxslt", "lcms2", "libjpeg", "libwebp", "libavif", "harfbuzz", "libepoxy", "libsecret", "enchant", "hyphen", "libnotify", "libmanette", "gst_all_1.gstreamer", "gst_all_1.gst-plugins-base", "gst_all_1.gst-plugins-good", "gst_all_1.gst-plugins-bad", "gst_all_1.gst-libav", "xorg.libX11", "xorg.libxcb", "xorg.libXcomposite", "xorg.libXcursor", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXi", "xorg.libXrandr", "xorg.libXrender", "xorg.libxkbfile", "xorg.libXtst", "xorg.libXinerama", "xorg.libSM", "xorg.libICE", "xorg.libXau", "xorg.libXdmcp", "xorg.libXt", "xorg.libXmu", "xorg.libXScrnSaver", "xorg.libXxf86vm"]
