@@ -283,20 +283,20 @@ export function Header({ clinic, content, overlay = false }: { clinic?: SiteCont
     return () => window.removeEventListener('scroll', update);
   }, []);
   return <header className={`public-header ${overlay ? `home-header ${scrolled ? 'is-scrolled' : ''}` : ''} ${lightHeader ? 'header-light' : 'header-transparent'}`}>
-    <div className="mx-auto flex max-w-[1240px] items-center justify-between gap-6 px-5 py-4 md:px-8">
+    <div className="mx-auto flex max-w-[1480px] items-center justify-between gap-6 px-5 py-4 md:px-8">
       <LogoWordmark clinic={clinic} inverse={!lightHeader} />
-      <nav aria-label={uiText(locale, 'Navigation principale', 'Main navigation')} className="hidden items-center gap-3 xl:flex">
+      <nav aria-label={uiText(locale, 'Navigation principale', 'Main navigation')} className="hidden items-center gap-3 2xl:flex">
         <Link href={locale === 'en' ? '/en' : '/'} className={`whitespace-nowrap text-[13px] font-medium transition-colors hover:text-[#b94f5b] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid="nav-accueil">{uiText(locale, 'Accueil', 'Home')}</Link>
         {navItems.map(([label, href]) => <Link key={href} href={routeFor(href, locale, content)} className={`whitespace-nowrap text-[13px] font-medium transition-colors hover:text-[#b94f5b] ${lightHeader ? 'text-[#073e53]' : 'text-white/90'}`} data-testid={`nav-${href.slice(1)}`}>{label}</Link>)}
         <Link href={routeFor('/informations', locale)} className={`${navColor} whitespace-nowrap`} data-testid="nav-informations">{uiText(locale, 'Informations', 'Updates')}</Link>
       </nav>
-      <div className="hidden items-center gap-5 xl:flex">
+      <div className="hidden items-center gap-5 2xl:flex">
         <Link href={localizedPath(location, locale === 'en' ? 'fr' : 'en', content)} lang={locale === 'en' ? 'fr' : 'en'} className={`text-xs font-semibold underline-offset-4 hover:underline ${lightHeader ? 'text-[#073e53]' : 'text-white'}`} data-testid="link-language-switch">{locale === 'en' ? 'Français' : 'English'}</Link>
         <Link href={routeFor('/contact', locale)} className="btn-gold whitespace-nowrap" data-testid="button-header-rendez-vous">{uiText(locale, 'Prendre rendez-vous', 'Request an appointment')} <ArrowRight size={15} /></Link>
       </div>
-      <button type="button" aria-label={open ? uiText(locale, 'Fermer le menu', 'Close menu') : uiText(locale, 'Ouvrir le menu', 'Open menu')} aria-expanded={open} onClick={() => setOpen(!open)} className={`grid h-10 w-10 place-items-center rounded-md border xl:hidden ${lightHeader ? 'border-[#073e53]/25 text-[#073e53]' : 'border-white/30 text-white'}`} data-testid="button-menu-mobile">{open ? <X size={19} /> : <Menu size={19} />}</button>
+      <button type="button" aria-label={open ? uiText(locale, 'Fermer le menu', 'Close menu') : uiText(locale, 'Ouvrir le menu', 'Open menu')} aria-expanded={open} onClick={() => setOpen(!open)} className={`grid h-10 w-10 place-items-center rounded-md border 2xl:hidden ${lightHeader ? 'border-[#073e53]/25 text-[#073e53]' : 'border-white/30 text-white'}`} data-testid="button-menu-mobile">{open ? <X size={19} /> : <Menu size={19} />}</button>
     </div>
-    {open && <nav aria-label={uiText(locale, 'Navigation mobile', 'Mobile navigation')} className={`absolute inset-x-0 top-full px-5 pb-6 pt-1 shadow-xl xl:hidden ${lightHeader ? 'bg-white' : 'bg-[#073e53]'}`}>
+    {open && <nav aria-label={uiText(locale, 'Navigation mobile', 'Mobile navigation')} className={`absolute inset-x-0 top-full px-5 pb-6 pt-1 shadow-xl 2xl:hidden ${lightHeader ? 'bg-white' : 'bg-[#073e53]'}`}>
       {[[uiText(locale, 'Accueil', 'Home'), locale === 'en' ? '/en' : '/'] as const, ...navItems, [uiText(locale, 'Informations', 'Updates'), '/informations'] as const, [uiText(locale, 'Contact', 'Contact'), '/contact'] as const].map(([label, href]) => <Link onClick={() => setOpen(false)} key={href} href={href === (locale === 'en' ? '/en' : '/') ? href : routeFor(href, locale)} className={`block border-t py-3 text-sm ${lightHeader ? 'border-[#073e53]/10 text-[#073e53]' : 'border-white/10 text-white/90'}`} data-testid={`mobile-nav-${href.slice(1) || 'accueil'}`}>{label}</Link>)}
       <Link href={localizedPath(location, locale === 'en' ? 'fr' : 'en', content)} lang={locale === 'en' ? 'fr' : 'en'} onClick={() => setOpen(false)} className={`block border-t py-3 text-sm ${lightHeader ? 'border-[#073e53]/10 text-[#073e53]' : 'border-white/10 text-white/90'}`} data-testid="mobile-link-language-switch">{locale === 'en' ? 'Français' : 'English'}</Link>
       <Link href={routeFor('/contact', locale)} onClick={() => setOpen(false)} className="btn-gold mt-4 w-full justify-center" data-testid="mobile-button-rendez-vous">{uiText(locale, 'Prendre rendez-vous', 'Request an appointment')} <ArrowRight size={15} /></Link>

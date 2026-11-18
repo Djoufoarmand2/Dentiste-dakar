@@ -6,6 +6,7 @@ const viewports = [
   { name: 'large-phone', width: 402, height: 874 },
   { name: 'tablet', width: 768, height: 1024 },
   { name: 'desktop', width: 1280, height: 900 },
+  { name: 'wide-desktop', width: 1536, height: 1000 },
 ];
 
 const routes = [
