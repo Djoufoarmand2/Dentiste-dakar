@@ -13,7 +13,6 @@ export const ContactAppointmentInputService = {
   Détartrage_et_polissage: 'Détartrage et polissage',
   Traitement_des_caries: 'Traitement des caries',
   'Plombage_/_composite': 'Plombage / composite',
-  'Kinésithérapie_dentaire_/_maxillo-faciale': 'Kinésithérapie dentaire / maxillo-faciale',
   Laboratoire_prothétique: 'Laboratoire prothétique',
   Chirurgie_dentaire: 'Chirurgie dentaire',
 } as const;

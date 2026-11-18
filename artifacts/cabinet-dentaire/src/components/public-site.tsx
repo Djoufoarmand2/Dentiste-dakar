@@ -199,7 +199,8 @@ const clinicGalleryPhotos = [
     caption: 'Un accompagnement attentif',
   },
 ];
-const visibleGallery = (gallery: SiteContent['gallery']) => gallery.filter((item) => item.id !== partnerLogoId);
+const visibleGallery = (gallery: SiteContent['gallery']) =>
+  gallery.filter((item) => item.id !== partnerLogoId && item.id !== 'illustration-kinesitherapie-maxillo-faciale');
 const visibleTeamMembers = (team: SiteContent['team']) => team.filter((member) =>
   !/fictif|fictive|à remplacer|à renseigner|exemple de contenu/i.test(`${member.name} ${member.role} ${member.biography}`));
 const galleryCaption = (item: SiteContent['gallery'][number], locale: 'fr' | 'en' = 'fr') => {
@@ -209,7 +210,6 @@ const galleryCaption = (item: SiteContent['gallery'][number], locale: 'fr' | 'en
     'illustration-detartrage-polissage': 'Détartrage et polissage',
     'illustration-traitement-caries': 'Traitement des caries',
     'illustration-plombage-composite': 'Plombage et composite',
-    'illustration-kinesitherapie-maxillo-faciale': 'Kinésithérapie maxillo-faciale',
     'illustration-laboratoire-prothetique': 'Laboratoire prothétique',
     'illustration-chirurgie-dentaire': 'Chirurgie dentaire',
     'illustration-maternite-clinique-bienveillance': 'Maternité · Clinique La Bienveillance',
@@ -220,7 +220,6 @@ const galleryCaption = (item: SiteContent['gallery'][number], locale: 'fr' | 'en
     'illustration-detartrage-polissage': 'Scaling and polishing',
     'illustration-traitement-caries': 'Cavity treatment',
     'illustration-plombage-composite': 'Filling and composite',
-    'illustration-kinesitherapie-maxillo-faciale': 'Maxillofacial physiotherapy',
     'illustration-laboratoire-prothetique': 'Prosthetics laboratory',
     'illustration-chirurgie-dentaire': 'Dental surgery',
     'illustration-maternite-clinique-bienveillance': 'Maternity · Clinique La Bienveillance',

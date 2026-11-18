@@ -2,6 +2,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadEnv } from 'vite';
+import { filterRemovedServiceFromPublicContent } from './public-content-policy.mjs';
 
 const outputDirectory = process.env.CABINET_SITEMAP_OUTPUT_DIR
   ? path.resolve(process.env.CABINET_SITEMAP_OUTPUT_DIR)
@@ -191,7 +192,7 @@ if (supabaseUrl && publishableKey) {
       signal: AbortSignal.timeout(10_000),
     });
     if (response.ok) {
-      publicContent = addEditorialPosts(await response.json());
+      publicContent = filterRemovedServiceFromPublicContent(addEditorialPosts(await response.json()));
       for (const post of publicContent.blogPosts ?? []) {
         if (post?.published === true && typeof post.slug === 'string' && /^[a-z0-9-]+$/.test(post.slug)) {
           routes.add(`/blog/${post.slug}/`);

@@ -126,13 +126,6 @@ const officialServices = [
     imageUrl: '',
   },
   {
-    id: 'kinesitherapie-maxillo-faciale',
-    title: 'Kinésithérapie dentaire et maxillo-faciale',
-    summary: 'Un accompagnement fonctionnel après évaluation de votre besoin.',
-    description: 'Les indications et les modalités sont définies avec le professionnel selon les symptômes, l’examen et, si besoin, l’orientation adaptée.',
-    imageUrl: '',
-  },
-  {
     id: 'laboratoire-prothetique',
     title: 'Laboratoire prothétique',
     summary: 'Un bloc prothétique associé à la prise en charge du cabinet.',

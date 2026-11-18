@@ -2,3 +2,9 @@
 /admin /arm/ 301
 /admin/ /arm/ 301
 /admin/* /arm/ 301
+
+# Le soin n'est plus proposé : rediriger les anciennes fiches vers la liste.
+/soins/kinesitherapie-maxillo-faciale /soins/ 301
+/soins/kinesitherapie-maxillo-faciale/ /soins/ 301
+/en/services/maxillofacial-physiotherapy /en/services/ 301
+/en/services/maxillofacial-physiotherapy/ /en/services/ 301

@@ -35,7 +35,6 @@ const galleryAlt = {
   'illustration-detartrage-polissage': 'AI-generated illustration: dental hygiene care.',
   'illustration-traitement-caries': 'AI-generated illustration: dental examination.',
   'illustration-plombage-composite': 'AI-generated illustration: discussing a dental restoration.',
-  'illustration-kinesitherapie-maxillo-faciale': 'AI-generated illustration: jaw mobility exercise.',
   'illustration-laboratoire-prothetique': 'AI-generated illustration: creating a dental prosthesis.',
   'illustration-chirurgie-dentaire': 'AI-generated illustration: preparing a dental surgery room.',
   'illustration-maternite-clinique-bienveillance': 'AI-generated illustration: maternity consultation at the partner institution.',

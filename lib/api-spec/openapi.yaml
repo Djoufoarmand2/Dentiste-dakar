@@ -395,7 +395,6 @@ components:
             - Détartrage et polissage
             - Traitement des caries
             - Plombage / composite
-            - Kinésithérapie dentaire / maxillo-faciale
             - Laboratoire prothétique
             - Chirurgie dentaire
         preferredDate: { type: string, format: date }

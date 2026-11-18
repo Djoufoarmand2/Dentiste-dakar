@@ -35,7 +35,6 @@ const serviceOptions: ContactAppointmentInput["service"][] = [
   "Détartrage et polissage",
   "Traitement des caries",
   "Plombage / composite",
-  "Kinésithérapie dentaire / maxillo-faciale",
   "Laboratoire prothétique",
   "Chirurgie dentaire",
 ];
@@ -344,7 +343,6 @@ export function AppointmentRequestForm({
                         "Détartrage et polissage": "Scaling and polishing",
                         "Traitement des caries": "Cavity treatment",
                         "Plombage / composite": "Filling / composite",
-                        "Kinésithérapie dentaire / maxillo-faciale": "Dental / maxillofacial physiotherapy",
                         "Laboratoire prothétique": "Prosthetics laboratory",
                         "Chirurgie dentaire": "Dental surgery",
                       } as Record<string, string>)[service] : service}

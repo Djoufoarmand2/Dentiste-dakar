@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { loadEnv } from 'vite';
+import { filterRemovedServiceFromPublicContent } from './public-content-policy.mjs';
 
 const viteEnv = loadEnv('production', process.cwd(), 'VITE_');
 const viteSetting = (name) => process.env[name]?.trim() || viteEnv[name]?.trim();
@@ -40,7 +41,7 @@ assert.equal(contentResponse.status, 200, `Site Supabase runtime public-content 
 assert.match(contentResponse.headers.get('content-type') || '', /application\/json/i, 'Site Supabase runtime public-content response should be JSON.');
 let publicContent;
 try {
-  publicContent = await contentResponse.json();
+  publicContent = filterRemovedServiceFromPublicContent(await contentResponse.json());
 } catch {
   throw new Error('Site Supabase runtime public-content response was not valid JSON; response details were suppressed.');
 }

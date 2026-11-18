@@ -27,15 +27,6 @@
       "procedureSteps": "Tell the practice what you would like help with and mention any sensitivity or concerns.\nThe practitioner asks about your oral health and any relevant care you have received.\nAn examination is carried out if appropriate and with your agreement.\nThe practitioner explains whether scaling or polishing is suitable and answers your questions.\nYou can discuss after-care advice and any follow-up that may be useful.",
       "imageAlt": "Illustration of a dental hygiene appointment."
     },
-    "kinesitherapie-maxillo-faciale": {
-      "slugEn": "maxillofacial-physiotherapy",
-      "title": "Dental and maxillofacial physiotherapy",
-      "summary": "Functional support after an assessment of your needs.",
-      "description": "The indications and arrangements are discussed with the professional based on your symptoms, an examination and, if needed, an appropriate referral.",
-      "purpose": "To discuss jaw or facial discomfort and whether functional support or another referral may be appropriate.",
-      "procedureSteps": "Describe the discomfort, when it started and what seems to affect it.\nShare relevant health information and details of any previous assessment or care.\nThe professional evaluates your request and explains whether this service may be suitable.\nIf appropriate, the goals and proposed approach are discussed before any care begins.\nFollow-up or referral options are discussed according to your situation.",
-      "imageAlt": "Illustration of a conversation about jaw and facial function."
-    },
     "laboratoire-prothetique": {
       "slugEn": "prosthetic-dental-laboratory",
       "title": "Dental prosthetics laboratory",
