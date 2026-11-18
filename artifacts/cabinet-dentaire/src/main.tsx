@@ -15,3 +15,12 @@ createRoot(document.getElementById('root')!, {
     <App />
   </ErrorBoundary>,
 );
+
+const siteIntro = document.getElementById('site-intro');
+if (siteIntro && !document.documentElement.classList.contains('site-intro-seen') && !document.documentElement.classList.contains('site-intro-skip')) {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.setTimeout(() => {
+    siteIntro.classList.add('site-intro--leaving');
+    window.setTimeout(() => siteIntro.remove(), reducedMotion ? 0 : 420);
+  }, reducedMotion ? 500 : 1_750);
+}

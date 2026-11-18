@@ -31,6 +31,14 @@ for (const viewport of viewports) {
         expect(response?.status(), `${route} should load successfully`).toBe(200);
         await expect(page.locator('#root > *').first()).toBeVisible();
 
+        if (route === '/') {
+          const intro = page.locator('#site-intro');
+          await expect(intro).toBeVisible();
+          await expect(intro.locator('h1')).toContainText('Bienvenue');
+          await expect(intro.locator('img')).toBeVisible();
+          await expect(intro).toHaveCount(0, { timeout: 3_000 });
+        }
+
         const dimensions = await page.evaluate(() => ({
           viewport: window.innerWidth,
           document: document.documentElement.scrollWidth,
@@ -51,3 +59,12 @@ for (const viewport of viewports) {
     });
   });
 }
+
+test('welcome screen can be skipped immediately', async ({ page }) => {
+  const response = await page.goto('/', { waitUntil: 'commit' });
+  expect(response?.status()).toBe(200);
+  const intro = page.locator('#site-intro');
+  await expect(intro).toBeVisible();
+  await intro.locator('[data-intro-skip]').click();
+  await expect(intro).toHaveCount(0, { timeout: 1_000 });
+});

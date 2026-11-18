@@ -22,8 +22,51 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+      #site-intro{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;overflow:hidden;background:#f8f8f5;color:#18365f;opacity:1;transition:opacity .38s ease,visibility .38s ease}
+      #site-intro.site-intro--leaving{opacity:0;visibility:hidden;pointer-events:none}
+      #site-intro .site-intro__content{width:min(100% - 40px,620px);display:grid;justify-items:center;text-align:center}
+      #site-intro .site-intro__logo{width:82px;height:82px;object-fit:contain;animation:site-intro-logo .7s cubic-bezier(.2,.75,.25,1) both}
+      #site-intro .site-intro__eyebrow{margin:18px 0 10px;color:#806b42;font:700 10px/1.4 Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase}
+      #site-intro .site-intro__title{max-width:590px;margin:0;color:#18365f;font:600 clamp(27px,6vw,43px)/1.15 Georgia,'Times New Roman',serif;clip-path:inset(0 100% 0 0);animation:site-intro-write .82s steps(34,end) .12s forwards}
+      #site-intro .site-intro__message{max-width:480px;margin:15px 0 0;color:#526176;font:400 15px/1.65 Arial,sans-serif;opacity:0;animation:site-intro-copy .42s ease .78s forwards}
+      #site-intro .site-intro__rule{width:76px;height:2px;margin-top:24px;border-radius:4px;background:#b5965a;transform:scaleX(0);transform-origin:center;animation:site-intro-rule .36s ease 1.22s forwards}
+      #site-intro .site-intro__skip{position:absolute;right:18px;bottom:18px;border-radius:999px;padding:9px 13px;color:#18365f;font:600 12px/1.2 Arial,sans-serif;text-decoration:underline;text-underline-offset:3px}
+      #site-intro .site-intro__skip:focus-visible{outline:3px solid #315c9a;outline-offset:3px}
+      html.site-intro-seen #site-intro,html.site-intro-skip #site-intro{display:none}
+      @keyframes site-intro-logo{from{opacity:0;transform:translateY(8px) scale(.94)}to{opacity:1;transform:translateY(0) scale(1)}}
+      @keyframes site-intro-write{to{clip-path:inset(0 0 0 0)}}
+      @keyframes site-intro-copy{to{opacity:1}}
+      @keyframes site-intro-rule{to{transform:scaleX(1)}}
+      @media(prefers-reduced-motion:reduce){#site-intro *{animation:none!important}#site-intro .site-intro__title{clip-path:none}#site-intro .site-intro__message{opacity:1}#site-intro .site-intro__rule{transform:none}}
+    </style>
+    <script>
+      try {
+        if (sessionStorage.getItem('cabinet-intro-seen') === '1') document.documentElement.classList.add('site-intro-seen');
+        else sessionStorage.setItem('cabinet-intro-seen', '1');
+        if (/^\/(?:arm|sign-in|sign-up|forgot-password|auth(?:\/|$))/.test(location.pathname)) document.documentElement.classList.add('site-intro-skip');
+      } catch {}
+      document.addEventListener('click', (event) => {
+        if (!(event.target instanceof Element) || !event.target.closest('[data-intro-skip]')) return;
+        event.preventDefault();
+        const intro = document.getElementById('site-intro');
+        if (!intro) return;
+        intro.classList.add('site-intro--leaving');
+        setTimeout(() => intro.remove(), 420);
+      });
+    </script>
   </head>
   <body>
+    <section id="site-intro" role="status" aria-live="polite" aria-label="Bienvenue au Cabinet Sourire Serein">
+      <div class="site-intro__content">
+        <img class="site-intro__logo" src="%BASE_URL%brand/logo-mark.webp" alt="" width="82" height="82" fetchpriority="high" />
+        <p class="site-intro__eyebrow">Cabinet Sourire Serein · Douala</p>
+        <h1 class="site-intro__title">Bienvenue, votre sourire est entre de bonnes mains.</h1>
+        <p class="site-intro__message">Nous prenons le temps de vous écouter, de répondre à vos questions et de vous expliquer chaque étape avec attention.</p>
+        <span class="site-intro__rule" aria-hidden="true"></span>
+      </div>
+      <button class="site-intro__skip" type="button" data-intro-skip>Accéder au site</button>
+    </section>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
